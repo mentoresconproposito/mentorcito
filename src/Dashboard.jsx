@@ -126,7 +126,7 @@ function RadarMini(props) {
 }
 
 // ── Google Sheets URL ──────────────────────────────────────────────────────────
-var SHEETS_URL = (typeof VITE_SHEETS_URL !== "undefined" && VITE_SHEETS_URL) ? VITE_SHEETS_URL : "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
+var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
 
 // ── Compute stats from seed records (fallback) ────────────────────────────────
 function buildStatsFromSeed(records) {
@@ -171,16 +171,23 @@ export default function Dashboard() {
   async function fetchStats() {
     setLoading(true);
     try {
-      var res  = await fetch(SHEETS_URL + "?action=stats");
-      var data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setStats(data);
-      setError(null);
+      if (SHEETS_URL.indexOf("TU_GOOGLE") !== -1) {
+        setStats(buildStatsFromSeed(SEED));
+        setError("⚠️ Usando datos de demo — configurá tu Google Sheet URL.");
+      } else {
+        // Usamos allorigins como proxy para evitar CORS
+        var proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(SHEETS_URL + "?action=stats");
+        var res  = await fetch(proxyUrl);
+        var json = await res.json();
+        var data = JSON.parse(json.contents);
+        if (data.error) throw new Error(data.error);
+        setStats(data);
+        setError(null);
+      }
       setLastRefresh(new Date());
     } catch(e) {
-      // Fallback a seed si falla
       setStats(buildStatsFromSeed(SEED));
-      setError("Usando datos de demo — " + e.message);
+      setError("Error conectando con Google Sheets (" + e.message + ") — mostrando datos de demo.");
     } finally {
       setLoading(false);
     }
@@ -493,17 +500,21 @@ export default function Dashboard() {
               </div>
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Sin ningún match</div>
-                {Object.keys(MENTOR_NAMES).filter(function(id) { return !mentorCount[id]; }).map(function(id) {
-                  return (
-                    <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
-                      <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{MENTOR_NAMES[id]}</span>
-                    </div>
-                  );
-                })}
-                {Object.keys(MENTOR_NAMES).every(function(id){ return mentorCount[id]; }) && (
-                  <div style={{ color: GREEN, fontSize: 13, fontWeight: 600 }}>✅ Todos los mentores tienen al menos 1 match</div>
-                )}
+                {(function() {
+                  var matchedIds = topMentores.map(function(e){ return e[0]; });
+                  var sinMatch = Object.keys(MENTOR_NAMES).filter(function(id){ return matchedIds.indexOf(id) === -1; });
+                  if (sinMatch.length === 0) {
+                    return <div style={{ color: GREEN, fontSize: 13, fontWeight: 600 }}>Todos los mentores tienen al menos 1 match</div>;
+                  }
+                  return sinMatch.map(function(id) {
+                    return (
+                      <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
+                        <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{MENTOR_NAMES[id]}</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 
