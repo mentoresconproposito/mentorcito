@@ -126,7 +126,7 @@ function RadarMini(props) {
 }
 
 // ── Google Sheets URL ──────────────────────────────────────────────────────────
-var SHEETS_URL = import.meta.env.VITE_SHEETS_URL || "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
+var SHEETS_URL = (typeof VITE_SHEETS_URL !== "undefined" && VITE_SHEETS_URL) ? VITE_SHEETS_URL : "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
 
 // ── Compute stats from seed records (fallback) ────────────────────────────────
 function buildStatsFromSeed(records) {
@@ -171,20 +171,16 @@ export default function Dashboard() {
   async function fetchStats() {
     setLoading(true);
     try {
-      if (SHEETS_URL.indexOf("TU_GOOGLE") !== -1) {
-        setStats(buildStatsFromSeed(SEED));
-        setError("⚠️ Usando datos de demo — configurá VITE_SHEETS_URL en Vercel.");
-      } else {
-        var res  = await fetch(SHEETS_URL + "?action=stats");
-        var data = await res.json();
-        if (data.error) throw new Error(data.error);
-        setStats(data);
-        setError(null);
-      }
+      var res  = await fetch(SHEETS_URL + "?action=stats");
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setStats(data);
+      setError(null);
       setLastRefresh(new Date());
     } catch(e) {
+      // Fallback a seed si falla
       setStats(buildStatsFromSeed(SEED));
-      setError("Error conectando con Google Sheets (" + e.message + ") — mostrando datos de demo.");
+      setError("Usando datos de demo — " + e.message);
     } finally {
       setLoading(false);
     }
