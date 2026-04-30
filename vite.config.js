@@ -6,8 +6,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      VITE_ANTHROPIC_API_KEY: JSON.stringify(env.VITE_ANTHROPIC_API_KEY || ''),
-      VITE_SHEETS_URL: JSON.stringify(env.VITE_SHEETS_URL || ''),
+      VITE_ANTHROPIC_KEY: JSON.stringify(env.VITE_ANTHROPIC_API_KEY || ''),
     }
   }
 })
