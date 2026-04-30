@@ -126,7 +126,7 @@ function RadarMini(props) {
 }
 
 // ── Google Sheets URL ──────────────────────────────────────────────────────────
-var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
+var SHEETS_URL = "/api/sheets";
 
 // ── Compute stats from seed records (fallback) ────────────────────────────────
 function buildStatsFromSeed(records) {
@@ -171,19 +171,11 @@ export default function Dashboard() {
   async function fetchStats() {
     setLoading(true);
     try {
-      if (SHEETS_URL.indexOf("TU_GOOGLE") !== -1) {
-        setStats(buildStatsFromSeed(SEED));
-        setError("⚠️ Usando datos de demo — configurá tu Google Sheet URL.");
-      } else {
-        // Usamos allorigins como proxy para evitar CORS
-        var proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(SHEETS_URL + "?action=stats");
-        var res  = await fetch(proxyUrl);
-        var json = await res.json();
-        var data = JSON.parse(json.contents);
-        if (data.error) throw new Error(data.error);
-        setStats(data);
-        setError(null);
-      }
+      var res  = await fetch(SHEETS_URL + "?action=stats");
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setStats(data);
+      setError(null);
       setLastRefresh(new Date());
     } catch(e) {
       setStats(buildStatsFromSeed(SEED));
