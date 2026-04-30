@@ -888,9 +888,9 @@ function DiagnosisPanel(props) {
     if (!found) {
       var recLow = recId.toLowerCase().replace(/\s+/g,"");
       found = MENTORS_DB.find(function(m) {
-        return m.id.toLowerCase() === recLow ||
-               m.nombre.toLowerCase().replace(/\s+/g,"").indexOf(recLow) !== -1 ||
-               recLow.indexOf(m.id.toLowerCase()) !== -1;
+        return m.id.toLowerCase()===recLow ||
+               m.nombre.toLowerCase().replace(/\s+/g,"").indexOf(recLow)!==-1 ||
+               recLow.indexOf(m.id.toLowerCase())!==-1;
       });
     }
     return found ? Object.assign({}, found, { razon: rec.razon }) : null;
@@ -1026,13 +1026,12 @@ export default function MentorAgent() {
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
 
   // URL del Google Apps Script — reemplazá con la tuya
-  var SHEETS_URL = (typeof VITE_SHEETS_URL !== "undefined" && VITE_SHEETS_URL) ? VITE_SHEETS_URL : "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
+  var SHEETS_URL = "/api/sheets";
 
   async function postToSheets(payload) {
     try {
       await fetch(SHEETS_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload),
       });
@@ -1075,16 +1074,17 @@ export default function MentorAgent() {
     if (apiMessages.length > 10) apiMessages = apiMessages.slice(-10);
 
     try {
-      var _key = (typeof VITE_ANTHROPIC_API_KEY !== "undefined") ? VITE_ANTHROPIC_API_KEY : "";
-      var _hdrs = { "Content-Type": "application/json" };
-      if (_key) {
-        _hdrs["x-api-key"] = _key;
-        _hdrs["anthropic-version"] = "2023-06-01";
-        _hdrs["anthropic-dangerous-direct-browser-access"] = "true";
-      }
       var res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: _hdrs,
+        headers: (function(){
+          var h={"Content-Type":"application/json"};
+          if(typeof VITE_ANTHROPIC_KEY!=="undefined"&&VITE_ANTHROPIC_KEY){
+            h["x-api-key"]=VITE_ANTHROPIC_KEY;
+            h["anthropic-version"]="2023-06-01";
+            h["anthropic-dangerous-direct-browser-access"]="true";
+          }
+          return h;
+        })(),
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
