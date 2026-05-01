@@ -126,7 +126,7 @@ function RadarMini(props) {
 }
 
 // ── Google Sheets URL ──────────────────────────────────────────────────────────
-var SHEETS_URL = "/api/sheets";
+var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
 
 // ── Compute stats from seed records (fallback) ────────────────────────────────
 function buildStatsFromSeed(records) {
@@ -171,11 +171,19 @@ export default function Dashboard() {
   async function fetchStats() {
     setLoading(true);
     try {
-      var res  = await fetch(SHEETS_URL + "?action=stats");
-      var data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setStats(data);
-      setError(null);
+      if (SHEETS_URL.indexOf("TU_GOOGLE") !== -1) {
+        setStats(buildStatsFromSeed(SEED));
+        setError("⚠️ Usando datos de demo — configurá tu Google Sheet URL.");
+      } else {
+        // Usamos allorigins como proxy para evitar CORS
+        var proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(SHEETS_URL + "?action=stats");
+        var res  = await fetch(proxyUrl);
+        var json = await res.json();
+        var data = JSON.parse(json.contents);
+        if (data.error) throw new Error(data.error);
+        setStats(data);
+        setError(null);
+      }
       setLastRefresh(new Date());
     } catch(e) {
       setStats(buildStatsFromSeed(SEED));
@@ -273,13 +281,14 @@ export default function Dashboard() {
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: "12px 28px", display: "flex", gap: 4, borderBottom: "1px solid " + BORDER, background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ padding: "12px 28px", display: "flex", gap: 4, flexWrap: "wrap", borderBottom: "1px solid " + BORDER, background: "rgba(255,255,255,0.01)" }}>
         {[
-          { key: "overview", label: "📈 Overview" },
-          { key: "demanda", label: "🔍 Demanda insatisfecha" },
-          { key: "mentores", label: "👥 Performance mentores" },
-          { key: "funnel", label: "🎯 Funnel de conversión" },
-          { key: "feed", label: "📋 Feed de diagnósticos" },
+          { key: "overview",  label: "📈 Overview" },
+          { key: "problemas", label: "🗣️ Problemas" },
+          { key: "demanda",   label: "🔍 Demanda insatisfecha" },
+          { key: "mentores",  label: "👥 Performance mentores" },
+          { key: "funnel",    label: "🎯 Funnel de conversión" },
+          { key: "feed",      label: "📋 Feed de diagnósticos" },
         ].map(function(t) {
           return <button key={t.key} onClick={function(){ setTab(t.key); }} style={tabStyle(t.key)}>{t.label}</button>;
         })}
@@ -393,6 +402,76 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── PROBLEMAS ── */}
+        {tab === "problemas" && (
+          <div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>
+              {topGaps.length} problemas únicos declarados por los mentees en sus diagnósticos
+            </div>
+
+            {/* Todos los gaps con texto completo */}
+            <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 24px", marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 20 }}>
+                Ranking completo de problemas declarados
+              </div>
+              {topGaps.length === 0 && (
+                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Sin datos aún — generá diagnósticos para ver los problemas.</div>
+              )}
+              {topGaps.map(function(g, i) {
+                var pct = topGaps[0][1] ? Math.round(g[1] / topGaps[0][1] * 100) : 0;
+                var isTop3 = i < 3;
+                return (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "flex-start", gap: 14,
+                    padding: "14px 16px", marginBottom: 8,
+                    background: isTop3 ? "rgba(247,37,133,0.05)" : "rgba(255,255,255,0.02)",
+                    border: "1px solid " + (isTop3 ? "rgba(247,37,133,0.2)" : BORDER),
+                    borderRadius: 10,
+                  }}>
+                    {/* Ranking */}
+                    <div style={{
+                      minWidth: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      background: isTop3 ? ACCENT : "rgba(255,255,255,0.08)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 800,
+                      color: isTop3 ? "white" : "rgba(255,255,255,0.4)",
+                    }}>{i + 1}</div>
+
+                    {/* Texto completo del problema */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: "1.5", marginBottom: 8, fontWeight: isTop3 ? 600 : 400 }}>
+                        {g[0]}
+                      </div>
+                      {/* Barra de frecuencia */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                          <div style={{ height: "100%", width: pct + "%", background: isTop3 ? ACCENT : PRIMARY, borderRadius: 2, transition: "width 0.6s" }} />
+                        </div>
+                        <span style={{ color: isTop3 ? ACCENT : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700, flexShrink: 0, fontFamily: "monospace" }}>
+                          {g[1]}x
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Insight automático */}
+            {topGaps.length > 0 && (
+              <div style={{ background: "rgba(67,97,238,0.08)", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 14, padding: "16px 20px" }}>
+                <div style={{ color: PRIMARY, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  💡 Insight
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, lineHeight: "1.7" }}>
+                  El problema más frecuente es <strong style={{ color: "white" }}>"{topGaps[0][0]}"</strong>, declarado {topGaps[0][1]} {topGaps[0][1] === 1 ? "vez" : "veces"}.
+                  {topGaps.length > 1 && " Los top 3 problemas concentran " + topGaps.slice(0,3).reduce(function(s,g){return s+g[1];},0) + " de " + topGaps.reduce(function(s,g){return s+g[1];},0) + " menciones totales."}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
