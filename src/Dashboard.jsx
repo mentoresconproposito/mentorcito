@@ -170,24 +170,29 @@ export default function Dashboard() {
 
   async function fetchStats() {
     setLoading(true);
+    async function doFetch() {
+      var res = await fetch(SHEETS_URL + "?action=stats");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      return data;
+    }
     try {
-      if (SHEETS_URL.indexOf("TU_GOOGLE") !== -1) {
-        setStats(buildStatsFromSeed(SEED));
-        setError("⚠️ Usando datos de demo — configurá tu Google Sheet URL.");
-      } else {
-        // Usamos allorigins como proxy para evitar CORS
-        var proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(SHEETS_URL + "?action=stats");
-        var res  = await fetch(proxyUrl);
-        var json = await res.json();
-        var data = JSON.parse(json.contents);
-        if (data.error) throw new Error(data.error);
-        setStats(data);
-        setError(null);
-      }
+      var data = await doFetch();
+      setStats(data);
+      setError(null);
       setLastRefresh(new Date());
     } catch(e) {
-      setStats(buildStatsFromSeed(SEED));
-      setError("Error conectando con Google Sheets (" + e.message + ") — mostrando datos de demo.");
+      try {
+        await new Promise(function(r){ setTimeout(r, 2000); });
+        var data2 = await doFetch();
+        setStats(data2);
+        setError(null);
+        setLastRefresh(new Date());
+      } catch(e2) {
+        setStats(buildStatsFromSeed(SEED));
+        setError("Sin conexión con Google Sheets — mostrando datos de demo.");
+      }
     } finally {
       setLoading(false);
     }
