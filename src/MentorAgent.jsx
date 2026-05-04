@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // ─────────────────────────────────────────────
 // MENTORS DB
@@ -452,15 +452,26 @@ function PackagePanel(props) {
   }
 
   var totalSesiones = mentors.reduce(function(s, m) { return s + m.nSesiones; }, 0);
+
+  // Opción A: todos los mentores, paquete completo
   var precioA = mentors.reduce(function(s, m) { return s + m.precio; }, 0);
-  var descA = Math.round(precioA * DISCOUNT);
-  var finalA = precioA - descA;
+  var descA   = Math.round(precioA * DISCOUNT);
+  var finalA  = precioA - descA;
+
+  // Opción B: 1 sesión de cada mentor
   var precioB = mentors.reduce(function(s, m) { return s + m.precio / m.nSesiones; }, 0);
-  var descB = Math.round(precioB * DISCOUNT);
-  var finalB = Math.round(precioB - descB);
-  var precio = opcion === "A" ? precioA : precioB;
-  var desc = opcion === "A" ? descA : descB;
-  var finalP = opcion === "A" ? finalA : finalB;
+  var descB   = Math.round(precioB * DISCOUNT);
+  var finalB  = Math.round(precioB - descB);
+
+  // Opción C: mejor match individual (prioridad 1), paquete completo con descuento
+  var topMentor = mentors[0];
+  var precioC   = topMentor ? topMentor.precio : 0;
+  var descC     = Math.round(precioC * DISCOUNT);
+  var finalC    = precioC - descC;
+
+  var precio = opcion === "A" ? precioA : opcion === "B" ? precioB : precioC;
+  var desc   = opcion === "A" ? descA   : opcion === "B" ? descB   : descC;
+  var finalP = opcion === "A" ? finalA  : opcion === "B" ? finalB  : finalC;
 
   function buildHistorial() {
     return (allMessages || []).slice(1).map(function(m) {
@@ -472,9 +483,10 @@ function PackagePanel(props) {
 
   function buildWaText() {
     var t = "Paquete: " + packageName + "\nOpcion: " + opcion + "\nNombre: " + nombre + "\nEmail: " + email + (wa ? "\nWA: " + wa : "") + "\n\nMentores:\n";
-    mentors.forEach(function(m, i) {
-      var p = opcion === "A" ? m.precio : Math.round(m.precio / m.nSesiones);
-      var s = opcion === "A" ? m.sesiones : "1 sesion";
+    var mentorsToShow = opcion === "C" ? [topMentor] : mentors;
+    mentorsToShow.forEach(function(m, i) {
+      var p = opcion === "A" ? m.precio : opcion === "B" ? Math.round(m.precio / m.nSesiones) : m.precio;
+      var s = opcion === "A" ? m.sesiones : opcion === "B" ? "1 sesion" : m.sesiones;
       t += (i + 1) + ". " + m.nombre + " - " + s + " - USD " + p + "\n";
     });
     t += "\nTotal: USD " + finalP + " (ahorro: USD " + desc + ")\n\nGaps:\n";
@@ -505,27 +517,35 @@ function PackagePanel(props) {
       <div style={{ padding: "20px 22px" }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 10 }}>Elegí tu opción</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {["A", "B"].map(function(k) {
-              var isSelected = opcion === k;
-              var label = k === "A" ? "Opción A — Paquete completo" : "Opción B — 1 sesión por mentor";
-              var sub = k === "A" ? totalSesiones + " sesiones" : mentors.length + " sesiones";
-              var fp = k === "A" ? finalA : finalB;
+          <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+            {[
+              { k: "A", label: "Opción A — Paquete completo", sub: totalSesiones + " sesiones · " + mentors.length + " mentores", fp: finalA, badge: null },
+              { k: "C", label: "Opción C — Mejor match individual", sub: (topMentor ? topMentor.nSesiones + " sesiones · " + topMentor.nombre : ""), fp: finalC, badge: "INTERMEDIA" },
+              { k: "B", label: "Opción B — 1 sesión por mentor", sub: mentors.length + " sesiones · 1 por mentor", fp: finalB, badge: null },
+            ].map(function(opt) {
+              var isSelected = opcion === opt.k;
               return (
-                <button key={k} onClick={function() { setOpcion(k); }}
-                  style={{ flex: 1, padding: 12, borderRadius: 12, cursor: "pointer", textAlign: "left", background: isSelected ? "rgba(67,97,238,0.2)" : "rgba(255,255,255,0.03)", border: "2px solid " + (isSelected ? "#4361ee" : "rgba(255,255,255,0.08)") }}>
-                  <div style={{ color: "white", fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{label}</div>
-                  <div style={{ color: C.textSecondary, fontSize: 11, marginBottom: 4 }}>{sub}</div>
-                  <div style={{ color: isSelected ? "#4361ee" : "rgba(255,255,255,0.5)", fontSize: 18, fontWeight: 800 }}>USD {fp}</div>
+                <button key={opt.k} onClick={function() { setOpcion(opt.k); }}
+                  style={{ width: "100%", padding: 12, borderRadius: 12, cursor: "pointer", textAlign: "left", background: isSelected ? "rgba(67,97,238,0.2)" : "rgba(255,255,255,0.03)", border: "2px solid " + (isSelected ? "#4361ee" : "rgba(255,255,255,0.08)"), position: "relative" }}>
+                  {opt.badge && (
+                    <span style={{ position: "absolute", top: -1, right: 12, background: "#7b2ff7", color: "white", fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: "2px 8px", borderRadius: "0 0 6px 6px", textTransform: "uppercase" }}>{opt.badge}</span>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ color: "white", fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
+                      <div style={{ color: C.textSecondary, fontSize: 11 }}>{opt.sub}</div>
+                    </div>
+                    <div style={{ color: isSelected ? "#4361ee" : "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 800, flexShrink: 0, marginLeft: 12 }}>USD {opt.fp}</div>
+                  </div>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {mentors.map(function(m, i) {
-          var pM = opcion === "A" ? m.precio : Math.round(m.precio / m.nSesiones);
-          var sM = opcion === "A" ? m.sesiones : "1 sesión";
+        {(opcion === "C" ? [topMentor] : mentors).map(function(m, i) {
+          var pM = opcion === "A" ? m.precio : opcion === "B" ? Math.round(m.precio / m.nSesiones) : m.precio;
+          var sM = opcion === "A" ? m.sesiones : opcion === "B" ? "1 sesión" : m.sesiones;
           return (
             <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", marginBottom: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
               <MentorAvatar src={m.foto} nombre={m.nombre} sz={44} border="1.5px solid rgba(255,255,255,0.1)" />
@@ -540,7 +560,11 @@ function PackagePanel(props) {
 
         <div style={{ background: "rgba(67,97,238,0.07)", border: "1px solid rgba(67,97,238,0.2)", borderRadius: 14, padding: "16px 18px", margin: "16px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ color: C.textSecondary, fontSize: 13 }}>Precio sin descuento</span>
+            <span style={{ color: C.textSecondary, fontSize: 13 }}>
+              {opcion === "A" ? "Paquetes individuales (" + mentors.length + " mentores)" :
+               opcion === "C" ? "Paquete " + (topMentor ? topMentor.nombre.split(" ")[0] : "") + " (" + (topMentor ? topMentor.nSesiones : 0) + " sesiones)" :
+               "1 sesión × " + mentors.length + " mentores"}
+            </span>
             <span style={{ color: C.textSecondary, fontSize: 13, textDecoration: "line-through" }}>USD {Math.round(precio)}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
@@ -883,16 +907,7 @@ function DiagnosisPanel(props) {
   if (!diagnosis) return null;
 
   var mentorsToShow = (diagnosis.mentores_recomendados || []).map(function(rec) {
-    var recId = (rec.id || "").trim();
-    var found = MENTORS_DB.find(function(m) { return m.id === recId; });
-    if (!found) {
-      var recLow = recId.toLowerCase().replace(/\s+/g,"");
-      found = MENTORS_DB.find(function(m) {
-        return m.id.toLowerCase()===recLow ||
-               m.nombre.toLowerCase().replace(/\s+/g,"").indexOf(recLow)!==-1 ||
-               recLow.indexOf(m.id.toLowerCase())!==-1;
-      });
-    }
+    var found = MENTORS_DB.find(function(m) { return m.id === rec.id; });
     return found ? Object.assign({}, found, { razon: rec.razon }) : null;
   }).filter(Boolean);
 
@@ -1026,12 +1041,13 @@ export default function MentorAgent() {
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
 
   // URL del Google Apps Script — reemplazá con la tuya
-  var SHEETS_URL = "/api/sheets";
+  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
 
   async function postToSheets(payload) {
     try {
       await fetch(SHEETS_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload),
       });
@@ -1076,18 +1092,10 @@ export default function MentorAgent() {
     try {
       var res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: (function(){
-          var h={"Content-Type":"application/json"};
-          if(typeof VITE_ANTHROPIC_KEY!=="undefined"&&VITE_ANTHROPIC_KEY){
-            h["x-api-key"]=VITE_ANTHROPIC_KEY;
-            h["anthropic-version"]="2023-06-01";
-            h["anthropic-dangerous-direct-browser-access"]="true";
-          }
-          return h;
-        })(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 4000,
+          max_tokens: 2000,
           stream: true,
           system: SYSTEM_PROMPT,
           messages: apiMessages,
