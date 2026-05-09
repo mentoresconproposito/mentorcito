@@ -1039,6 +1039,14 @@ export default function MentorAgent() {
   var [diagnosis, setDiagnosis] = useState(null);
   var [phase, setPhase] = useState("intro");
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
+  var bottomRef = useRef(null);
+
+  // Auto-scroll al último mensaje
+  useEffect(function() {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
 
   // URL del Google Apps Script — reemplazá con la tuya
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
@@ -1184,8 +1192,9 @@ export default function MentorAgent() {
         {[
           "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');",
           "* { box-sizing: border-box; margin: 0; padding: 0; }",
-          "body { background: #0d0d1a; }",
-          "::-webkit-scrollbar { width: 4px; }",
+          "html,body,#root { height: 100%; }",
+          "body { background: #0d0d1a; overscroll-behavior: none; }",
+          "::-webkit-scrollbar { width: 3px; }",
           "::-webkit-scrollbar-track { background: transparent; }",
           "::-webkit-scrollbar-thumb { background: rgba(67,97,238,0.3); border-radius: 2px; }",
           "@keyframes pulse { 0%,100% { opacity:0.3; transform:scale(0.8); } 50% { opacity:1; transform:scale(1.2); } }",
@@ -1194,12 +1203,13 @@ export default function MentorAgent() {
           "textarea:focus { outline: none; }",
           "textarea { resize: none; }",
           "::placeholder { color: rgba(255,255,255,0.25); }",
+          "@media(max-width:640px){textarea,input{font-size:16px!important}}",
         ].join("\n")}
       </style>
 
-      <div style={{ minHeight: "100vh", background: "#0d0d1a", display: "flex", flexDirection: "column", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)" }}>
+      <div style={{ height: "100vh", background: "#0d0d1a", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)" }}>
 
-        <div style={{ padding: "0 24px", height: 60, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ padding: "0 16px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <a href="https://mentoresconproposito.vercel.app/" style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", fontSize: 16, textDecoration: "none", flexShrink: 0 }}>←</a>
             <span style={{ fontSize: 22 }}>💠</span>
@@ -1214,7 +1224,7 @@ export default function MentorAgent() {
           </div>
         </div>
 
-        <div style={{ padding: "10px 24px", display: "flex", gap: 8, alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)" }}>
+        <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)", flexShrink: 0, overflowX: "auto" }}>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginRight: 4 }}>Exploramos:</span>
           {[{ icon: "🔧", label: "Tecnología", color: "#3a86ff" }, { icon: "📦", label: "Producto", color: "#7b2ff7" }, { icon: "💼", label: "Negocio", color: "#f72585" }].map(function(p) {
             return (
@@ -1226,14 +1236,14 @@ export default function MentorAgent() {
           })}
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "calc(100vh - 200px)" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 12, WebkitOverflowScrolling: "touch" }}>
           {messages.map(function(msg, i) {
             return (
               <div key={i} className="msg-appear" style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start" }}>
                 {msg.role === "assistant" && (
                   <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(67,97,238,0.15)", border: "1px solid rgba(67,97,238,0.35)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, marginRight: 8, marginTop: 18 }}>💠</div>
                 )}
-                <div style={{ display: "flex", flexDirection: "column", maxWidth: "78%", gap: 3 }}>
+                <div style={{ display: "flex", flexDirection: "column", maxWidth: "85%", gap: 2 }}>
                   {msg.role === "assistant" && (
                     <span style={{ fontSize: 10, color: "#4361ee", fontWeight: 700, letterSpacing: 1, paddingLeft: 2 }}>AGENTE MENTORCITO</span>
                   )}
@@ -1257,9 +1267,10 @@ export default function MentorAgent() {
               </div>
             </div>
           )}
+          <div ref={bottomRef} style={{ height: 1, flexShrink: 0 }} />
         </div>
 
-        <div style={{ padding: "12px 24px 20px", borderTop: "1px solid rgba(255,255,255,0.07)", background: "rgba(13,13,26,0.97)" }}>
+        <div style={{ padding: "8px 12px 16px", borderTop: "1px solid rgba(255,255,255,0.07)", background: "rgba(13,13,26,0.97)", flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "10px 14px" }}>
             <textarea value={input} onChange={function(e) { setInput(e.target.value); }} onKeyDown={handleKey}
               placeholder="Contame sobre tu situación actual..."
