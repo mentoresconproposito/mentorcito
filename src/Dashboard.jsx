@@ -263,7 +263,7 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div style={{ padding: "20px 28px", borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, background: "rgba(8,11,20,0.97)", backdropFilter: "blur(12px)", zIndex: 10 }}>
+      <div style={{ padding: "14px 16px", borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, position: "sticky", top: 0, background: "rgba(8,11,20,0.97)", backdropFilter: "blur(12px)", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 22 }}>📊</span>
           <div>
@@ -286,7 +286,7 @@ export default function Dashboard() {
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: "12px 28px", display: "flex", gap: 4, flexWrap: "wrap", borderBottom: "1px solid " + BORDER, background: "rgba(255,255,255,0.01)" }}>
+      <div style={{ padding: "8px 12px", display: "flex", gap: 4, overflowX: "auto", WebkitOverflowScrolling: "touch", borderBottom: "1px solid " + BORDER, background: "rgba(255,255,255,0.01)" }}>
         {[
           { key: "overview",  label: "📈 Overview" },
           { key: "problemas", label: "🗣️ Problemas" },
@@ -299,13 +299,13 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div style={{ padding: "24px 28px" }}>
+      <div style={{ padding: "16px 12px" }}>
 
         {/* ── OVERVIEW ── */}
         {tab === "overview" && (
           <div>
             {/* KPIs */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
               <div className="card"><Stat icon="🧭" value={total} label="Diagnósticos totales" sub={"+" + hoy + " hoy · +" + semana + " esta semana"} color={PRIMARY} /></div>
               <div className="card"><Stat icon="✅" value={matchRate + "%"} label="Tasa de match" sub={matchCount + " con mentor asignado"} color={GREEN} /></div>
               <div className="card"><Stat icon="❌" value={stats.no_match_count} label="Sin match" sub={"Demanda insatisfecha"} color={ACCENT} /></div>
@@ -313,7 +313,7 @@ export default function Dashboard() {
             </div>
 
             {/* Radar promedio + gaps */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 12 }}>
 
               {/* Radar poblacional */}
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
@@ -564,7 +564,7 @@ export default function Dashboard() {
         {/* ── MENTORES ── */}
         {tab === "mentores" && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 12 }}>
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Mentores más matcheados</div>
                 {topMentores.length === 0 && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Sin datos aún</div>}
@@ -597,7 +597,7 @@ export default function Dashboard() {
             {/* Cobertura de patas */}
             <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Cobertura del catálogo por pata</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
                 {[
                   { pata: "🔧 Tecnología", count: 5, total: 10, color: "#3a86ff", gap: "CTO fraccionado, DevOps" },
                   { pata: "📦 Producto", count: 9, total: 10, color: PURPLE, gap: "UX Research, Design" },
@@ -625,7 +625,7 @@ export default function Dashboard() {
         {tab === "funnel" && (
           <div>
             {/* KPI row */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 24 }}>
               <div className="card">
                 <Stat icon="🎯" value={funnelSteps[funnelSteps.length-1].count} label="Enviaron WhatsApp" sub={"de " + total + " diagnósticos totales"} color={GREEN} />
               </div>
@@ -646,7 +646,7 @@ export default function Dashboard() {
             </div>
 
             {/* Funnel visual */}
-            <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "24px 28px", marginBottom: 16 }}>
+            <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "16px 12px", marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 24 }}>
                 Funnel de conversión — paso a paso
               </div>
@@ -692,7 +692,7 @@ export default function Dashboard() {
             </div>
 
             {/* Opción A vs B */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 12 }}>
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Opción elegida en el paquete</div>
                 {(opcionA + opcionB) === 0 ? (
