@@ -156,8 +156,43 @@ function buildStatsFromSeed(records) {
       opcion_a:records.filter(function(r){return r.opcion==="A";}).length,
       opcion_b:records.filter(function(r){return r.opcion==="B";}).length,
     },
+    estados: buildEstadosFromRecords(records),
     recent: records.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,30),
   };
+}
+
+function buildEstadosFromRecords(records) {
+  var ESTADOS = ["Estancamiento","Transición a Liderazgo","Reinvención Profesional"];
+  var dist = {"Estancamiento":0,"Transición a Liderazgo":0,"Reinvención Profesional":0};
+  var urg  = {"Alta":0,"Media":0,"Baja":0};
+  var sen  = {"Junior":0,"Mid":0,"Senior":0};
+  var gapsByEstado = {"Estancamiento":{},"Transición a Liderazgo":{},"Reinvención Profesional":{}};
+  var total = records.length;
+  records.forEach(function(r) {
+    var e = r.estado || "Estancamiento";
+    var u = r.urgencia || "Media";
+    var s = r.seniority || "Mid";
+    if (dist[e] !== undefined) dist[e]++;
+    if (urg[u]  !== undefined) urg[u]++;
+    if (sen[s]  !== undefined) sen[s]++;
+    if (gapsByEstado[e]) {
+      (r.gaps||[]).forEach(function(g){ if(g) gapsByEstado[e][g]=(gapsByEstado[e][g]||0)+1; });
+    }
+  });
+  var gapsByEstadoTop = {};
+  ESTADOS.forEach(function(e) {
+    gapsByEstadoTop[e] = Object.entries(gapsByEstado[e]).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  });
+  var ICONOS = {"Estancamiento":"🔁","Transición a Liderazgo":"📈","Reinvención Profesional":"🔀"};
+  var MENTORIAS = {
+    "Estancamiento":["Sistema de producto (Marina Ramirez)","Estrategia y visión (Michel Hauzeur)","Criterio propio (Natalia Jiménez)"],
+    "Transición a Liderazgo":["Liderazgo sistémico (Natalia Jiménez)","Producto como sistema (Michel Hauzeur)","Go-to-Market (Martín Giorgetti)"],
+    "Reinvención Profesional":["PMF y validación (Martín Giorgetti)","Estrategia de negocio (Francisco Santolo)","Lanzá tu mentoría (Gustavo Loustalet)"],
+  };
+  var ops = ESTADOS.map(function(e) {
+    return { estado:e, icono:ICONOS[e], count:dist[e], pct:total?Math.round(dist[e]/total*100):0, top_gaps:gapsByEstadoTop[e].map(function(g){return g[0];}), mentorias:MENTORIAS[e] };
+  });
+  return { distribucion:dist, urgencia:urg, seniority:sen, gaps_by_estado:gapsByEstadoTop, oportunidades:ops };
 }
 
 // ── Main dashboard ─────────────────────────────────────────────────────────────
@@ -224,6 +259,7 @@ export default function Dashboard() {
   var avgActual  = stats.avg_actual  || {tech:0,producto:0,negocio:0};
   var avgObjetivo= stats.avg_objetivo|| {tech:0,producto:0,negocio:0};
   var funnel     = stats.funnel      || {};
+  var estados    = stats.estados     || buildEstadosFromRecords(records);
   var records    = stats.recent      || [];
   var opcionA    = funnel.opcion_a   || 0;
   var opcionB    = funnel.opcion_b   || 0;
@@ -777,6 +813,166 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+
+        {/* ── ESTADOS PROFESIONALES ── */}
+        {tab === "estados" && (
+          <div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>
+              Clasificación automática basada en el análisis semántico de cada diagnóstico
+            </div>
+
+            {/* Distribución + urgencia + seniority */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 16 }}>
+
+              {/* Distribución por estado */}
+              <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Distribución por estado</div>
+                {[
+                  { key: "Estancamiento",          icon: "🔁", color: AMBER },
+                  { key: "Transición a Liderazgo", icon: "📈", color: PRIMARY },
+                  { key: "Reinvención Profesional", icon: "🔀", color: ACCENT },
+                ].map(function(e) {
+                  var count = (estados.distribucion || {})[e.key] || 0;
+                  var pct   = total ? Math.round(count/total*100) : 0;
+                  return (
+                    <div key={e.key} style={{ marginBottom: 14 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{e.icon} {e.key}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: e.color }}>{count} <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>({pct}%)</span></span>
+                      </div>
+                      <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3 }}>
+                        <div style={{ height: "100%", width: pct+"%", background: e.color, borderRadius: 3, transition: "width 0.6s" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Urgencia */}
+              <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Nivel de urgencia detectado</div>
+                {[
+                  { key: "Alta",  color: ACCENT, icon: "🔴" },
+                  { key: "Media", color: AMBER,  icon: "🟡" },
+                  { key: "Baja",  color: GREEN,  icon: "🟢" },
+                ].map(function(u) {
+                  var count = (estados.urgencia || {})[u.key] || 0;
+                  var pct   = total ? Math.round(count/total*100) : 0;
+                  return (
+                    <div key={u.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", marginBottom: 8, background: u.color+"0a", border: "1px solid "+u.color+"25", borderRadius: 10 }}>
+                      <span style={{ fontSize: 18 }}>{u.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600 }}>Urgencia {u.key}</span>
+                          <span style={{ color: u.color, fontSize: 13, fontWeight: 700 }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                          <div style={{ height: "100%", width: pct+"%", background: u.color, borderRadius: 2 }} />
+                        </div>
+                      </div>
+                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Seniority */}
+              <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Seniority predominante</div>
+                {[
+                  { key: "Junior", color: "#3a86ff", desc: "Primeros pasos en producto" },
+                  { key: "Mid",    color: PURPLE,    desc: "2-5 años de experiencia" },
+                  { key: "Senior", color: GREEN,     desc: "Referente con equipo a cargo" },
+                ].map(function(s) {
+                  var count = (estados.seniority || {})[s.key] || 0;
+                  var pct   = total ? Math.round(count/total*100) : 0;
+                  var isBig = count === Math.max.apply(null, Object.values(estados.seniority || {Junior:0,Mid:0,Senior:0}));
+                  return (
+                    <div key={s.key} style={{ padding: "12px 14px", marginBottom: 8, background: isBig ? s.color+"12" : "rgba(255,255,255,0.02)", border: "1px solid "+(isBig ? s.color+"35" : BORDER), borderRadius: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                        <span style={{ color: isBig ? "white" : "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: isBig ? 700 : 400 }}>
+                          {isBig ? "⭐ " : ""}{s.key}
+                        </span>
+                        <span style={{ color: s.color, fontSize: 13, fontWeight: 700 }}>{count} <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>({pct}%)</span></span>
+                      </div>
+                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{s.desc}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Problemas por estado + oportunidades de mentoría */}
+            {(estados.oportunidades || []).filter(function(o){ return !o.es_reclutamiento; }).map(function(op) {
+              var colors = { "Estancamiento": AMBER, "Transición a Liderazgo": PRIMARY, "Reinvención Profesional": ACCENT };
+              var col = colors[op.estado] || PRIMARY;
+              return (
+                <div key={op.estado} className="card" style={{ background: CARD, border: "1px solid "+col+"25", borderRadius: 14, padding: "20px 22px", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 22 }}>{op.icono}</span>
+                      <div>
+                        <div style={{ color: "white", fontSize: 14, fontWeight: 700 }}>{op.estado}</div>
+                        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{op.count} usuarios · {op.pct}% del total</div>
+                      </div>
+                    </div>
+                    <div style={{ padding: "4px 12px", borderRadius: 20, background: col+"18", border: "1px solid "+col+"35", color: col, fontSize: 12, fontWeight: 700 }}>
+                      {op.pct}%
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                    {/* Problemas recurrentes */}
+                    <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ color: col, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Problemas recurrentes</div>
+                      {(op.top_gaps||[]).length === 0 && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Sin datos aún</div>}
+                      {(op.top_gaps||[]).map(function(g, i) {
+                        return (
+                          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                            <span style={{ color: col, fontSize: 12, flexShrink: 0 }}>▸</span>
+                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, lineHeight: "1.4" }}>{g}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Oportunidades de mentoría */}
+                    <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ color: GREEN, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Mentorías recomendadas</div>
+                      {(op.mentorias||[]).map(function(m, i) {
+                        return (
+                          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                            <span style={{ color: GREEN, fontSize: 12, flexShrink: 0 }}>✓</span>
+                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, lineHeight: "1.4" }}>{m}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Oportunidades de reclutamiento */}
+            {(estados.oportunidades || []).some(function(o){ return o.es_reclutamiento; }) && (
+              <div className="card" style={{ background: "rgba(67,97,238,0.06)", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 14, padding: "20px 22px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <span style={{ fontSize: 18 }}>🎯</span>
+                  <div style={{ color: PRIMARY, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Oportunidades de reclutamiento detectadas</div>
+                </div>
+                {(estados.oportunidades||[]).filter(function(o){ return o.es_reclutamiento; }).map(function(op, i) {
+                  return (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", marginBottom: 6, background: "rgba(255,255,255,0.03)", border: "1px solid "+BORDER, borderRadius: 8 }}>
+                      <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>🔍 {op.mentorias[0]}</span>
+                      <span style={{ color: ACCENT, fontSize: 12, fontWeight: 700 }}>{op.count} leads esperando</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
