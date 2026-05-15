@@ -1,5 +1,6 @@
-// v2.0 — loop profesional
+// v3.0 — loop profesional rebuild 2026
 import { useState, useEffect } from "react";
+var DASHBOARD_VERSION = "3.0.0";
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 var BG   = "#080b14";
@@ -374,7 +375,7 @@ export default function Dashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 22 }}>📊</span>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics — Estados</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
               {lastRefresh ? "Actualizado " + lastRefresh.toLocaleTimeString("es-AR") : "Dashboard de demanda del Marketplace"}
             </div>
