@@ -1,4 +1,3 @@
-// v2.0 — loop profesional
 import { useState, useEffect, useRef } from "react";
 
 // ─────────────────────────────────────────────
@@ -1016,9 +1015,35 @@ function PantallaPostDiagnostico(props) {
       </div>
 
       {/* Botón continuar */}
+      {/* Share card */}
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Compartir mi resultado</div>
+        <div style={{ background: "linear-gradient(135deg, rgba(67,97,238,0.15), rgba(247,37,133,0.1))", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 16 }}>💠</span>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }}>Mentorcito</span>
+          </div>
+          <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Mi estado profesional: {meta.icono} {estado}</div>
+          <div style={{ color: nivel.color, fontSize: 12, marginBottom: 4 }}>Score de riesgo: {score}/100 — {nivel.label}</div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>¿En qué estado estás vos? mentorcito.vercel.app</div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <a href={"https://wa.me/?text=" + encodeURIComponent("Hice el diagnóstico de carrera con Mentorcito 💠\n\nMi estado: " + meta.icono + " " + estado + "\nScore de riesgo: " + score + "/100 — " + nivel.label + "\n\n¿En qué estado estás vos?\nmentorcito.vercel.app")}
+            target="_blank" rel="noopener noreferrer"
+            style={{ flex: 1, padding: "8px 12px", borderRadius: 8, background: "#25D366", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none", textAlign: "center" }}>
+            💬 Compartir por WA
+          </a>
+          <button onClick={function() {
+            navigator.clipboard && navigator.clipboard.writeText(meta.icono + " " + estado + " — Score: " + score + "/100\n¿En qué estado estás vos? mentorcito.vercel.app");
+          }} style={{ flex: 1, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+            📋 Copiar resultado
+          </button>
+        </div>
+      </div>
+
       <button onClick={onContinuar}
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
-        Ver mi plan de salida →
+        Ver mi plan de acción →
       </button>
       <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10 }}>
         Tu diagnóstico incluye mentores específicos para tu situación
@@ -1095,6 +1120,82 @@ function RoadmapNoventa(props) {
       </a>
       <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, lineHeight: "1.5" }}>
         El equipo responde en menos de 24h. No es una llamada de ventas — es una conversación sobre tu diagnóstico.
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// CTA ACCORDION — dos caminos, el usuario elige
+// ─────────────────────────────────────────────
+function CtaAccordion(props) {
+  var onRoadmap     = props.onRoadmap;
+  var diagnosis     = props.diagnosis;
+  var mentorsToShow = props.mentorsToShow;
+  var allMessages   = props.allMessages;
+  var trackEvent    = props.trackEvent || function() {};
+  var hasMatch      = props.hasMatch;
+  var [open, setOpen] = useState(null); // null | "roadmap" | "paquete"
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      {/* Separador */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+        <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>¿Cómo querés avanzar?</span>
+        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+      </div>
+
+      {/* Opción A — Plan de acción */}
+      <div style={{ marginBottom: 8, border: "1px solid " + (open === "roadmap" ? "rgba(67,97,238,0.5)" : "rgba(255,255,255,0.09)"), borderRadius: 12, overflow: "hidden", transition: "border 0.2s" }}>
+        <button onClick={function() { setOpen(open === "roadmap" ? null : "roadmap"); }}
+          style={{ width: "100%", padding: "14px 18px", background: open === "roadmap" ? "rgba(67,97,238,0.12)" : "rgba(255,255,255,0.03)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🗺️</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>Quiero un plan de acción</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Roadmap de 90 días + conversación con el equipo</div>
+            </div>
+          </div>
+          <span style={{ color: "rgba(67,97,238,0.8)", fontSize: 16, transform: open === "roadmap" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
+        </button>
+        {open === "roadmap" && (
+          <div style={{ padding: "0 18px 16px", background: "rgba(67,97,238,0.06)" }}>
+            <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, paddingTop: 12 }}>
+              Te mostramos tu roadmap de 90 días personalizado y te conectamos con el equipo para entender qué opciones tenés. Sin presión de venta.
+            </div>
+            <button onClick={onRoadmap}
+              style={{ width: "100%", padding: "12px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 10, color: "white", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+              Ver mi roadmap →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Opción B — Paquete directo (solo si hay match) */}
+      {hasMatch && (
+        <div style={{ marginBottom: 4, border: "1px solid " + (open === "paquete" ? "rgba(123,47,247,0.5)" : "rgba(255,255,255,0.09)"), borderRadius: 12, overflow: "hidden", transition: "border 0.2s" }}>
+          <button onClick={function() { setOpen(open === "paquete" ? null : "paquete"); trackEvent("vio_paquete", true); }}
+            style={{ width: "100%", padding: "14px 18px", background: open === "paquete" ? "rgba(123,47,247,0.12)" : "rgba(255,255,255,0.03)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>✨</span>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>Quiero contratar una mentoría</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Ver el paquete personalizado con opciones A, B y C</div>
+              </div>
+            </div>
+            <span style={{ color: "rgba(123,47,247,0.8)", fontSize: 16, transform: open === "paquete" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
+          </button>
+          {open === "paquete" && (
+            <div style={{ padding: "0 0 0 0" }}>
+              <PackagePanel diagnosis={diagnosis} mentors={mentorsToShow} allMessages={allMessages} trackEvent={trackEvent} onVisible={function(){}} />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ textAlign: "center", marginTop: 10, color: "rgba(255,255,255,0.2)", fontSize: 10 }}>
+        Podés explorar las dos opciones antes de decidir
       </div>
     </div>
   );
@@ -1246,15 +1347,15 @@ function DiagnosisPanel(props) {
           })}
         </div>
 
-        <button onClick={function(){ setStep("roadmap"); trackEvent("abrio_formulario", true); }}
-          style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 6 }}>
-          Ver mi plan de 90 días →
-        </button>
-        <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, marginBottom: 16 }}>
-          Con mentores específicos para tu momento en el loop
-        </div>
-
-        {hasMatch && <PackagePanel diagnosis={diagnosis} mentors={mentorsToShow} allMessages={allMessages} trackEvent={trackEvent} onVisible={function(){ trackEvent("vio_paquete", true); }} />}
+        {/* ── CTA accordion: dos caminos, el usuario elige ── */}
+        <CtaAccordion
+          onRoadmap={function(){ setStep("roadmap"); trackEvent("abrio_formulario", true); }}
+          diagnosis={diagnosis}
+          mentorsToShow={mentorsToShow}
+          allMessages={allMessages}
+          trackEvent={trackEvent}
+          hasMatch={hasMatch}
+        />
       </div>
     );
   }
@@ -1266,7 +1367,6 @@ function DiagnosisPanel(props) {
     </div>
   );
 }
-
 
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
@@ -1325,7 +1425,19 @@ export default function MentorAgent() {
   }
 
   function cleanText(text) {
-    return text.replace(/<DIAGNOSIS>[\s\S]*?<\/DIAGNOSIS>/g, "").trim();
+    // Si hay un <DIAGNOSIS parcial (empieza pero no cierra), ocultar desde ahí
+    var diagStart = text.indexOf("<DIAGNOSIS>");
+    if (diagStart !== -1) {
+      var before = text.slice(0, diagStart).trim();
+      // Si hay bloque completo, eliminarlo
+      var clean = text.replace(/<DIAGNOSIS>[\s\S]*?<\/DIAGNOSIS>/g, "").trim();
+      // Si el bloque no cerró todavía (streaming), mostrar solo lo anterior
+      if (text.indexOf("</DIAGNOSIS>") === -1) {
+        return before || "";
+      }
+      return clean;
+    }
+    return text.trim();
   }
 
   async function sendMessage() {
