@@ -898,7 +898,7 @@ export default function Dashboard() {
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,flexWrap:"wrap",marginBottom:12}}>
                 {["Reinvención","Estancamiento","Liderazgo"].map(function(e,i){
                   var m=LOOP_META[e];
-                  var count=(estadosData.distribucion||{})[e]||0;
+                  var count=(estados.distribucion||{})[e]||0;
                   var pct=total?Math.round(count/total*100):0;
                   return (
                     <div key={e} style={{display:"flex",alignItems:"center"}}>
@@ -920,7 +920,7 @@ export default function Dashboard() {
               <div className="card" style={{background:CARD,border:"1px solid "+BORDER,borderRadius:14,padding:"18px 20px"}}>
                 <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.5)",textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>Urgencia detectada</div>
                 {[{key:"Alta",color:ACCENT,icon:"🔴"},{key:"Media",color:AMBER,icon:"🟡"},{key:"Baja",color:GREEN,icon:"🟢"}].map(function(u){
-                  var count=(estadosData.urgencia||{})[u.key]||0;
+                  var count=(estados.urgencia||{})[u.key]||0;
                   var pct=total?Math.round(count/total*100):0;
                   return (
                     <div key={u.key} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:6,background:u.color+"0a",border:"1px solid "+u.color+"25",borderRadius:8}}>
@@ -940,9 +940,9 @@ export default function Dashboard() {
               <div className="card" style={{background:CARD,border:"1px solid "+BORDER,borderRadius:14,padding:"18px 20px"}}>
                 <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.5)",textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>Seniority predominante</div>
                 {[{key:"Junior",color:"#3a86ff",desc:"Primeros pasos / Reinvención entrante"},{key:"Mid",color:PURPLE,desc:"2-5 años / Estancamiento frecuente"},{key:"Senior",color:GREEN,desc:"5+ años / Liderazgo o nueva Reinvención"}].map(function(s){
-                  var count=(estadosData.seniority||{})[s.key]||0;
+                  var count=(estados.seniority||{})[s.key]||0;
                   var pct=total?Math.round(count/total*100):0;
-                  var allVals=Object.values(estadosData.seniority||{Junior:0,Mid:0,Senior:0});
+                  var allVals=Object.values(estados.seniority||{Junior:0,Mid:0,Senior:0});
                   var isBig=count===Math.max.apply(null,allVals)&&count>0;
                   return (
                     <div key={s.key} style={{padding:"10px 12px",marginBottom:6,background:isBig?s.color+"12":"rgba(255,255,255,0.02)",border:"1px solid "+(isBig?s.color+"35":BORDER),borderRadius:8}}>
@@ -956,7 +956,7 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
-            {(estadosData.oportunidades||[]).map(function(op){
+            {(estados.oportunidades||[]).map(function(op){
               return (
                 <div key={op.estado} className="card" style={{background:CARD,border:"1px solid "+op.color+"35",borderRadius:14,padding:"18px 20px",marginBottom:12}}>
                   <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
