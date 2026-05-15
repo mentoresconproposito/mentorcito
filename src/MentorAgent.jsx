@@ -523,8 +523,8 @@ function PackagePanel(props) {
           <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
             {[
               { k: "A", label: "Opción A — Paquete completo", sub: totalSesiones + " sesiones · " + mentors.length + " mentores", fp: finalA, badge: null },
-              { k: "C", label: "Opción C — Mejor match individual", sub: (topMentor ? topMentor.nSesiones + " sesiones · " + topMentor.nombre : ""), fp: finalC, badge: "INTERMEDIA" },
               { k: "B", label: "Opción B — 1 sesión por mentor", sub: mentors.length + " sesiones · 1 por mentor", fp: finalB, badge: null },
+              { k: "C", label: "Opción C — Mejor match individual", sub: (topMentor ? topMentor.nSesiones + " sesiones · " + topMentor.nombre : ""), fp: finalC, badge: "INTERMEDIA" },
             ].map(function(opt) {
               var isSelected = opcion === opt.k;
               return (
@@ -1018,27 +1018,92 @@ function PantallaPostDiagnostico(props) {
       {/* Share card */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Compartir mi resultado</div>
-        <div style={{ background: "linear-gradient(135deg, rgba(67,97,238,0.15), rgba(247,37,133,0.1))", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 16 }}>💠</span>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600 }}>Mentorcito</span>
+        {/* Preview de la imagen */}
+        <div id={"share-card-" + estado.replace(/\s/g,"-")} style={{ background: "linear-gradient(135deg, #0d0d1a, #1a0d2e)", border: "1px solid rgba(67,97,238,0.3)", borderRadius: 12, padding: "18px 16px", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 18 }}>💠</span>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Mentorcito</span>
           </div>
-          <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Mi estado profesional: {meta.icono} {estado}</div>
-          <div style={{ color: nivel.color, fontSize: 12, marginBottom: 4 }}>Score de riesgo: {score}/100 — {nivel.label}</div>
-          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>¿En qué estado estás vos? mentorcito.vercel.app</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>Mi estado profesional hoy</div>
+          <div style={{ color: "white", fontSize: 20, fontWeight: 800, marginBottom: 6 }}>{meta.icono} {estado}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
+              <div style={{ height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 3 }} />
+            </div>
+            <span style={{ color: nivel.color, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{score}/100</span>
+          </div>
+          <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 12 }}>{nivel.label} — {nivel.desc}</div>
+          <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 10 }} />
+          <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>¿En qué estado estás vos? mentorcito.vercel.app</div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <a href={"https://wa.me/?text=" + encodeURIComponent("Hice el diagnóstico de carrera con Mentorcito 💠\n\nMi estado: " + meta.icono + " " + estado + "\nScore de riesgo: " + score + "/100 — " + nivel.label + "\n\n¿En qué estado estás vos?\nmentorcito.vercel.app")}
-            target="_blank" rel="noopener noreferrer"
-            style={{ flex: 1, padding: "8px 12px", borderRadius: 8, background: "#25D366", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none", textAlign: "center" }}>
-            💬 Compartir por WA
-          </a>
-          <button onClick={function() {
-            navigator.clipboard && navigator.clipboard.writeText(meta.icono + " " + estado + " — Score: " + score + "/100\n¿En qué estado estás vos? mentorcito.vercel.app");
-          }} style={{ flex: 1, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-            📋 Copiar resultado
-          </button>
-        </div>
+        <button onClick={function() {
+          // Canvas-based image generation
+          var card = document.getElementById("share-card-" + estado.replace(/\s/g,"-"));
+          if (!card) return;
+          var W = 400, H = 280;
+          var canvas = document.createElement("canvas");
+          canvas.width = W * 2; canvas.height = H * 2;
+          var ctx = canvas.getContext("2d");
+          ctx.scale(2, 2);
+          // Background gradient
+          var grad = ctx.createLinearGradient(0,0,W,H);
+          grad.addColorStop(0, "#0d0d1a");
+          grad.addColorStop(1, "#1a0d2e");
+          ctx.fillStyle = grad;
+          ctx.roundRect(0, 0, W, H, 16);
+          ctx.fill();
+          // Border
+          ctx.strokeStyle = "rgba(67,97,238,0.5)";
+          ctx.lineWidth = 1;
+          ctx.roundRect(0.5, 0.5, W-1, H-1, 16);
+          ctx.stroke();
+          // Logo
+          ctx.font = "bold 11px sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.fillText("💠  MENTORCITO", 20, 36);
+          // Label
+          ctx.font = "10px sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.4)";
+          ctx.fillText("MI ESTADO PROFESIONAL HOY", 20, 62);
+          // Estado
+          ctx.font = "bold 26px sans-serif";
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(meta.icono + "  " + estado, 20, 98);
+          // Score bar bg
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.roundRect(20, 112, W-40, 8, 4);
+          ctx.fill();
+          // Score bar fill
+          var bgrad = ctx.createLinearGradient(20, 0, 20 + (W-40)*score/100, 0);
+          bgrad.addColorStop(0, "#4361ee");
+          bgrad.addColorStop(1, nivel.color);
+          ctx.fillStyle = bgrad;
+          ctx.roundRect(20, 112, (W-40)*score/100, 8, 4);
+          ctx.fill();
+          // Score text
+          ctx.font = "bold 13px sans-serif";
+          ctx.fillStyle = nivel.color;
+          ctx.fillText(score + "/100  •  " + nivel.label, 20, 140);
+          // Desc
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.55)";
+          ctx.fillText(nivel.desc, 20, 162);
+          // Divider
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(20, 180); ctx.lineTo(W-20, 180); ctx.stroke();
+          // CTA
+          ctx.font = "10px sans-serif";
+          ctx.fillStyle = "rgba(255,255,255,0.3)";
+          ctx.fillText("¿En qué estado estás vos?  mentorcito.vercel.app", 20, 200);
+          // Download
+          var link = document.createElement("a");
+          link.download = "mi-estado-mentorcito.png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        }} style={{ width: "100%", padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", color: "white", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          📸 Compartir resultado como imagen
+        </button>
       </div>
 
       <button onClick={onContinuar}
