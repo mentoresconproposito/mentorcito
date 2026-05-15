@@ -397,6 +397,7 @@ export default function Dashboard() {
       <div style={{ padding: "8px 12px", display: "flex", gap: 4, overflowX: "auto", WebkitOverflowScrolling: "touch", borderBottom: "1px solid " + BORDER, background: "rgba(255,255,255,0.01)" }}>
         {[
           { key: "overview",  label: "📈 Overview" },
+          { key: "estados",   label: "🧠 Estados" },
           { key: "problemas", label: "🗣️ Problemas" },
           { key: "demanda",   label: "🔍 Demanda insatisfecha" },
           { key: "mentores",  label: "👥 Performance mentores" },
