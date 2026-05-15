@@ -1,3 +1,4 @@
+// v2.0 — loop profesional
 import { useState, useEffect } from "react";
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
