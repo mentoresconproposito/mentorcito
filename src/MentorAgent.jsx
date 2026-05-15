@@ -298,9 +298,12 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "4. Después de 3-4 intercambios emitís el diagnóstico\n"
 + "5. Si hay buen match: recomendá 2-3 mentores y explicá qué señales coincidieron\n"
 + "6. Si no hay match: usá la lógica A/B/C de arriba\n\n"
-+ "Respondé siempre en español. Sé directo, cálido y personalizado.\n\n"
++ "LOOP PROFESIONAL — clasificá el estado del usuario en el campo 'estado':\n"
++ "- Reinvención: entra a producto, cambia de industria, quiere emprender, ser mentor, advisor, founder\n"
++ "- Estancamiento: bloqueado, reactivo, sin sistema, mismo rol, sin crecimiento, frustr, caos\n"
++ "- Liderazgo: quiere liderar equipo, manager, head, director, sin autoridad formal, escalar impacto\n\n"
 + "Cuando tengas suficiente info incluí al final:\n<DIAGNOSIS>\n"
-+ "{\"nivel_actual\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"nivel_objetivo\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"gaps\":[\"gap1\"],\"mentores_recomendados\":[{\"id\":\"ID\",\"razon\":\"razon\",\"prioridad\":1}],\"mentor_buscado_id\":null,\"mentor_prototipo\":null,\"proximos_pasos\":[\"paso1\"]}\n"
++ "{\"nivel_actual\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"nivel_objetivo\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"gaps\":[\"gap1\"],\"estado\":\"Estancamiento\",\"mentores_recomendados\":[{\"id\":\"ID\",\"razon\":\"razon\",\"prioridad\":1}],\"mentor_buscado_id\":null,\"mentor_prototipo\":null,\"proximos_pasos\":[\"paso1\"]}\n"
 + "</DIAGNOSIS>\n"
 + "Cuando no hay match, mentor_prototipo debe ser:\n"
 + "{\"titulo_ideal\":\"...\",\"patas_clave\":[\"...\"],\"experiencia_minima\":\"...\",\"problemas_que_debe_resolver\":[\"...\"],\"donde_buscarlo\":[\"...\"],\"preguntas_para_validarlo\":[\"...\"]}";
@@ -899,130 +902,370 @@ function MentorPrototipo(props) {
   );
 }
 
-function DiagnosisPanel(props) {
+// ─────────────────────────────────────────────
+// SCORE DE RIESGO PROFESIONAL
+// ─────────────────────────────────────────────
+function calcularScore(diagnosis) {
+  var nAct = diagnosis.nivel_actual  || {};
+  var nObj = diagnosis.nivel_objetivo || {};
+  var gapTotal = ((nObj.tech||0)-(nAct.tech||0)) + ((nObj.producto||0)-(nAct.producto||0)) + ((nObj.negocio||0)-(nAct.negocio||0));
+  var scoreGap   = Math.min(30, gapTotal * 3.3);
+  var minPata    = Math.min(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
+  var scorePata  = Math.min(25, (10 - minPata) * 2.5);
+  var scoreEstado = { "Estancamiento":25, "Liderazgo":18, "Reinvención":15 }[diagnosis.estado] || 20;
+  var maxPata    = Math.max(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
+  var scoreDeseq = Math.min(20, (maxPata - minPata) * 4);
+  return Math.round(scoreGap + scorePata + scoreEstado + scoreDeseq);
+}
+
+function nivelScore(score) {
+  if (score >= 76) return { label: "Alto",           color: "#f72585", desc: "Riesgo real de quedarte donde estás" };
+  if (score >= 56) return { label: "Moderado-Alto",  color: "#fb8500", desc: "El momento de actuar es ahora" };
+  if (score >= 31) return { label: "Moderado",       color: "#ffd166", desc: "Hay tensión acumulada que conviene resolver" };
+  return             { label: "Bajo",                color: "#06d6a0", desc: "Estás en una etapa de consolidación" };
+}
+
+// ─────────────────────────────────────────────
+// PANTALLA POST-DIAGNÓSTICO
+// ─────────────────────────────────────────────
+var ESTADO_META_AGENT = {
+  "Estancamiento": {
+    icono: "🔁",
+    tagline: "Tenés el conocimiento. Te falta el sistema para usarlo.",
+    tension: "Sin un cambio estructural, el estancamiento en producto tiende a profundizarse. El 68% de los PMs en este estado reportan estar en la misma situación 12 meses después.",
+    identidad: "PM con experiencia bloqueada",
+  },
+  "Liderazgo": {
+    icono: "📈",
+    tagline: "Estás listo para liderar. Pero nadie te está esperando ahí arriba.",
+    tension: "La transición a liderazgo es el momento de mayor abandono profesional en producto. Sin apoyo específico, el 54% regresa a roles de ejecución.",
+    identidad: "Profesional en transición a liderazgo",
+  },
+  "Reinvención": {
+    icono: "🔀",
+    tagline: "Cambiar es la parte fácil. Aterrizar el cambio es lo difícil.",
+    tension: "Las reinvenciones sin estructura duran en promedio 8 meses antes de que la persona vuelva a lo conocido. El timing es crítico.",
+    identidad: "Profesional en reinvención activa",
+  },
+};
+
+function PantallaPostDiagnostico(props) {
   var diagnosis = props.diagnosis;
-  var allMessages = props.allMessages;
-  var trackEvent = props.trackEvent || function() {};
-  var [paqueteVisible, setPaqueteVisible] = useState(false);
+  var onContinuar = props.onContinuar;
   if (!diagnosis) return null;
 
-  var mentorsToShow = (diagnosis.mentores_recomendados || []).map(function(rec) {
-    var found = MENTORS_DB.find(function(m) { return m.id === rec.id; });
-    return found ? Object.assign({}, found, { razon: rec.razon }) : null;
-  }).filter(Boolean);
+  var estado = diagnosis.estado || "Estancamiento";
+  // Normalize
+  if (estado.indexOf("Liderazgo") !== -1 || estado.indexOf("Transici") !== -1) estado = "Liderazgo";
+  else if (estado.indexOf("Reinven") !== -1) estado = "Reinvención";
+  else estado = "Estancamiento";
 
-  var hasMatch = mentorsToShow.length > 0;
-  var prototipo = diagnosis.mentor_prototipo || null;
-  var buscadoId = diagnosis.mentor_buscado_id || null;
-  var buscado = buscadoId ? MENTORS_BUSCADOS.find(function(b) { return b.id === buscadoId; }) || null : null;
+  var meta  = ESTADO_META_AGENT[estado] || ESTADO_META_AGENT["Estancamiento"];
+  var score = calcularScore(diagnosis);
+  var nivel = nivelScore(score);
+  var gaps  = (diagnosis.gaps || []).slice(0, 2);
 
   return (
     <div style={{ marginTop: 16 }}>
-      <div style={{ background: C.bgCard, border: "1px solid " + C.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-          <RadarChart data={diagnosis} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 9, height: 9, borderRadius: "50%", background: C.primary }} />
-            <span style={{ color: C.textSecondary, fontSize: 11 }}>Nivel actual</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 9, height: 9, borderRadius: "50%", background: C.gap }} />
-            <span style={{ color: C.textSecondary, fontSize: 11 }}>Nivel objetivo</span>
+      {/* Estado + identidad */}
+      <div style={{ background: "linear-gradient(135deg, rgba(67,97,238,0.12), rgba(123,47,247,0.08))", border: "1px solid rgba(67,97,238,0.3)", borderRadius: 16, padding: "22px 20px", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <span style={{ fontSize: 28 }}>{meta.icono}</span>
+          <div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>Tu estado profesional hoy</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>{estado}</div>
           </div>
         </div>
-        {["tech", "producto", "negocio"].map(function(key) {
-          var labelsMap = { tech: "Tecnología", producto: "Producto", negocio: "Negocio" };
-          var actual = (diagnosis.nivel_actual && diagnosis.nivel_actual[key]) || 0;
-          var objetivo = (diagnosis.nivel_objetivo && diagnosis.nivel_objetivo[key]) || 0;
-          var gap = objetivo - actual;
-          return (
-            <div key={key} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                <span style={{ color: C.text, fontSize: 12, fontWeight: 600 }}>{labelsMap[key]}</span>
-                <span style={{ color: gap > 0 ? C.gap : C.primary, fontSize: 11, fontWeight: 600 }}>{actual} → {objetivo}</span>
-              </div>
-              <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, position: "relative" }}>
-                <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: (actual * 10) + "%", background: C.primary, borderRadius: 3 }} />
-                {gap > 0 && <div style={{ position: "absolute", left: (actual * 10) + "%", top: 0, height: "100%", width: (gap * 10) + "%", background: "rgba(247,37,133,0.5)", borderRadius: 3 }} />}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{ background: C.gapLight, border: "1px solid " + C.gapBorder, borderRadius: 12, padding: 16, marginBottom: 12 }}>
-        <div style={{ color: C.gap, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Gaps identificados</div>
-        {(diagnosis.gaps || []).map(function(gap, i) {
-          return (
-            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-              <span style={{ color: C.gap, flexShrink: 0 }}>▸</span>
-              <span style={{ color: C.textSecondary, fontSize: 13, lineHeight: "1.5" }}>{gap}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {hasMatch ? (
+        <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.92)", lineHeight: "1.4", marginBottom: 14, fontStyle: "italic", borderLeft: "3px solid #4361ee", paddingLeft: 12 }}>
+          "{meta.tagline}"
+        </div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ color: C.primary, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Mentores recomendados</div>
-          {mentorsToShow.map(function(m, i) {
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Lo que detectamos</div>
+          {gaps.map(function(g, i) {
             return (
-              <div key={m.id} style={{ background: C.bgCard, border: "1px solid " + (i === 0 ? C.primaryBorder : C.border), borderRadius: 14, padding: 16, marginBottom: 10, position: "relative" }}>
-                {i === 0 && (
-                  <div style={{ position: "absolute", top: -1, right: 14, background: C.primary, color: "white", fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: "3px 10px", borderRadius: "0 0 8px 8px", textTransform: "uppercase" }}>Mejor match</div>
-                )}
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <MentorAvatar src={m.foto} nombre={m.nombre} sz={52} border={"2px solid " + (i === 0 ? C.primaryBorder : C.border)} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: C.text, fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{m.nombre}</div>
-                    <div style={{ color: C.primary, fontSize: 11, marginBottom: 8, fontWeight: 500 }}>{m.titulo}</div>
-                    <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 8, padding: "8px 11px", marginBottom: 8 }}>
-                      <div style={{ color: C.textMuted, fontSize: 9, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Mentoría</div>
-                      <div style={{ color: C.text, fontSize: 12, lineHeight: "1.4" }}>{m.mentoria}</div>
-                      <div style={{ color: C.textMuted, fontSize: 10, marginTop: 3 }}>{m.sesiones}</div>
-                    </div>
-                    <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: C.primaryLight, padding: "7px 10px", borderRadius: 7, fontStyle: "italic" }}>
-                      {m.razon}
-                    </div>
-                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
-                      {m.tags.map(function(tag) {
-                        return <span key={tag} style={{ padding: "2px 9px", borderRadius: 20, background: C.primaryLight, color: C.primary, fontSize: 10, fontWeight: 600 }}>{tag}</span>;
-                      })}
-                    </div>
-                    <a href={m.url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "8px 16px", borderRadius: 8, background: i === 0 ? C.primary : "transparent", color: i === 0 ? "white" : C.primary, fontSize: 13, fontWeight: 700, textDecoration: "none", border: "1.5px solid " + C.primary }}>
-                      Reservar mentoría →
-                    </a>
-                  </div>
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
+                <span style={{ color: "#4361ee", fontSize: 12, flexShrink: 0, marginTop: 1 }}>▸</span>
+                <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, lineHeight: "1.4" }}>{g}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
+          <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>{meta.identidad}</div>
+        </div>
+      </div>
+
+      {/* Score de Riesgo */}
+      <div style={{ background: nivel.color + "10", border: "1px solid " + nivel.color + "40", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Score de Riesgo Profesional</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
+          <div style={{ fontSize: 44, fontWeight: 800, color: "white", lineHeight: 1 }}>{score}</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: nivel.color, marginBottom: 2 }}>{nivel.label}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>de 100 posibles</div>
+          </div>
+        </div>
+        {/* Barra */}
+        <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, marginBottom: 10, position: "relative" }}>
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4, transition: "width 1s ease" }} />
+        </div>
+        <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{nivel.desc}</div>
+        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6" }}>{meta.tension}</div>
+      </div>
+
+      {/* Botón continuar */}
+      <button onClick={onContinuar}
+        style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
+        Ver mi plan de salida →
+      </button>
+      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10 }}>
+        Tu diagnóstico incluye mentores específicos para tu situación
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// ROADMAP 90 DÍAS
+// ─────────────────────────────────────────────
+var ROADMAP_META = {
+  "Estancamiento": [
+    { mes: "MES 1", titulo: "Diagnóstico profundo", items: ["Mapear tu sistema actual de trabajo", "Identificar el cuello de botella real", "Primer experimento de cambio", "Medir y ajustar"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de sistema", items: ["Diseñar tu sistema de producto propio", "Implementar rutinas de decisión"], bloqueado: true },
+    { mes: "MES 3", titulo: "Escalado y visibilidad", items: ["Consolidar el cambio", "Posicionarte para el próximo paso"], bloqueado: true },
+  ],
+  "Liderazgo": [
+    { mes: "MES 1", titulo: "Claridad de transición", items: ["Mapear tu brecha actual hacia el liderazgo", "Identificar tu estilo de influencia", "Primer proyecto de liderazgo sin autoridad", "Medir impacto"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de presencia", items: ["Desarrollar tu voz estratégica", "Gestionar hacia arriba y hacia los lados"], bloqueado: true },
+    { mes: "MES 3", titulo: "Consolidación del rol", items: ["Asumir responsabilidades de liderazgo", "Hacer visible el cambio"], bloqueado: true },
+  ],
+  "Reinvención": [
+    { mes: "MES 1", titulo: "Aterrizaje del cambio", items: ["Mapear tus transferencias reales de valor", "Validar la nueva dirección con evidencia", "Primer paso concreto en el nuevo contexto", "Reducir el riesgo del salto"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de credibilidad", items: ["Generar prueba social en el nuevo rol", "Conectar con la nueva comunidad"], bloqueado: true },
+    { mes: "MES 3", titulo: "Consolidación", items: ["Cerrar el ciclo anterior", "Abrazar la nueva identidad"], bloqueado: true },
+  ],
+};
+
+function RoadmapNoventa(props) {
+  var estado = props.estado || "Estancamiento";
+  var score  = props.score  || 50;
+  var nivel  = nivelScore(score);
+  var onWA   = props.onWA;
+  if (estado.indexOf("Liderazgo") !== -1 || estado.indexOf("Transici") !== -1) estado = "Liderazgo";
+  else if (estado.indexOf("Reinven") !== -1) estado = "Reinvención";
+  else estado = "Estancamiento";
+  var roadmap = ROADMAP_META[estado] || ROADMAP_META["Estancamiento"];
+
+  return (
+    <div style={{ marginTop: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "18px 16px", marginBottom: 12 }}>
+      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Tu roadmap de 90 días</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Generado para tu perfil de {estado.toLowerCase()}</div>
+      {roadmap.map(function(fase, i) {
+        return (
+          <div key={i} style={{ marginBottom: 12, opacity: fase.bloqueado ? 0.6 : 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: fase.bloqueado ? "rgba(255,255,255,0.3)" : "#4361ee", textTransform: "uppercase" }}>{fase.mes}</div>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+              {fase.bloqueado && <span style={{ fontSize: 12 }}>🔒</span>}
+            </div>
+            <div style={{ fontWeight: 700, color: fase.bloqueado ? "rgba(255,255,255,0.4)" : "white", fontSize: 13, marginBottom: 6 }}>{fase.titulo}</div>
+            {!fase.bloqueado && fase.items.map(function(item, j) {
+              return (
+                <div key={j} style={{ display: "flex", gap: 7, marginBottom: 4 }}>
+                  <span style={{ color: "#4361ee", fontSize: 11, flexShrink: 0 }}>·</span>
+                  <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "1.4" }}>{item}</span>
+                </div>
+              );
+            })}
+            {fase.bloqueado && (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>Desbloqueado con mentoría personalizada</div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "16px 0" }} />
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16, lineHeight: "1.6" }}>
+        ¿Querés que un mentor te ayude a ejecutar este plan?
+      </div>
+      <a href={onWA} target="_blank" rel="noopener noreferrer"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "14px 20px", background: "#25D366", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, textDecoration: "none", marginBottom: 8 }}>
+        💬 Hablar con el equipo sobre mi diagnóstico
+      </a>
+      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, lineHeight: "1.5" }}>
+        El equipo responde en menos de 24h. No es una llamada de ventas — es una conversación sobre tu diagnóstico.
+      </div>
+    </div>
+  );
+}
+
+function DiagnosisPanel(props) {
+  var diagnosis   = props.diagnosis;
+  var allMessages = props.allMessages;
+  var trackEvent  = props.trackEvent || function() {};
+  var [step, setStep] = useState("insight"); // insight | mentores | roadmap
+  if (!diagnosis) return null;
+
+  var mentorsToShow = (diagnosis.mentores_recomendados || []).map(function(rec) {
+    var recId = (rec.id || "").trim();
+    var found = MENTORS_DB.find(function(m) { return m.id === recId; });
+    if (!found) {
+      var recLow = recId.toLowerCase().replace(/\s+/g, "");
+      found = MENTORS_DB.find(function(m) {
+        return m.id.toLowerCase() === recLow ||
+               m.nombre.toLowerCase().replace(/\s+/g,"").indexOf(recLow) !== -1 ||
+               recLow.indexOf(m.id.toLowerCase()) !== -1;
+      });
+    }
+    return found ? Object.assign({}, found, { razon: rec.razon }) : null;
+  }).filter(Boolean);
+
+  var hasMatch  = mentorsToShow.length > 0;
+  var prototipo = diagnosis.mentor_prototipo || null;
+  var buscadoId = diagnosis.mentor_buscado_id || null;
+  var buscado   = buscadoId ? MENTORS_BUSCADOS.find(function(b) { return b.id === buscadoId; }) || null : null;
+  var score     = calcularScore(diagnosis);
+
+  var estado = diagnosis.estado || "Estancamiento";
+  if (estado.indexOf("Liderazgo") !== -1 || estado.indexOf("Transici") !== -1) estado = "Liderazgo";
+  else if (estado.indexOf("Reinven") !== -1) estado = "Reinvención";
+  else estado = "Estancamiento";
+
+  function buildWaMsg() {
+    var gaps = (diagnosis.gaps || []).slice(0, 3).map(function(g) { return "\u2022 " + g; }).join("\n");
+    return "https://wa.me/5491170043893?text=" + encodeURIComponent(
+      "Hola! Acabo de hacer el diagnóstico con Mentorcito.\n\n" +
+      "Mi estado: " + estado + "\nScore de riesgo: " + score + "/100\n\n" +
+      "Gaps detectados:\n" + gaps + "\n\nMe gustaría entender qué opciones tengo."
+    );
+  }
+
+  // STEP 1 — Insight psicológico + score
+  if (step === "insight") {
+    return (
+      <div style={{ marginTop: 16 }}>
+        <PantallaPostDiagnostico
+          diagnosis={Object.assign({}, diagnosis, { estado: estado })}
+          onContinuar={function() { setStep("mentores"); trackEvent("vio_paquete", true); }} />
+      </div>
+    );
+  }
+
+  // STEP 2 — Mentores + radar + gaps
+  if (step === "mentores") {
+    return (
+      <div style={{ marginTop: 16 }}>
+        <div style={{ background: C.bgCard, border: "1px solid " + C.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+            <RadarChart data={diagnosis} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 14 }}>
+            {[["Actual", C.primary], ["Objetivo", C.gap]].map(function(x) {
+              return (
+                <div key={x[0]} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: x[1] }} />
+                  <span style={{ color: C.textSecondary, fontSize: 10 }}>{x[0]}</span>
+                </div>
+              );
+            })}
+          </div>
+          {["tech", "producto", "negocio"].map(function(key) {
+            var lbl = { tech: "Tecnología", producto: "Producto", negocio: "Negocio" };
+            var act = (diagnosis.nivel_actual  || {})[key] || 0;
+            var obj = (diagnosis.nivel_objetivo || {})[key] || 0;
+            var gap = obj - act;
+            return (
+              <div key={key} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ color: C.text, fontSize: 12, fontWeight: 600 }}>{lbl[key]}</span>
+                  <span style={{ color: gap > 0 ? C.gap : C.primary, fontSize: 11, fontWeight: 600 }}>{act} → {obj}</span>
+                </div>
+                <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, position: "relative" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: (act*10)+"%", background: C.primary, borderRadius: 3 }} />
+                  {gap > 0 && <div style={{ position: "absolute", left: (act*10)+"%", top: 0, height: "100%", width: (gap*10)+"%", background: "rgba(247,37,133,0.5)", borderRadius: 3 }} />}
                 </div>
               </div>
             );
           })}
         </div>
-      ) : buscado ? (
-        <MentorBuscado buscado={buscado} allMessages={allMessages} />
-      ) : (
-        <MentorPrototipo prototipo={prototipo} allMessages={allMessages} />
-      )}
 
-      <div style={{ background: C.successLight, border: "1px solid rgba(123,47,247,0.25)", borderRadius: 12, padding: 16, marginBottom: 12 }}>
-        <div style={{ color: C.success, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Próximos pasos</div>
-        {(diagnosis.proximos_pasos || []).map(function(paso, i) {
-          return (
-            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 7 }}>
-              <span style={{ minWidth: 20, height: 20, borderRadius: "50%", background: C.success, color: "white", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
-              <span style={{ color: C.textSecondary, fontSize: 13, lineHeight: "1.5" }}>{paso}</span>
-            </div>
-          );
-        })}
+        <div style={{ background: C.gapLight, border: "1px solid " + C.gapBorder, borderRadius: 12, padding: 16, marginBottom: 12 }}>
+          <div style={{ color: C.gap, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Gaps identificados</div>
+          {(diagnosis.gaps || []).map(function(gap, i) {
+            return (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                <span style={{ color: C.gap, flexShrink: 0 }}>▸</span>
+                <span style={{ color: C.textSecondary, fontSize: 13, lineHeight: "1.5" }}>{gap}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {hasMatch ? (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ color: C.primary, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Mentores recomendados</div>
+            {mentorsToShow.map(function(m, i) {
+              return (
+                <div key={m.id} style={{ background: C.bgCard, border: "1px solid " + (i===0?C.primaryBorder:C.border), borderRadius: 14, padding: 16, marginBottom: 10, position: "relative" }}>
+                  {i===0 && <div style={{ position: "absolute", top: -1, right: 14, background: C.primary, color: "white", fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: "3px 10px", borderRadius: "0 0 8px 8px", textTransform: "uppercase" }}>Mejor match</div>}
+                  <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <MentorAvatar src={m.foto} nombre={m.nombre} sz={48} border={"2px solid "+(i===0?C.primaryBorder:C.border)} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: C.text, fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nombre}</div>
+                      <div style={{ color: C.primary, fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
+                      <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: C.primaryLight, padding: "7px 10px", borderRadius: 7, fontStyle: "italic" }}>{m.razon}</div>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
+                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: C.primaryLight, color: C.primary, fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
+                      </div>
+                      <a href={m.url} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: i===0?C.primary:"transparent", color: i===0?"white":C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
+                        Reservar mentoría →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : buscado ? (
+          <MentorBuscado buscado={buscado} allMessages={allMessages} />
+        ) : (
+          <MentorPrototipo prototipo={prototipo} allMessages={allMessages} />
+        )}
+
+        <div style={{ background: C.successLight, border: "1px solid rgba(123,47,247,0.25)", borderRadius: 12, padding: 16, marginBottom: 12 }}>
+          <div style={{ color: C.success, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Próximos pasos</div>
+          {(diagnosis.proximos_pasos || []).map(function(paso, i) {
+            return (
+              <div key={i} style={{ display: "flex", gap: 10, marginBottom: 7 }}>
+                <span style={{ minWidth: 20, height: 20, borderRadius: "50%", background: C.success, color: "white", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i+1}</span>
+                <span style={{ color: C.textSecondary, fontSize: 13, lineHeight: "1.5" }}>{paso}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <button onClick={function(){ setStep("roadmap"); trackEvent("abrio_formulario", true); }}
+          style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 6 }}>
+          Ver mi plan de 90 días →
+        </button>
+        <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, marginBottom: 16 }}>
+          Con mentores específicos para tu momento en el loop
+        </div>
+
+        {hasMatch && <PackagePanel diagnosis={diagnosis} mentors={mentorsToShow} allMessages={allMessages} trackEvent={trackEvent} onVisible={function(){ trackEvent("vio_paquete", true); }} />}
       </div>
+    );
+  }
 
-      {hasMatch && <PackagePanel diagnosis={diagnosis} mentors={mentorsToShow} allMessages={allMessages} trackEvent={trackEvent} onVisible={function(){ trackEvent("vio_paquete", true); }} />}
+  // STEP 3 — Roadmap 90 días + WA directo
+  return (
+    <div style={{ marginTop: 16 }}>
+      <RoadmapNoventa estado={estado} score={score} onWA={buildWaMsg()} />
     </div>
   );
 }
+
 
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
