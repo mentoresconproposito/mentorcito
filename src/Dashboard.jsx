@@ -331,7 +331,43 @@ export default function Dashboard() {
   var avgActual  = stats.avg_actual  || {tech:0,producto:0,negocio:0};
   var avgObjetivo= stats.avg_objetivo|| {tech:0,producto:0,negocio:0};
   var funnel     = stats.funnel      || {};
-  var estados    = stats.estados     || buildEstadosFromRecords(records);
+  var estadosRaw = stats.estados     || buildEstadosFromRecords(records);
+
+  // Normalizar claves del servidor (nombres viejos → nombres nuevos del loop)
+  function normalizeDistribucion(dist) {
+    var out = {"Reinvención":0,"Estancamiento":0,"Liderazgo":0};
+    Object.keys(dist||{}).forEach(function(k) {
+      var n = normalizarEstado(k) || k;
+      if (out[n] !== undefined) out[n] += dist[k];
+    });
+    return out;
+  }
+  function normalizeOportunidades(ops) {
+    if (!ops) return [];
+    return ops.map(function(op) {
+      var estado = normalizarEstado(op.estado) || op.estado;
+      var m = LOOP_META[estado] || {};
+      return Object.assign({}, op, {
+        estado: estado,
+        icono: m.icono || op.icono,
+        color: m.color || op.color,
+        descripcion: m.descripcion || op.descripcion,
+        seniority_tipico: m.seniority_tipico || op.seniority_tipico || "",
+        mentorias: m.mentores || op.mentorias || [],
+      });
+    }).filter(function(op, i, arr) {
+      // Deduplicar por estado normalizado
+      return arr.findIndex(function(o){ return o.estado === op.estado; }) === i;
+    });
+  }
+
+  var estados = {
+    distribucion:   normalizeDistribucion(estadosRaw.distribucion),
+    urgencia:       estadosRaw.urgencia || {},
+    seniority:      estadosRaw.seniority || {},
+    gaps_by_estado: estadosRaw.gaps_by_estado || {},
+    oportunidades:  normalizeOportunidades(estadosRaw.oportunidades),
+  };
   var records    = stats.recent      || [];
   var opcionA    = funnel.opcion_a   || 0;
   var opcionB    = funnel.opcion_b   || 0;
@@ -340,11 +376,11 @@ export default function Dashboard() {
   var semana = records.filter(function(r){ return Date.now()-r.ts < 604800000; }).length;
 
   var funnelSteps = [
-    { key: "diagnostico",      label: "Diagnóstico generado",  count: funnel.diagnostico      || total,       color: PRIMARY,   icon: "🧭" },
-    { key: "con_match",        label: "Con mentor matcheado",  count: funnel.con_match        || matchCount,  color: "#3a86ff", icon: "✅" },
-    { key: "vio_paquete",      label: "Vió el paquete",        count: funnel.vio_paquete      || 0,           color: PURPLE,    icon: "📦" },
-    { key: "abrio_formulario", label: "Abrió el formulario",   count: funnel.abrio_formulario || 0,           color: AMBER,     icon: "📝" },
-    { key: "envio_wa",         label: "Envió WhatsApp",        count: funnel.envio_wa         || 0,           color: "#25D366", icon: "💬" },
+    { key: "diagnostico",      label: "Diagnóstico generado",     count: funnel.diagnostico      || total,       color: PRIMARY,   icon: "🧭" },
+    { key: "con_match",        label: "Con mentor matcheado",     count: funnel.con_match        || matchCount,  color: "#3a86ff", icon: "✅" },
+    { key: "vio_paquete",      label: "Vió el insight + score",   count: funnel.vio_paquete      || 0,           color: PURPLE,    icon: "💡" },
+    { key: "abrio_formulario", label: "Eligió plan o paquete",    count: funnel.abrio_formulario || 0,           color: AMBER,     icon: "🗺️" },
+    { key: "envio_wa",         label: "Inició conversación WA",   count: funnel.envio_wa         || 0,           color: "#25D366", icon: "💬" },
   ];
 
   function dropoff(from, to) { return from ? Math.round((1 - to/from) * 100) : 0; }
@@ -845,9 +881,9 @@ export default function Dashboard() {
                   var nivel = drop > 50 ? { label: "Alta", color: ACCENT, icon: "🔴" } : drop > 25 ? { label: "Media", color: AMBER, icon: "🟡" } : { label: "Baja", color: GREEN, icon: "🟢" };
                   var sugerencia = {
                     "con_match":        "Catálogo con gaps — reclutar más mentores",
-                    "vio_paquete":      "El usuario se va sin explorar el paquete",
-                    "abrio_formulario": "El precio o la propuesta no convence",
-                    "envio_wa":         "Fricción en el formulario o falta de urgencia",
+                    "vio_paquete":      "El usuario se va antes de ver el insight",
+                    "abrio_formulario": "El insight no generó urgencia suficiente para actuar",
+                    "envio_wa":         "Eligió explorar pero no inició la conversación",
                   }[step.key] || "";
                   return (
                     <div key={step.key} style={{ padding: "10px 12px", marginBottom: 8, background: "rgba(255,255,255,0.02)", border: "1px solid " + BORDER, borderRadius: 8 }}>
