@@ -1366,21 +1366,37 @@ function DiagnosisPanel(props) {
 // ─────────────────────────────────────────────
 // LANDING DE ESTADO COMPARTIDO
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// LOOP PROFESIONAL — metadatos para landing
+// ─────────────────────────────────────────────
+var LOOP_META = {
+  "Reinvención": {
+    icono: "🔀", color: "#f72585",
+    descripcion: "Entrada a producto o salida hacia un nuevo ciclo. Founder, Advisor, Mentor, nueva industria. Alta energía, alta incertidumbre.",
+    tagline: "Cambiar es la parte fácil. Aterrizar el cambio es lo difícil.",
+  },
+  "Estancamiento": {
+    icono: "🔁", color: "#fb8500",
+    descripcion: "Zona de confort que se volvió trampa. El profesional domina su rol pero siente que no crece. Muy frecuente en PMs de 2-5 años.",
+    tagline: "Tenés el conocimiento. Te falta el sistema para usarlo.",
+  },
+  "Liderazgo": {
+    icono: "📈", color: "#4361ee",
+    descripcion: "Transición de hacer a liderar. El desafío ya no es técnico sino humano y estratégico. Antesala de la próxima Reinvención.",
+    tagline: "Estás listo para liderar. Pero nadie te está esperando ahí arriba.",
+  },
+};
+
 function EstadoLanding(props) {
   var estado = props.estado;
   var onStart = props.onStart;
   var m = LOOP_META[estado];
   if (!m) return null;
 
-  var TAGLINES = {
-    "Estancamiento":  "Tenés el conocimiento. Te falta el sistema para usarlo.",
-    "Liderazgo":      "Estás listo para liderar. Pero nadie te está esperando ahí arriba.",
-    "Reinvención":    "Cambiar es la parte fácil. Aterrizar el cambio es lo difícil.",
-  };
   var PREGUNTAS = {
-    "Estancamiento":  "¿Cuánto hace que sentís que no avanzás?",
-    "Liderazgo":      "¿Ya sabés que querés liderar, pero no encontraste cómo?",
-    "Reinvención":    "¿Estás en un momento de cambio sin saber bien hacia dónde?",
+    "Estancamiento": "Cuanto hace que sentis que no avanzas?",
+    "Liderazgo":     "Ya sabes que queres liderar, pero no encontraste como?",
+    "Reinvención":   "Estas en un momento de cambio sin saber bien hacia donde?",
   };
 
   return (
@@ -1388,42 +1404,38 @@ function EstadoLanding(props) {
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}"}</style>
 
       <div style={{ maxWidth: 420, width: "100%", animation: "fadeUp 0.4s ease forwards" }}>
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, justifyContent: "center" }}>
           <span style={{ fontSize: 20 }}>💠</span>
           <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600 }}>Mentorcito · Mentores con Propósito</span>
         </div>
 
-        {/* Card de estado */}
         <div style={{ background: m.color + "10", border: "2px solid " + m.color + "40", borderRadius: 20, padding: "28px 24px", marginBottom: 20, textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>{m.icono}</div>
-          <div style={{ fontSize: 10, color: m.color, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Un colega tuyo está en</div>
+          <div style={{ fontSize: 10, color: m.color, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Un colega tuyo esta en</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: "white", marginBottom: 14 }}>{estado}</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: "1.5", fontStyle: "italic", marginBottom: 16, borderLeft: "3px solid " + m.color, paddingLeft: 14, textAlign: "left" }}>
-            "{TAGLINES[estado]}"
+            {m.tagline}
           </div>
           <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: "1.6" }}>
             {m.descripcion}
           </div>
         </div>
 
-        {/* Pregunta gancho */}
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "18px 20px", marginBottom: 20, textAlign: "center" }}>
           <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{PREGUNTAS[estado]}</div>
           <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-            Hacé tu diagnóstico gratis y descubrí en qué punto del loop profesional estás vos.
+            Hace tu diagnostico gratis y descubri en que punto del loop profesional estas vos.
           </div>
         </div>
 
-        {/* Loop visual mini */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 24 }}>
-          {["🔀 Reinvención", "🔁 Estancamiento", "📈 Liderazgo"].map(function(e, i) {
-            var key = e.split(" ")[1];
-            var isActive = key === estado;
+          {["Reinvención","Estancamiento","Liderazgo"].map(function(e, i) {
+            var meta = LOOP_META[e] || {};
+            var isActive = e === estado;
             return (
               <div key={e} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ padding: "4px 10px", borderRadius: 20, background: isActive ? LOOP_META[key].color + "25" : "rgba(255,255,255,0.04)", border: "1px solid " + (isActive ? LOOP_META[key].color + "60" : "rgba(255,255,255,0.08)"), color: isActive ? LOOP_META[key].color : "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: isActive ? 700 : 400 }}>
-                  {e}
+                <div style={{ padding: "4px 10px", borderRadius: 20, background: isActive ? meta.color + "25" : "rgba(255,255,255,0.04)", border: "1px solid " + (isActive ? meta.color + "60" : "rgba(255,255,255,0.08)"), color: isActive ? meta.color : "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: isActive ? 700 : 400 }}>
+                  {meta.icono} {e}
                 </div>
                 {i < 2 && <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>→</span>}
               </div>
@@ -1431,18 +1443,18 @@ function EstadoLanding(props) {
           })}
         </div>
 
-        {/* CTA */}
         <button onClick={onStart}
           style={{ width: "100%", padding: "16px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 14, color: "white", fontSize: 15, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
-          Hacer mi diagnóstico gratis →
+          Hacer mi diagnostico gratis
         </button>
         <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 11 }}>
-          5 minutos · Sin registro · 100% gratuito
+          5 minutos - Sin registro - 100% gratuito
         </div>
       </div>
     </div>
   );
 }
+
 
 var INITIAL_MSG = {
   role: "assistant",
