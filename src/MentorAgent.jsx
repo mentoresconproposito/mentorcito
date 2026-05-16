@@ -1030,17 +1030,16 @@ function PantallaPostDiagnostico(props) {
       </div>
       <button onClick={function() {
         var link = "https://mentorcito.vercel.app?estado=" + encodeURIComponent(estado);
-        var texto = meta.icono + " Estoy en " + estado + " — " + meta.tagline + "\n\n¿En qué punto del loop profesional estás vos?\n" + link;
+        var texto = meta.icono + " Estoy en " + estado + "\n\n" + meta.tagline + "\n\nHace tu diagnostico gratis:\n" + link;
         if (navigator.share) {
-          navigator.share({ title: "Mi estado profesional — Mentorcito", text: texto, url: link });
+          navigator.share({ title: "Mentorcito - Mi estado profesional", text: texto, url: link });
         } else if (navigator.clipboard) {
           navigator.clipboard.writeText(texto);
-          alert("¡Link copiado! Compartilo con quien creas que está en el mismo estado.");
+          alert("Link copiado. Compartilo con quien creas que esta en el mismo estado.");
         }
       }} style={{ width: "100%", marginTop: 10, padding: "10px 16px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-        🔗 Compartir mi estado con un colega
+        Compartir mi estado con un colega
       </button>
-      </div>
     </div>
   );
 }
