@@ -10,7 +10,7 @@ var PRIMARY = "#4361ee";
 var ACCENT  = "#f72585";
 var GREEN   = "#06d6a0";
 var AMBER   = "#fb8500";
-var PURPLE  = "#7b2ff7";
+var PURPLE  = "#9b5fff";
 
 var MENTOR_NAMES = {
   GustavoLoustalet: "Gustavo Loustalet",
@@ -568,7 +568,7 @@ export default function Dashboard() {
                 Ranking completo de problemas declarados
               </div>
               {topGaps.length === 0 && (
-                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Sin datos aún — generá diagnósticos para ver los problemas.</div>
+                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Sin datos aún — generá diagnósticos para ver los problemas.</div>
               )}
               {topGaps.map(function(g, i) {
                 var pct = topGaps[0][1] ? Math.round(g[1] / topGaps[0][1] * 100) : 0;
@@ -712,7 +712,7 @@ export default function Dashboard() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 12 }}>
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Mentores más matcheados</div>
-                {topMentores.length === 0 && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Sin datos aún</div>}
+                {topMentores.length === 0 && <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Sin datos aún</div>}
                 {topMentores.map(function(entry, i) {
                   var id = entry[0], count = entry[1];
                   var name = MENTOR_NAMES[id] || id;
@@ -753,7 +753,7 @@ export default function Dashboard() {
                     <div key={item.pata} style={{ background: item.color + "08", border: "1px solid " + item.color + "25", borderRadius: 12, padding: "16px 18px" }}>
                       <div style={{ fontSize: 18, marginBottom: 8 }}>{item.pata.split(" ")[0]}</div>
                       <div style={{ color: "white", fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{item.pata.split(" ").slice(1).join(" ")}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: item.color, marginBottom: 6 }}>{item.count}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>/{item.total}</span></div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: item.color, marginBottom: 6 }}>{item.count}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>/{item.total}</span></div>
                       <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginBottom: 10 }}>
                         <div style={{ height: "100%", width: pct + "%", background: item.color, borderRadius: 2 }} />
                       </div>
@@ -841,7 +841,7 @@ export default function Dashboard() {
               <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>Opción elegida en el paquete</div>
                 {(opcionA + opcionB) === 0 ? (
-                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Sin datos aún</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Sin datos aún</div>
                 ) : (
                   <div>
                     <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
@@ -950,7 +950,7 @@ export default function Dashboard() {
                 })}
                 <div style={{color:"rgba(255,255,255,0.2)",fontSize:16,margin:"0 2px"}}>↩</div>
               </div>
-              <div style={{textAlign:"center",color:"rgba(255,255,255,0.3)",fontSize:11}}>Loop cíclico — incluso un CPO puede volver a Reinvención al fundar o mentorear</div>
+              <div style={{textAlign:"center",color:"rgba(255,255,255,0.45)",fontSize:11}}>Loop cíclico — incluso un CPO puede volver a Reinvención al fundar o mentorear</div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",gap:12,marginBottom:16}}>
               <div className="card" style={{background:CARD,border:"1px solid "+BORDER,borderRadius:14,padding:"18px 20px"}}>
@@ -1009,7 +1009,7 @@ export default function Dashboard() {
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10}}>
                     <div style={{background:"rgba(255,255,255,0.02)",borderRadius:8,padding:"12px 14px"}}>
                       <div style={{color:op.color,fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Problemas recurrentes</div>
-                      {(op.top_gaps||[]).length===0&&<div style={{color:"rgba(255,255,255,0.3)",fontSize:11}}>Sin datos aún</div>}
+                      {(op.top_gaps||[]).length===0&&<div style={{color:"rgba(255,255,255,0.45)",fontSize:11}}>Sin datos aún</div>}
                       {(op.top_gaps||[]).map(function(g,i){return <div key={i} style={{display:"flex",gap:6,marginBottom:5}}><span style={{color:op.color,fontSize:11,flexShrink:0}}>▸</span><span style={{color:"rgba(255,255,255,0.7)",fontSize:11,lineHeight:"1.4"}}>{g}</span></div>;})}
                     </div>
                     <div style={{background:"rgba(255,255,255,0.02)",borderRadius:8,padding:"12px 14px"}}>
@@ -1133,7 +1133,7 @@ export default function Dashboard() {
                     {/* Problemas recurrentes */}
                     <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: 10, padding: "12px 14px" }}>
                       <div style={{ color: col, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Problemas recurrentes</div>
-                      {(op.top_gaps||[]).length === 0 && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Sin datos aún</div>}
+                      {(op.top_gaps||[]).length === 0 && <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Sin datos aún</div>}
                       {(op.top_gaps||[]).map(function(g, i) {
                         return (
                           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
@@ -1198,11 +1198,11 @@ export default function Dashboard() {
                         <span style={{ padding: "2px 8px", borderRadius: 20, background: hasMatch ? "rgba(6,214,160,0.12)" : "rgba(247,37,133,0.12)", color: hasMatch ? GREEN : ACCENT, fontSize: 10, fontWeight: 700 }}>
                           {hasMatch ? "✅ Match" : buscadoName ? "🔍 " + buscadoName : "🧩 Prototipo"}
                         </span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{timeAgo(r.ts)}</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontFamily: "monospace" }}>{timeAgo(r.ts)}</span>
                       </div>
                       {(r.gaps || []).length > 0 && (
                         <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 6, lineHeight: "1.5" }}>
-                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Gaps: </span>
+                          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>Gaps: </span>
                           {r.gaps.slice(0,2).join(" · ")}
                         </div>
                       )}
@@ -1219,7 +1219,7 @@ export default function Dashboard() {
                         {["tech","producto","negocio"].map(function(k) {
                           var act = (r.nivel_actual||{})[k]||0;
                           var obj = (r.nivel_objetivo||{})[k]||0;
-                          return <span key={k} style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{k[0].toUpperCase()}:{act}→{obj}</span>;
+                          return <span key={k} style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontFamily: "monospace" }}>{k[0].toUpperCase()}:{act}→{obj}</span>;
                         })}
                       </div>
                     </div>
