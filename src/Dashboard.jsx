@@ -128,7 +128,7 @@ function RadarMini(props) {
 }
 
 // ── Google Sheets URL ──────────────────────────────────────────────────────────
-var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
+var SHEETS_URL = "/api/sheets";
 
 // ── Compute stats from seed records (fallback) ────────────────────────────────
 function buildStatsFromSeed(records) {
