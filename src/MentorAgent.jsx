@@ -164,6 +164,22 @@ var MENTORS_DB = [
     foto: "https://ui-avatars.com/api/?name=Nicolas+Musa&background=4361ee&color=fff&size=128&bold=true&rounded=true",
     url: "https://mentoresconproposito.vercel.app/mentor/NicolasMusa",
   },
+  {
+    id: "JuanCejas",
+    nombre: "Juan Cejas",
+    titulo: "UX Designer @ Mercado Libre | UX Artist | Diseño que lidera producto",
+    mentoria: "De diseñador que ejecuta a diseñador que lidera producto",
+    tags: ["UX Design", "UX/UI", "Diseño de Producto"],
+    patas: ["producto", "tech"],
+    nivel: "mid-senior",
+    perfil_ideal: ["diseñador UX/UI que quiere pasar de ejecutar a liderar producto", "diseñador que siente que sus ideas no se implementan", "diseñador que quiere conectar su trabajo con métricas de negocio", "profesional de diseño que quiere influir en decisiones de producto"],
+    problemas_que_resuelve: ["me ven como el que dibuja pantallas y no como alguien estratégico", "no sé cómo conectar mi trabajo de diseño con métricas de negocio", "mis ideas no llegan a implementarse porque no sé defenderlas", "no sé trabajar con stakeholders sin perder mi criterio", "quiero incorporar IA a mi proceso de diseño"],
+    sesiones: "6 sesiones + 1 personalizada",
+    nSesiones: 6,
+    precio: 1100,
+    foto: "https://ui-avatars.com/api/?name=Juan+Cejas&background=7b2ff7&color=fff&size=128&bold=true&rounded=true",
+    url: "https://mentoresconproposito.vercel.app/mentor/JuanCejas",
+  },
 ];
 
 // ─────────────────────────────────────────────
