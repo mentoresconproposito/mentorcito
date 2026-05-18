@@ -217,7 +217,7 @@ var MENTORS_BUSCADOS = [
     ],
     donde_buscarlo: ["LinkedIn", "comunidades de UX latam", "ADPList", "IxDA"],
     icono: "🔬",
-    color: "#7b2ff7",
+    color: "#9b5fff",
   },
   {
     id: "buscado_ventas_b2b",
@@ -587,7 +587,7 @@ function PackagePanel(props) {
             <span style={{ color: C.textSecondary, fontSize: 13, textDecoration: "line-through" }}>USD {Math.round(precio)}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(247,37,133,0.15)", border: "1px solid rgba(247,37,133,0.3)", color: "#f72585", fontSize: 11, fontWeight: 700 }}>−20% paquete</span>
+            <span style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(247,37,133,0.18)", border: "1px solid rgba(247,37,133,0.4)", color: "#ff6db5", fontSize: 11, fontWeight: 700 }}>−20% paquete</span>
             <span style={{ color: "#f72585", fontSize: 13, fontWeight: 700 }}>−USD {desc}</span>
           </div>
           <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 14 }} />
@@ -744,7 +744,7 @@ function MentorBuscado(props) {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <a href={"https://wa.me/5491170043893?text=" + buildWaText()}
             target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: "#25D366", color: "white", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: "#25D366", color: "#003d14", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
             💬 Anotarme en lista de espera
           </a>
           <a href={"https://mentoresconproposito.vercel.app/alta-mentores"}
@@ -817,7 +817,7 @@ function MentorPrototipo(props) {
     },
     {
       icon: "📋",
-      color: "#7b2ff7",
+      color: "#9b5fff",
       title: "Experiencia mínima requerida",
       content: p.experiencia_minima,
       type: "text",
@@ -910,7 +910,7 @@ function MentorPrototipo(props) {
         </div>
         <a href={"https://wa.me/5491170043893?text=" + buildWaText()}
           target="_blank" rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: "#25D366", color: "white", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: "#25D366", color: "#003d14", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
           💬 Enviar diagnóstico completo por WhatsApp
         </a>
       </div>
@@ -1060,7 +1060,7 @@ function PantallaPostDiagnostico(props) {
           })}
         </div>
         <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>
             {identidad} · brecha en {pataLabels[pataMin]}
           </div>
@@ -1087,7 +1087,7 @@ function PantallaPostDiagnostico(props) {
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
         Ver mi plan de accion
       </button>
-      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, marginBottom: 12 }}>
+      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 10, marginBottom: 12 }}>
         Tu diagnostico incluye mentores especificos para tu situacion
       </div>
 
@@ -1154,10 +1154,10 @@ function RoadmapNoventa(props) {
         ¿Querés que un mentor te ayude a ejecutar este plan?
       </div>
       <a href={onWA} target="_blank" rel="noopener noreferrer"
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "14px 20px", background: "#25D366", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, textDecoration: "none", marginBottom: 8 }}>
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "14px 20px", background: "#25D366", border: "none", borderRadius: 12, color: "#003d14", fontSize: 14, fontWeight: 800, textDecoration: "none", marginBottom: 8 }}>
         💬 Hablar con el equipo sobre mi diagnóstico
       </a>
-      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, lineHeight: "1.5" }}>
+      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 10, lineHeight: "1.5" }}>
         El equipo responde en menos de 24h. No es una llamada de ventas — es una conversación sobre tu diagnóstico.
       </div>
     </div>
@@ -1353,10 +1353,10 @@ function DiagnosisPanel(props) {
                     <MentorAvatar src={m.foto} nombre={m.nombre} sz={48} border={"2px solid "+(i===0?C.primaryBorder:C.border)} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nombre}</div>
-                      <div style={{ color: C.primary, fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
+                      <div style={{ color: "#6b87f5", fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
                       <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: C.primaryLight, padding: "7px 10px", borderRadius: 7, fontStyle: "italic" }}>{m.razon}</div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
-                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: C.primaryLight, color: C.primary, fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
+                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: C.primaryLight, color: "#6b87f5", fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
                       </div>
                       <a href={m.url} target="_blank" rel="noopener noreferrer"
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: i===0?C.primary:"transparent", color: i===0?"white":C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
@@ -1730,8 +1730,8 @@ export default function MentorAgent() {
         </div>
 
         <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)", flexShrink: 0, overflowX: "auto" }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginRight: 4 }}>Exploramos:</span>
-          {[{ icon: "🔧", label: "Tecnología", color: "#3a86ff" }, { icon: "📦", label: "Producto", color: "#7b2ff7" }, { icon: "💼", label: "Negocio", color: "#f72585" }].map(function(p) {
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginRight: 4 }}>Exploramos:</span>
+          {[{ icon: "🔧", label: "Tecnología", color: "#3a86ff" }, { icon: "📦", label: "Producto", color: "#9b5fff" }, { icon: "💼", label: "Negocio", color: "#f72585" }].map(function(p) {
             return (
               <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: p.color + "18", border: "1px solid " + p.color + "35" }}>
                 <span style={{ fontSize: 12 }}>{p.icon}</span>
