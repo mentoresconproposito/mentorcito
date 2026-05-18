@@ -931,23 +931,66 @@ function nivelScore(score) {
 var ESTADO_META_AGENT = {
   "Estancamiento": {
     icono: "🔁",
-    tagline: "Tenés el conocimiento. Te falta el sistema para usarlo.",
-    tension: "Sin un cambio estructural, el estancamiento en producto tiende a profundizarse. El 68% de los PMs en este estado reportan estar en la misma situación 12 meses después.",
-    identidad: "PM con experiencia bloqueada",
+    taglines: [
+      "Tenés el conocimiento. Te falta el sistema para usarlo.",
+      "Sabés hacer tu trabajo. Pero ya no te está llevando a ningún lado nuevo.",
+      "El problema no es tu capacidad. Es que el contexto dejó de desafiarte.",
+      "Dominás el rol. Pero el rol ya no te hace crecer.",
+    ],
+    identidades: [
+      "PM con experiencia bloqueada",
+      "Profesional que superó su rol actual",
+      "Experto/a en zona de confort",
+    ],
+    tensiones: [
+      "Sin un cambio estructural, el estancamiento tiende a profundizarse. El 68% de los PMs en este estado reportan estar en la misma situación 12 meses después.",
+      "El estancamiento no duele al principio. Duele cuando te das cuenta de cuánto tiempo pasó sin que nada cambie.",
+      "La comodidad operativa es la trampa más difícil de ver. Porque todo funciona, pero nada crece.",
+    ],
   },
   "Liderazgo": {
     icono: "📈",
-    tagline: "Estás listo para liderar. Pero nadie te está esperando ahí arriba.",
-    tension: "La transición a liderazgo es el momento de mayor abandono profesional en producto. Sin apoyo específico, el 54% regresa a roles de ejecución.",
-    identidad: "Profesional en transición a liderazgo",
+    taglines: [
+      "Estás lista/o para liderar. Pero nadie te está esperando ahí arriba.",
+      "El siguiente paso existe. El problema es que nadie te lo va a dar.",
+      "Ya no alcanza con ser buena/o ejecutando. Ahora tenés que hacer que otros sean buenos.",
+      "La transición no es un ascenso. Es un cambio de identidad.",
+    ],
+    identidades: [
+      "Profesional en transición a liderazgo",
+      "Ejecutor/a lista/o para el salto estratégico",
+      "PM que está dejando de hacer para empezar a liderar",
+    ],
+    tensiones: [
+      "La transición a liderazgo es el momento de mayor abandono profesional en producto. Sin apoyo específico, el 54% regresa a roles de ejecución.",
+      "La mayoría de los PMs que aspiran a liderar nunca llegan porque no saben cuándo dejaron de ser ejecutores para ser estrategas.",
+      "El liderazgo no se practica en el papel. Se practica antes de tenerlo.",
+    ],
   },
   "Reinvención": {
     icono: "🔀",
-    tagline: "Cambiar es la parte fácil. Aterrizar el cambio es lo difícil.",
-    tension: "Las reinvenciones sin estructura duran en promedio 8 meses antes de que la persona vuelva a lo conocido. El timing es crítico.",
-    identidad: "Profesional en reinvención activa",
+    taglines: [
+      "Cambiar es la parte fácil. Aterrizar el cambio es lo difícil.",
+      "Sabés que tenés que moverte. El problema es hacia dónde exactamente.",
+      "La energía está. La dirección todavía no.",
+      "Estás en el punto más importante de tu carrera. Y también el más incierto.",
+    ],
+    identidades: [
+      "Profesional en reinvención activa",
+      "Experto/a buscando nuevo contexto",
+      "PM en transición a un nuevo ciclo",
+    ],
+    tensiones: [
+      "Las reinvenciones sin estructura duran en promedio 8 meses antes de que la persona vuelva a lo conocido. El timing es crítico.",
+      "La reinvención profesional no es una decisión. Es un proceso. Y la mayoría lo subestima.",
+      "El mayor riesgo de la reinvención no es fallar. Es aterrizar en un lugar parecido al que dejaste.",
+    ],
   },
 };
+
+function elegirVariante(arr, seed) {
+  return arr[seed % arr.length];
+}
 
 function PantallaPostDiagnostico(props) {
   var diagnosis = props.diagnosis;
@@ -955,19 +998,29 @@ function PantallaPostDiagnostico(props) {
   if (!diagnosis) return null;
 
   var estado = diagnosis.estado || "Estancamiento";
-  // Normalize
   if (estado.indexOf("Liderazgo") !== -1 || estado.indexOf("Transici") !== -1) estado = "Liderazgo";
   else if (estado.indexOf("Reinven") !== -1) estado = "Reinvención";
   else estado = "Estancamiento";
 
-  var meta  = ESTADO_META_AGENT[estado] || ESTADO_META_AGENT["Estancamiento"];
   var score = calcularScore(diagnosis);
   var nivel = nivelScore(score);
-  var gaps  = (diagnosis.gaps || []).slice(0, 2);
+  var meta  = ESTADO_META_AGENT[estado] || ESTADO_META_AGENT["Estancamiento"];
+
+  var tagline   = elegirVariante(meta.taglines,    score);
+  var identidad = elegirVariante(meta.identidades, score + 1);
+  var tension   = elegirVariante(meta.tensiones,   score + 2);
+
+  var nAct = diagnosis.nivel_actual || {};
+  var pataMin = "producto";
+  var valMin  = 999;
+  ["tech","producto","negocio"].forEach(function(p) {
+    if ((nAct[p]||0) < valMin) { valMin = nAct[p]||0; pataMin = p; }
+  });
+  var pataLabels = { tech: "tecnologia", producto: "producto", negocio: "negocio" };
+  var gaps = (diagnosis.gaps || []).slice(0, 2);
 
   return (
     <div style={{ marginTop: 16 }}>
-      {/* Estado + identidad */}
       <div style={{ background: "linear-gradient(135deg, rgba(67,97,238,0.12), rgba(123,47,247,0.08))", border: "1px solid rgba(67,97,238,0.3)", borderRadius: 16, padding: "22px 20px", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <span style={{ fontSize: 28 }}>{meta.icono}</span>
@@ -977,7 +1030,7 @@ function PantallaPostDiagnostico(props) {
           </div>
         </div>
         <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.92)", lineHeight: "1.4", marginBottom: 14, fontStyle: "italic", borderLeft: "3px solid #4361ee", paddingLeft: 12 }}>
-          "{meta.tagline}"
+          {tagline}
         </div>
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Lo que detectamos</div>
@@ -992,11 +1045,12 @@ function PantallaPostDiagnostico(props) {
         </div>
         <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
-          <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>{meta.identidad}</div>
+          <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>
+            {identidad} · brecha en {pataLabels[pataMin]}
+          </div>
         </div>
       </div>
 
-      {/* Score de Riesgo */}
       <div style={{ background: nivel.color + "10", border: "1px solid " + nivel.color + "40", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Score de Riesgo Profesional</div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
@@ -1006,23 +1060,21 @@ function PantallaPostDiagnostico(props) {
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>de 100 posibles</div>
           </div>
         </div>
-        {/* Barra */}
         <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, marginBottom: 10, position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4, transition: "width 1s ease" }} />
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4 }} />
         </div>
         <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{nivel.desc}</div>
-        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6" }}>{meta.tension}</div>
+        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6" }}>{tension}</div>
       </div>
 
       <button onClick={onContinuar}
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
-        Ver mi plan de acción →
+        Ver mi plan de accion
       </button>
       <div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 10, marginBottom: 12 }}>
-        Tu diagnóstico incluye mentores específicos para tu situación
+        Tu diagnostico incluye mentores especificos para tu situacion
       </div>
 
-      {/* Compartir estado */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
         <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>o compartí tu estado</span>
@@ -1030,7 +1082,7 @@ function PantallaPostDiagnostico(props) {
       </div>
       <button onClick={function() {
         var link = "https://mentorcito.vercel.app?estado=" + encodeURIComponent(estado);
-        var texto = meta.icono + " Estoy en " + estado + "\n\n" + meta.tagline + "\n\nHace tu diagnostico gratis:\n" + link;
+        var texto = meta.icono + " Estoy en " + estado + "\n\n" + tagline + "\n\nHace tu diagnostico gratis:\n" + link;
         if (navigator.share) {
           navigator.share({ title: "Mentorcito - Mi estado profesional", text: texto, url: link });
         } else if (navigator.clipboard) {
@@ -1043,27 +1095,6 @@ function PantallaPostDiagnostico(props) {
     </div>
   );
 }
-
-// ─────────────────────────────────────────────
-// ROADMAP 90 DÍAS
-// ─────────────────────────────────────────────
-var ROADMAP_META = {
-  "Estancamiento": [
-    { mes: "MES 1", titulo: "Diagnóstico profundo", items: ["Mapear tu sistema actual de trabajo", "Identificar el cuello de botella real", "Primer experimento de cambio", "Medir y ajustar"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de sistema", items: ["Diseñar tu sistema de producto propio", "Implementar rutinas de decisión"], bloqueado: true },
-    { mes: "MES 3", titulo: "Escalado y visibilidad", items: ["Consolidar el cambio", "Posicionarte para el próximo paso"], bloqueado: true },
-  ],
-  "Liderazgo": [
-    { mes: "MES 1", titulo: "Claridad de transición", items: ["Mapear tu brecha actual hacia el liderazgo", "Identificar tu estilo de influencia", "Primer proyecto de liderazgo sin autoridad", "Medir impacto"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de presencia", items: ["Desarrollar tu voz estratégica", "Gestionar hacia arriba y hacia los lados"], bloqueado: true },
-    { mes: "MES 3", titulo: "Consolidación del rol", items: ["Asumir responsabilidades de liderazgo", "Hacer visible el cambio"], bloqueado: true },
-  ],
-  "Reinvención": [
-    { mes: "MES 1", titulo: "Aterrizaje del cambio", items: ["Mapear tus transferencias reales de valor", "Validar la nueva dirección con evidencia", "Primer paso concreto en el nuevo contexto", "Reducir el riesgo del salto"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de credibilidad", items: ["Generar prueba social en el nuevo rol", "Conectar con la nueva comunidad"], bloqueado: true },
-    { mes: "MES 3", titulo: "Consolidación", items: ["Cerrar el ciclo anterior", "Abrazar la nueva identidad"], bloqueado: true },
-  ],
-};
 
 function RoadmapNoventa(props) {
   var estado = props.estado || "Estancamiento";
