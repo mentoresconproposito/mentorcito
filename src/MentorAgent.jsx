@@ -1259,10 +1259,14 @@ function CtaAccordion(props) {
 }
 
 function DiagnosisPanel(props) {
-  var diagnosis   = props.diagnosis;
-  var allMessages = props.allMessages;
-  var trackEvent  = props.trackEvent || function() {};
-  var [step, setStep] = useState("insight"); // insight | mentores | roadmap
+  var diagnosis    = props.diagnosis;
+  var allMessages  = props.allMessages;
+  var trackEvent   = props.trackEvent  || function() {};
+  var postToSheets = props.postToSheets || function() {};
+  var diagKey      = props.diagKey     || null;
+  var [step, setStep]       = useState("insight");
+  var [userEmail, setUserEmail] = useState("");
+  var [userName, setUserName]   = useState("");
   if (!diagnosis) return null;
 
   var mentorsToShow = (diagnosis.mentores_recomendados || []).map(function(rec) {
@@ -1305,7 +1309,64 @@ function DiagnosisPanel(props) {
       <div style={{ marginTop: 16 }}>
         <PantallaPostDiagnostico
           diagnosis={Object.assign({}, diagnosis, { estado: estado })}
-          onContinuar={function() { setStep("mentores"); trackEvent("vio_paquete", true); }} />
+          onContinuar={function() { setStep("email"); }} />
+      </div>
+    );
+  }
+
+  // STEP EMAIL — captura liviana antes de ver el plan
+  if (step === "email") {
+    return (
+      <div style={{ marginTop: 16 }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "22px 18px" }}>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Antes de continuar</div>
+          <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+            Te mandamos tu diagnóstico por email
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: "1.6", marginBottom: 18 }}>
+            Para que lo tengas guardado y puedas revisarlo cuando quieras. Es opcional.
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600, marginBottom: 5 }}>Tu nombre</div>
+            <input
+              value={userName}
+              onChange={function(e) { setUserName(e.target.value); }}
+              placeholder="Ej: Martín García"
+              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.9)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600, marginBottom: 5 }}>Tu email</div>
+            <input
+              value={userEmail}
+              onChange={function(e) { setUserEmail(e.target.value); }}
+              placeholder="tu@email.com"
+              type="email"
+              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.9)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+          </div>
+
+          <button onClick={function() {
+            if (userEmail && diagKey) {
+              postToSheets({
+                action: "update_contact",
+                diag_key: diagKey,
+                nombre: userName,
+                email: userEmail,
+              });
+            }
+            setStep("mentores");
+            trackEvent("vio_paquete", true);
+          }}
+            style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
+            Ver mi plan de acción →
+          </button>
+
+          <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
+            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer" }}>
+            Continuar sin guardar
+          </button>
+        </div>
       </div>
     );
   }
@@ -1671,6 +1732,16 @@ export default function MentorAgent() {
           var diagKey = "diag:" + Date.now();
           setCurrentDiagKey(diagKey);
           if (SHEETS_URL.indexOf("TU_GOOGLE") === -1) {
+            // Build chat summary (first 3 user messages)
+            var resumen = newMessages.filter(function(m){ return m.role === "user"; })
+              .slice(0, 4).map(function(m){ return m.content; }).join(" | ");
+            // Extract nombre from messages if agent asked
+            var nombreDetectado = "";
+            newMessages.forEach(function(m) {
+              if (m.role === "user" && m.content.length < 40 && newMessages.indexOf(m) < 4) {
+                nombreDetectado = m.content.trim();
+              }
+            });
             postToSheets({
               action: "new_diagnosis",
               ts: Date.now(),
@@ -1682,6 +1753,9 @@ export default function MentorAgent() {
               mentor_buscado_id: diag.mentor_buscado_id || null,
               tiene_prototipo: !!diag.mentor_prototipo,
               diag_key: diagKey,
+              nombre: nombreDetectado,
+              email: "",
+              resumen: resumen,
             });
           }
         } catch (e) {}
@@ -1773,7 +1847,7 @@ export default function MentorAgent() {
                   <div style={{ padding: "13px 16px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "4px 18px 18px 18px", background: msg.role === "user" ? "rgba(67,97,238,0.14)" : "rgba(255,255,255,0.05)", border: "1px solid " + (msg.role === "user" ? "rgba(67,97,238,0.35)" : "rgba(255,255,255,0.08)"), fontSize: 14, lineHeight: "1.6" }}>
                     {formatMessage(msg.content)}
                     {msg.role === "assistant" && diagnosis && i === messages.length - 1 && (
-                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} />
+                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} />
                     )}
                   </div>
                 </div>
