@@ -1354,6 +1354,7 @@ function DiagnosisPanel(props) {
                 nombre: userName,
                 email: userEmail,
               });
+              trackEvent("dejo_email", true);
             }
             setStep("mentores");
             trackEvent("vio_paquete", true);
