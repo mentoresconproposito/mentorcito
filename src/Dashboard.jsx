@@ -153,6 +153,7 @@ function buildStatsFromSeed(records) {
     funnel: {
       diagnostico:total, con_match:matches.length,
       vio_paquete:records.filter(function(r){return r.vio_paquete;}).length,
+      dejo_email:records.filter(function(r){return r.dejo_email;}).length,
       abrio_formulario:records.filter(function(r){return r.abrio_formulario;}).length,
       envio_wa:records.filter(function(r){return r.envio_wa;}).length,
       opcion_a:records.filter(function(r){return r.opcion==="A";}).length,
@@ -379,6 +380,7 @@ export default function Dashboard() {
     { key: "diagnostico",      label: "Diagnóstico generado",     count: funnel.diagnostico      || total,       color: PRIMARY,   icon: "🧭" },
     { key: "con_match",        label: "Con mentor matcheado",     count: funnel.con_match        || matchCount,  color: "#3a86ff", icon: "✅" },
     { key: "vio_paquete",      label: "Vió el insight + score",   count: funnel.vio_paquete      || 0,           color: PURPLE,    icon: "💡" },
+    { key: "dejo_email",       label: "Dejó su email",            count: funnel.dejo_email       || 0,           color: "#06d6a0", icon: "📧" },
     { key: "abrio_formulario", label: "Eligió plan o paquete",    count: funnel.abrio_formulario || 0,           color: AMBER,     icon: "🗺️" },
     { key: "envio_wa",         label: "Inició conversación WA",   count: funnel.envio_wa         || 0,           color: "#25D366", icon: "💬" },
   ];
@@ -882,6 +884,7 @@ export default function Dashboard() {
                   var sugerencia = {
                     "con_match":        "Catálogo con gaps — reclutar más mentores",
                     "vio_paquete":      "El usuario se va antes de ver el insight",
+                    "dejo_email":       "No dejó su email — revisar copy y valor percibido",
                     "abrio_formulario": "El insight no generó urgencia suficiente para actuar",
                     "envio_wa":         "Eligió explorar pero no inició la conversación",
                   }[step.key] || "";
