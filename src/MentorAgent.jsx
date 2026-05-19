@@ -1112,6 +1112,24 @@ function PantallaPostDiagnostico(props) {
   );
 }
 
+var ROADMAP_META = {
+  "Estancamiento": [
+    { mes: "MES 1", titulo: "Diagnóstico profundo", items: ["Mapear tu sistema actual de trabajo", "Identificar el cuello de botella real", "Primer experimento de cambio", "Medir y ajustar"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de sistema", items: ["Diseñar tu sistema de producto propio", "Implementar rutinas de decisión"], bloqueado: true },
+    { mes: "MES 3", titulo: "Escalado y visibilidad", items: ["Consolidar el cambio", "Posicionarte para el próximo paso"], bloqueado: true },
+  ],
+  "Liderazgo": [
+    { mes: "MES 1", titulo: "Claridad de transición", items: ["Mapear tu brecha actual hacia el liderazgo", "Identificar tu estilo de influencia", "Primer proyecto de liderazgo sin autoridad", "Medir impacto"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de presencia", items: ["Desarrollar tu voz estratégica", "Gestionar hacia arriba y hacia los lados"], bloqueado: true },
+    { mes: "MES 3", titulo: "Consolidación del rol", items: ["Asumir responsabilidades de liderazgo", "Hacer visible el cambio"], bloqueado: true },
+  ],
+  "Reinvención": [
+    { mes: "MES 1", titulo: "Aterrizaje del cambio", items: ["Mapear tus transferencias reales de valor", "Validar la nueva dirección con evidencia", "Primer paso concreto en el nuevo contexto", "Reducir el riesgo del salto"], bloqueado: false },
+    { mes: "MES 2", titulo: "Construcción de credibilidad", items: ["Generar prueba social en el nuevo rol", "Conectar con la nueva comunidad"], bloqueado: true },
+    { mes: "MES 3", titulo: "Consolidación", items: ["Cerrar el ciclo anterior", "Abrazar la nueva identidad"], bloqueado: true },
+  ],
+};
+
 function RoadmapNoventa(props) {
   var estado = props.estado || "Estancamiento";
   var score  = props.score  || 50;
