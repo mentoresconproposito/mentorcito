@@ -554,7 +554,7 @@ function PackagePanel(props) {
                       <div style={{ color: "white", fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
                       <div style={{ color: C.textSecondary, fontSize: 11 }}>{opt.sub}</div>
                     </div>
-                    <div style={{ color: isSelected ? "#4361ee" : "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 800, flexShrink: 0, marginLeft: 12 }}>USD {opt.fp}</div>
+                    <div style={{ color: isSelected ? "white" : "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 800, flexShrink: 0, marginLeft: 12 }}>USD {opt.fp}</div>
                   </div>
                 </button>
               );
@@ -577,7 +577,7 @@ function PackagePanel(props) {
           );
         })}
 
-        <div style={{ background: "rgba(67,97,238,0.07)", border: "1px solid rgba(67,97,238,0.2)", borderRadius: 14, padding: "16px 18px", margin: "16px 0" }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "16px 18px", margin: "16px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <span style={{ color: C.textSecondary, fontSize: 13 }}>
               {opcion === "A" ? "Paquetes individuales (" + mentors.length + " mentores)" :
@@ -633,7 +633,7 @@ function PackagePanel(props) {
               </a>
               <a href={ready ? "mailto:mentoresconproposito@gmail.com?subject=Paquete%3A%20" + encodeURIComponent(packageName) + "&body=" + encodeURIComponent("Nombre: " + nombre + "\nEmail: " + email + "\nPaquete: " + packageName + "\nTotal: USD " + finalP) : "#"}
                 onClick={function() { if (ready) { setFormStep("sent"); trackEvent("envio_wa", true); } }}
-                style={{ flex: 1, padding: 12, borderRadius: 10, background: ready ? "rgba(67,97,238,0.2)" : "rgba(255,255,255,0.04)", border: "1px solid " + (ready ? "rgba(67,97,238,0.4)" : "rgba(255,255,255,0.07)"), color: ready ? "#4361ee" : C.textMuted, fontSize: 13, fontWeight: 700, textDecoration: "none", textAlign: "center", cursor: ready ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                style={{ flex: 1, padding: 12, borderRadius: 10, background: ready ? "#4361ee" : "rgba(255,255,255,0.04)", border: "1px solid " + (ready ? "#4361ee" : "rgba(255,255,255,0.07)"), color: ready ? "white" : "rgba(255,255,255,0.45)", fontSize: 13, fontWeight: 700, textDecoration: "none", textAlign: "center", cursor: ready ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 Email
               </a>
             </div>
@@ -1214,11 +1214,11 @@ function CtaAccordion(props) {
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Roadmap de 90 días + conversación con el equipo</div>
             </div>
           </div>
-          <span style={{ color: "rgba(67,97,238,0.8)", fontSize: 16, transform: open === "roadmap" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, transform: open === "roadmap" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
         </button>
         {open === "roadmap" && (
-          <div style={{ padding: "0 18px 16px", background: "rgba(67,97,238,0.06)" }}>
-            <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, paddingTop: 12 }}>
+          <div style={{ padding: "0 18px 16px", background: "rgba(255,255,255,0.03)" }}>
+            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, paddingTop: 12 }}>
               Te mostramos tu roadmap de 90 días personalizado y te conectamos con el equipo para entender qué opciones tenés. Sin presión de venta.
             </div>
             <button onClick={onRoadmap}
@@ -1372,9 +1372,9 @@ function DiagnosisPanel(props) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nombre}</div>
                       <div style={{ color: "#6b87f5", fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
-                      <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: C.primaryLight, padding: "7px 10px", borderRadius: 7, fontStyle: "italic" }}>{m.razon}</div>
+                      <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: "rgba(67,97,238,0.18)", padding: "7px 10px", borderRadius: 7, fontStyle: "italic", color: "rgba(255,255,255,0.88)", border: "1px solid rgba(255,255,255,0.1)" }}>{m.razon}</div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
-                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: C.primaryLight, color: "#6b87f5", fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
+                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(67,97,238,0.25)", color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
                       </div>
                       <a href={m.url} target="_blank" rel="noopener noreferrer"
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: i===0?C.primary:"transparent", color: i===0?"white":C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
