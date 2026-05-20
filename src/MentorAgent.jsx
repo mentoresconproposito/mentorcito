@@ -267,6 +267,39 @@ var MENTORS_BUSCADOS = [
     icono: "📈",
     color: "#f72585",
   },
+  {
+    id: "buscado_job_search_pm",
+    titulo: "Mentor de Búsqueda de Trabajo en Producto",
+    descripcion: "Alguien que haya contratado PMs o que haya navegado exitosamente el proceso de búsqueda en producto. Conoce el CV, el portfolio, las entrevistas de caso y la negociación de oferta.",
+    patas: ["producto"],
+    nivel: "senior",
+    problemas_que_resuelve: [
+      "no sé cómo entrar al mundo del producto",
+      "no tengo portfolio de producto",
+      "no paso las entrevistas de PM",
+      "quiero cambiar de empresa pero no sé cómo posicionarme",
+      "no sé cuánto pedir de salario",
+    ],
+    donde_buscarlo: ["LinkedIn", "comunidades de producto", "ex-recruiters tech"],
+    icono: "🧭",
+    color: "#3a86ff",
+  },
+  {
+    id: "buscado_operations_automation",
+    titulo: "Mentor de Operaciones y Automatización",
+    descripcion: "Especialista en eficiencia operativa y automatización de procesos usando herramientas no-code y low-code. Para equipos de producto que pierden tiempo en procesos manuales.",
+    patas: ["tech", "producto"],
+    nivel: "mid",
+    problemas_que_resuelve: [
+      "mis procesos son manuales y consumen mucho tiempo",
+      "no sé automatizar flujos de trabajo",
+      "pierdo tiempo en tareas repetitivas",
+      "no tengo un sistema operativo claro en mi equipo",
+    ],
+    donde_buscarlo: ["Make/Zapier communities", "No-code Latam", "LinkedIn operaciones"],
+    icono: "⚡",
+    color: "#ffd166",
+  },
 ];
 
 // ─────────────────────────────────────────────
