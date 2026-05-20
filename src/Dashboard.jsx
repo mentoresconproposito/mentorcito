@@ -26,11 +26,14 @@ var MENTOR_NAMES = {
 };
 
 var BUSCADOS_NAMES = {
-  buscado_cto_fraccionado: "CTO Fraccionado",
-  buscado_ux_research:     "UX Researcher",
-  buscado_ventas_b2b:      "Sales B2B",
-  buscado_fundraising:     "Fundraising",
-  buscado_growth_plg:      "Growth / PLG",
+  buscado_cto_fraccionado:     "CTO Fraccionado",
+  buscado_ux_research:         "UX Researcher",
+  buscado_ventas_b2b:          "Sales B2B",
+  buscado_fundraising:         "Fundraising",
+  buscado_growth_plg:          "Growth / PLG",
+  buscado_job_search_pm:       "Búsqueda de trabajo en Producto",
+  buscado_operations_automation: "Operaciones y Automatización",
+  prototipo_custom:            "Perfil personalizado",
 };
 
 // ── Seed data para demo ───────────────────────────────────────────────────────
@@ -738,6 +741,8 @@ export default function Dashboard() {
                 buscado_ventas_b2b:      { nombre: "Sales B2B",             icono: "🤝", color: AMBER,     desc: "Estrategia de ventas para productos B2B. Ciclo de venta, calificacion, negociacion y cierre.", gaps_tipicos: ["no se vender mi producto","no tengo proceso de ventas","no cierro demos"] },
                 buscado_fundraising:     { nombre: "Fundraising",           icono: "💰", color: GREEN,     desc: "Levantamiento de capital, pitch deck, term sheets y relacion con inversores.", gaps_tipicos: ["quiero levantar capital","no entiendo term sheets","no se hacer el pitch"] },
                 buscado_growth_plg:      { nombre: "Growth / PLG",          icono: "📈", color: ACCENT,    desc: "Estrategias de crecimiento product-led. Onboarding, activacion, retencion y loops de crecimiento.", gaps_tipicos: ["mi churn es alto","no diseño onboarding","no tengo loops de crecimiento"] },
+                buscado_job_search_pm:   { nombre: "Busqueda de trabajo en Producto", icono: "🧭", color: "#3a86ff", desc: "Mentor con experiencia en conseguir roles de PM: CV, portfolio, entrevistas y negociacion de oferta.", gaps_tipicos: ["no se como entrar al mundo del producto","no tengo portfolio","no paso las entrevistas de PM","quiero cambiar de empresa"] },
+                buscado_operations_automation: { nombre: "Operaciones y Automatizacion", icono: "⚡", color: "#ffd166", desc: "Eficiencia operativa, automatizacion de procesos y herramientas no-code/low-code para equipos de producto.", gaps_tipicos: ["mis procesos son manuales","no se automatizar flujos","pierdo tiempo en tareas repetitivas","no tengo sistema de operaciones"] },
                 prototipo_custom:        { nombre: "Perfil personalizado",  icono: "🧩", color: "rgba(255,255,255,0.4)", desc: "El agente genero un prototipo personalizado porque ningun mentor existente cubria los gaps especificos.", gaps_tipicos: [] },
               };
               var meta = BUSCADOS_META[id] || { nombre: id, icono: "🎯", color: PRIMARY, desc: "", gaps_tipicos: [] };
