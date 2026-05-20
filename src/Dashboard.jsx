@@ -413,7 +413,7 @@ export default function Dashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 22 }}>📊</span>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics — Estados</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
               {lastRefresh ? "Actualizado " + lastRefresh.toLocaleTimeString("es-AR") : "Dashboard de demanda del Marketplace"}
             </div>
@@ -438,6 +438,7 @@ export default function Dashboard() {
           { key: "estados",   label: "🧠 Estados" },
           { key: "problemas", label: "🗣️ Problemas" },
           { key: "demanda",   label: "🔍 Demanda insatisfecha" },
+          { key: "buscados",  label: "🎯 Mentores solicitados" },
           { key: "mentores",  label: "👥 Performance mentores" },
           { key: "funnel",    label: "🎯 Funnel de conversión" },
           { key: "feed",      label: "📋 Feed de diagnósticos" },
@@ -709,6 +710,118 @@ export default function Dashboard() {
         )}
 
         {/* ── MENTORES ── */}
+        {tab === "buscados" && (
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 20 }}>
+              Perfiles solicitados sin match en el catalogo. Cada uno es una oportunidad de reclutamiento con demanda garantizada.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 16 }}>
+              <div className="card"><Stat icon="🎯" value={topBuscados.length} label="Perfiles distintos" sub="solicitados sin match" color={ACCENT}/></div>
+              <div className="card"><Stat icon="👥" value={stats.no_match_count || 0} label="Sin mentor matcheado" sub="demanda insatisfecha total" color={AMBER}/></div>
+              <div className="card"><Stat icon="📊" value={topBuscados.reduce(function(s,e){return s+e[1];},0)} label="Solicitudes totales" sub="columna L del Sheet" color={PRIMARY}/></div>
+            </div>
+
+            {topBuscados.length === 0 && (
+              <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🎯</div>
+                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Sin mentores buscados aun</div>
+                <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, marginTop: 6 }}>Cuando un diagnostico no encuentre match, aparecera aqui</div>
+              </div>
+            )}
+
+            {topBuscados.map(function(entry, i) {
+              var id = entry[0], count = entry[1];
+              var BUSCADOS_META = {
+                buscado_cto_fraccionado: { nombre: "CTO Fraccionado",      icono: "⚙️", color: "#3a86ff", desc: "Guia tecnica para founders o PMs sin background de ingenieria. Stack, arquitectura, evaluacion de devs.", gaps_tipicos: ["no se elegir stack","no puedo evaluar developers","no entiendo decisiones tecnicas"] },
+                buscado_ux_research:     { nombre: "UX Researcher",         icono: "🔬", color: PURPLE,    desc: "Discovery profundo, entrevistas con usuarios, validacion de hipotesis. Para equipos que operan con opiniones en lugar de datos.", gaps_tipicos: ["mi discovery es superficial","no se hacer entrevistas utiles","no valido antes de construir"] },
+                buscado_ventas_b2b:      { nombre: "Sales B2B",             icono: "🤝", color: AMBER,     desc: "Estrategia de ventas para productos B2B. Ciclo de venta, calificacion, negociacion y cierre.", gaps_tipicos: ["no se vender mi producto","no tengo proceso de ventas","no cierro demos"] },
+                buscado_fundraising:     { nombre: "Fundraising",           icono: "💰", color: GREEN,     desc: "Levantamiento de capital, pitch deck, term sheets y relacion con inversores.", gaps_tipicos: ["quiero levantar capital","no entiendo term sheets","no se hacer el pitch"] },
+                buscado_growth_plg:      { nombre: "Growth / PLG",          icono: "📈", color: ACCENT,    desc: "Estrategias de crecimiento product-led. Onboarding, activacion, retencion y loops de crecimiento.", gaps_tipicos: ["mi churn es alto","no diseño onboarding","no tengo loops de crecimiento"] },
+                prototipo_custom:        { nombre: "Perfil personalizado",  icono: "🧩", color: "rgba(255,255,255,0.4)", desc: "El agente genero un prototipo personalizado porque ningun mentor existente cubria los gaps especificos.", gaps_tipicos: [] },
+              };
+              var meta = BUSCADOS_META[id] || { nombre: id, icono: "🎯", color: PRIMARY, desc: "", gaps_tipicos: [] };
+              var pct = stats.no_match_count ? Math.round(count / stats.no_match_count * 100) : 0;
+              var pctTotal = total ? Math.round(count / total * 100) : 0;
+              var gapCount2 = {};
+              records.forEach(function(r) {
+                if (r.mentor_buscado_id === id) {
+                  (r.gaps || []).forEach(function(g) { if (g) gapCount2[g] = (gapCount2[g] || 0) + 1; });
+                }
+              });
+              var gapsReales = Object.entries(gapCount2).sort(function(a,b){return b[1]-a[1];}).slice(0,4).map(function(g){return g[0];});
+              var gapsList = gapsReales.length > 0 ? gapsReales : meta.gaps_tipicos;
+              var gapsLabel = gapsReales.length > 0 ? "Gaps reales declarados" : "Gaps tipicos de este perfil";
+
+              return (
+                <div key={id} className="card" style={{ background: CARD, border: "1px solid " + meta.color + "30", borderRadius: 14, padding: "20px 20px", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: meta.color + "18", border: "1px solid " + meta.color + "35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{meta.icono}</div>
+                      <div>
+                        <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{meta.nombre}</div>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <span style={{ color: meta.color, fontSize: 22, fontWeight: 800 }}>{count}</span>
+                          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11 }}>solicitudes</span>
+                          <span style={{ padding: "2px 8px", borderRadius: 20, background: meta.color + "18", border: "1px solid " + meta.color + "35", color: meta.color, fontSize: 10, fontWeight: 700 }}>{pctTotal}% del total</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, marginBottom: 4 }}>del total sin match</div>
+                      <div style={{ color: meta.color, fontSize: 18, fontWeight: 700 }}>{pct}%</div>
+                    </div>
+                  </div>
+
+                  <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, marginBottom: 14 }}>
+                    <div style={{ height: "100%", width: pct + "%", background: meta.color, borderRadius: 3, transition: "width 0.6s" }} />
+                  </div>
+
+                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, borderLeft: "3px solid " + meta.color }}>
+                    {meta.desc}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 10 }}>
+                    <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: 8, padding: "12px 14px" }}>
+                      <div style={{ color: meta.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{gapsLabel}</div>
+                      {gapsList.map(function(g, j) {
+                        return (
+                          <div key={j} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                            <span style={{ color: meta.color, fontSize: 11, flexShrink: 0 }}>▸</span>
+                            <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, lineHeight: "1.4" }}>{g}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ background: "rgba(6,214,160,0.04)", borderRadius: 8, padding: "12px 14px", border: "1px solid rgba(6,214,160,0.15)" }}>
+                      <div style={{ color: GREEN, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Oportunidad de reclutamiento</div>
+                      <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: "1.6", marginBottom: 10 }}>
+                        {count} {count === 1 ? "persona esta esperando" : "personas estan esperando"} un mentor con este perfil. Demanda garantizada desde el dia 1.
+                      </div>
+                      <div style={{ display: "flex", gap: 5 }}>
+                        <span style={{ padding: "3px 8px", borderRadius: 6, background: "rgba(6,214,160,0.1)", color: GREEN, fontSize: 10, fontWeight: 600 }}>ROI inmediato</span>
+                        <span style={{ padding: "3px 8px", borderRadius: 6, background: "rgba(6,214,160,0.1)", color: GREEN, fontSize: 10, fontWeight: 600 }}>{count} lead{count !== 1 ? "s" : ""} validado{count !== 1 ? "s" : ""}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {topBuscados.length > 0 && (
+              <div style={{ background: "rgba(67,97,238,0.06)", border: "1px solid rgba(67,97,238,0.2)", borderRadius: 14, padding: "18px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 16 }}>💡</span>
+                  <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>Estrategia de reclutamiento sugerida</div>
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.7" }}>
+                  El perfil con mayor demanda es <strong style={{ color: "white" }}>{BUSCADOS_NAMES[topBuscados[0][0]] || topBuscados[0][0]}</strong> con {topBuscados[0][1]} solicitudes. Al incorporarlo, esos leads ya estan calificados y pueden ser contactados con el contexto de su diagnostico.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {tab === "mentores" && (
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginBottom: 12 }}>
