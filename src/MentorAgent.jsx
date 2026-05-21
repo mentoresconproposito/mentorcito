@@ -458,7 +458,7 @@ function MentorAvatar(props) {
   var bg = palette[nombre.charCodeAt(0) % palette.length];
   if (failed) {
     return (
-      <div style={{ width: sz, height: sz, borderRadius: "50%", flexShrink: 0, border: border, display: "flex", alignItems: "center", justifyContent: "center", background: bg, color: "white", fontSize: Math.round(sz * 0.35), fontWeight: "700", fontFamily: "sans-serif" }}>
+      <div style={{ width: sz, height: sz, borderRadius: "50%", flexShrink: 0, border: border, display: "flex", alignItems: "center", justifyContent: "center", background: bg, color: T.textWhite, fontSize: Math.round(sz * 0.35), fontWeight: "700", fontFamily: "sans-serif" }}>
         {initials}
       </div>
     );
@@ -552,8 +552,8 @@ function PackagePanel(props) {
   return (
     <div style={{ marginTop: 24, borderRadius: 20, overflow: "hidden", background: "linear-gradient(145deg, rgba(67,97,238,0.08), rgba(123,47,247,0.06))", border: "1px solid rgba(67,97,238,0.3)" }}>
       <div style={{ background: "linear-gradient(135deg, #4361ee, #7b2ff7)", padding: "20px 22px" }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", marginBottom: 6 }}>Paquete 100% personalizado</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "white", marginBottom: 14 }}>{packageName}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: T.textSub, textTransform: "uppercase", marginBottom: 6 }}>Paquete 100% personalizado</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: T.textWhite, marginBottom: 14 }}>{packageName}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {mentors.map(function(m, i) {
             return (
@@ -562,7 +562,7 @@ function PackagePanel(props) {
               </div>
             );
           })}
-          <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginLeft: 12, fontWeight: 600 }}>{mentors.length} mentores · {totalSesiones} sesiones</span>
+          <span style={{ color: T.text, fontSize: 12, marginLeft: 12, fontWeight: 600 }}>{mentors.length} mentores · {totalSesiones} sesiones</span>
         </div>
       </div>
 
@@ -580,11 +580,11 @@ function PackagePanel(props) {
                 <button key={opt.k} onClick={function() { setOpcion(opt.k); }}
                   style={{ width: "100%", padding: 12, borderRadius: 12, cursor: "pointer", textAlign: "left", background: isSelected ? "rgba(67,97,238,0.2)" : "rgba(255,255,255,0.03)", border: "2px solid " + (isSelected ? "#4361ee" : "rgba(255,255,255,0.08)"), position: "relative" }}>
                   {opt.badge && (
-                    <span style={{ position: "absolute", top: -1, right: 12, background: "#7b2ff7", color: "white", fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: "2px 8px", borderRadius: "0 0 6px 6px", textTransform: "uppercase" }}>{opt.badge}</span>
+                    <span style={{ position: "absolute", top: -1, right: 12, background: "#7b2ff7", color: T.textWhite, fontSize: 9, fontWeight: 700, letterSpacing: 1, padding: "2px 8px", borderRadius: "0 0 6px 6px", textTransform: "uppercase" }}>{opt.badge}</span>
                   )}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <div style={{ color: "white", fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
+                      <div style={{ color: T.textWhite, fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
                       <div style={{ color: C.textSecondary, fontSize: 11 }}>{opt.sub}</div>
                     </div>
                     <div style={{ color: isSelected ? "white" : "rgba(255,255,255,0.5)", fontSize: 20, fontWeight: 800, flexShrink: 0, marginLeft: 12 }}>USD {opt.fp}</div>
@@ -599,18 +599,18 @@ function PackagePanel(props) {
           var pM = opcion === "A" ? m.precio : opcion === "B" ? Math.round(m.precio / m.nSesiones) : m.precio;
           var sM = opcion === "A" ? m.sesiones : opcion === "B" ? "1 sesión" : m.sesiones;
           return (
-            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", marginBottom: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", marginBottom: 8, background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 12 }}>
               <MentorAvatar src={m.foto} nombre={m.nombre} sz={44} border="1.5px solid rgba(255,255,255,0.1)" />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>{m.nombre}</div>
+                <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700 }}>{m.nombre}</div>
                 <div style={{ color: C.textSecondary, fontSize: 11, marginTop: 2 }}>{sM} · {m.mentoria.slice(0, 50)}...</div>
               </div>
-              <div style={{ color: "white", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>USD {pM}</div>
+              <div style={{ color: T.textWhite, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>USD {pM}</div>
             </div>
           );
         })}
 
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "16px 18px", margin: "16px 0" }}>
+        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "16px 18px", margin: "16px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <span style={{ color: C.textSecondary, fontSize: 13 }}>
               {opcion === "A" ? "Paquetes individuales (" + mentors.length + " mentores)" :
@@ -623,13 +623,13 @@ function PackagePanel(props) {
             <span style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(247,37,133,0.18)", border: "1px solid rgba(247,37,133,0.4)", color: "#ff6db5", fontSize: 11, fontWeight: 700 }}>−20% paquete</span>
             <span style={{ color: "#f72585", fontSize: 13, fontWeight: 700 }}>−USD {desc}</span>
           </div>
-          <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 14 }} />
+          <div style={{ height: 1, background: T.highlightBg, marginBottom: 14 }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ color: "white", fontSize: 15, fontWeight: 800 }}>Total</div>
+              <div style={{ color: T.textWhite, fontSize: 15, fontWeight: 800 }}>Total</div>
               <div style={{ color: "#f72585", fontSize: 11, fontWeight: 600 }}>Ahorrás USD {desc}</div>
             </div>
-            <div style={{ color: "white", fontSize: 28, fontWeight: 800 }}>USD {finalP}</div>
+            <div style={{ color: T.textWhite, fontSize: 28, fontWeight: 800 }}>USD {finalP}</div>
           </div>
         </div>
 
@@ -641,8 +641,8 @@ function PackagePanel(props) {
         )}
 
         {formStep === "form" && (
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 18 }}>
-            <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Dejanos tus datos</div>
+          <div style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 14, padding: 18 }}>
+            <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Dejanos tus datos</div>
             <div style={{ color: C.textSecondary, fontSize: 12, marginBottom: 16 }}>Te contactamos para coordinar el paquete.</div>
             {[
               { label: "Tu nombre", val: nombre, fn: setNombre, ph: "Ej: Martín García" },
@@ -653,7 +653,7 @@ function PackagePanel(props) {
                 <div key={field.label} style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, marginBottom: 5 }}>{field.label}</div>
                   <input value={field.val} onChange={function(e) { field.fn(e.target.value); }} placeholder={field.ph}
-                    style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.9)", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "10px 12px", background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 8, color: T.text, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                 </div>
               );
             })}
@@ -680,7 +680,7 @@ function PackagePanel(props) {
         {formStep === "sent" && (
           <div style={{ textAlign: "center", padding: "28px 20px", background: "rgba(123,47,247,0.08)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 14 }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-            <div style={{ color: "white", fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Listo!</div>
+            <div style={{ color: T.textWhite, fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Listo!</div>
             <div style={{ color: C.textSecondary, fontSize: 13, lineHeight: "1.6" }}>Tu solicitud del {packageName} fue enviada. El equipo te va a contactar pronto.</div>
           </div>
         )}
@@ -731,16 +731,16 @@ function MentorBuscado(props) {
                 Próximamente en MCP
               </div>
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "white", lineHeight: "1.2" }}>{buscado.titulo}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: T.textWhite, lineHeight: "1.2" }}>{buscado.titulo}</div>
           </div>
         </div>
-        <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, lineHeight: "1.6" }}>
+        <div style={{ color: T.textSub, fontSize: 13, lineHeight: "1.6" }}>
           {buscado.descripcion}
         </div>
       </div>
 
       {/* Problemas que resuelve */}
-      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
+      <div style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
         <div style={{ color: buscado.color, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
           🩺 Problemáticas que va a resolver
         </div>
@@ -755,8 +755,8 @@ function MentorBuscado(props) {
       </div>
 
       {/* Dónde buscarlo */}
-      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
-        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+      <div style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+        <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
           🔍 Dónde estamos buscando este perfil
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -770,8 +770,8 @@ function MentorBuscado(props) {
 
       {/* CTA */}
       <div style={{ background: "rgba(67,97,238,0.08)", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 14, padding: "16px 18px" }}>
-        <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Sumate a la lista de espera</div>
-        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 12 }}>
+        <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Sumate a la lista de espera</div>
+        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 12 }}>
           Te avisamos cuando este mentor esté disponible en la plataforma. También podés ayudarnos a encontrarlo.
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -782,7 +782,7 @@ function MentorBuscado(props) {
           </a>
           <a href={"https://mentoresconproposito.vercel.app/alta-mentores"}
             target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 8, background: T.highlightBg, border: "1px solid rgba(255,255,255,0.15)", color: T.textSub, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
             Conocés a alguien? →
           </a>
         </div>
@@ -885,11 +885,11 @@ function MentorPrototipo(props) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <div style={{ fontSize: 28 }}>🧩</div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", marginBottom: 3 }}>No encontramos match exacto en el catálogo</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "white" }}>Prototipo de mentor ideal</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: T.textSub, textTransform: "uppercase", marginBottom: 3 }}>No encontramos match exacto en el catálogo</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: T.textWhite }}>Prototipo de mentor ideal</div>
           </div>
         </div>
-        <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, lineHeight: "1.6" }}>
+        <div style={{ color: T.textSub, fontSize: 13, lineHeight: "1.6" }}>
           Construimos el perfil del mentor que necesitás. Usalo como brief para buscarlo en plataformas externas o para reconocerlo cuando lo encuentres.
         </div>
       </div>
@@ -899,13 +899,13 @@ function MentorPrototipo(props) {
         var hasContent = s.content && (Array.isArray(s.content) ? s.content.length > 0 : s.content.length > 0);
         if (!hasContent) return null;
         return (
-          <div key={s.title} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
+          <div key={s.title} style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 16 }}>{s.icon}</span>
               <span style={{ color: s.color, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{s.title}</span>
             </div>
             {s.type === "text" && (
-              <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 14, lineHeight: "1.6" }}>{s.content}</div>
+              <div style={{ color: T.text, fontSize: 14, lineHeight: "1.6" }}>{s.content}</div>
             )}
             {s.type === "list" && (
               <div>
@@ -913,7 +913,7 @@ function MentorPrototipo(props) {
                   return (
                     <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: s.color, marginTop: 6, flexShrink: 0 }} />
-                      <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, lineHeight: "1.5" }}>{item}</span>
+                      <span style={{ color: T.text, fontSize: 13, lineHeight: "1.5" }}>{item}</span>
                     </div>
                   );
                 })}
@@ -925,7 +925,7 @@ function MentorPrototipo(props) {
                   return (
                     <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
                       <div style={{ minWidth: 22, height: 22, borderRadius: "50%", background: s.color + "22", border: "1px solid " + s.color + "55", display: "flex", alignItems: "center", justifyContent: "center", color: s.color, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                      <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, lineHeight: "1.6", fontStyle: "italic" }}>{item}</span>
+                      <span style={{ color: T.text, fontSize: 13, lineHeight: "1.6", fontStyle: "italic" }}>{item}</span>
                     </div>
                   );
                 })}
@@ -937,8 +937,8 @@ function MentorPrototipo(props) {
 
       {/* CTA */}
       <div style={{ background: "rgba(67,97,238,0.08)", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 14, padding: "16px 18px", marginTop: 4 }}>
-        <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 6 }}>¿Conocés a alguien que encaje en este perfil?</div>
-        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 12 }}>
+        <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700, marginBottom: 6 }}>¿Conocés a alguien que encaje en este perfil?</div>
+        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 12 }}>
           Compartile este diagnóstico o contactanos — estamos construyendo el catálogo de mentores y podría sumar.
         </div>
         <a href={"https://wa.me/5491170043893?text=" + buildWaText()}
@@ -1074,60 +1074,60 @@ function PantallaPostDiagnostico(props) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <span style={{ fontSize: 28 }}>{meta.icono}</span>
           <div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>Tu estado profesional hoy</div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>{estado}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 }}>Tu estado profesional hoy</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: T.textWhite }}>{estado}</div>
           </div>
         </div>
         <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.92)", lineHeight: "1.4", marginBottom: 14, fontStyle: "italic", borderLeft: "3px solid #4361ee", paddingLeft: 12 }}>
           {tagline}
         </div>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Lo que detectamos</div>
+          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Lo que detectamos</div>
           {gaps.map(function(g, i) {
             return (
               <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
                 <span style={{ color: "#4361ee", fontSize: 12, flexShrink: 0, marginTop: 1 }}>▸</span>
-                <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, lineHeight: "1.4" }}>{g}</span>
+                <span style={{ color: T.text, fontSize: 13, lineHeight: "1.4" }}>{g}</span>
               </div>
             );
           })}
         </div>
-        <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
-          <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600 }}>
+        <div style={{ padding: "10px 12px", background: T.card, borderRadius: 8, border: "1px solid " + T.border }}>
+          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Tu identidad profesional actual</div>
+          <div style={{ color: T.textSub, fontSize: 12, fontWeight: 600 }}>
             {identidad} · brecha en {pataLabels[pataMin]}
           </div>
         </div>
       </div>
 
       <div style={{ background: nivel.color + "10", border: "1px solid " + nivel.color + "40", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Score de Riesgo Profesional</div>
+        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Score de Riesgo Profesional</div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-          <div style={{ fontSize: 44, fontWeight: 800, color: "white", lineHeight: 1 }}>{score}</div>
+          <div style={{ fontSize: 44, fontWeight: 800, color: T.textWhite, lineHeight: 1 }}>{score}</div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: nivel.color, marginBottom: 2 }}>{nivel.label}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>de 100 posibles</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>de 100 posibles</div>
           </div>
         </div>
-        <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, marginBottom: 10, position: "relative" }}>
+        <div style={{ height: 8, background: T.highlightBg, borderRadius: 4, marginBottom: 10, position: "relative" }}>
           <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4 }} />
         </div>
         <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{nivel.desc}</div>
-        <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6" }}>{tension}</div>
+        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6" }}>{tension}</div>
       </div>
 
       <button onClick={onContinuar}
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
         Ver mi plan de accion
       </button>
-      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 10, marginBottom: 12 }}>
+      <div style={{ textAlign: "center", color: T.textMuted, fontSize: 10, marginBottom: 12 }}>
         Tu diagnostico incluye mentores especificos para tu situacion
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-        <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>o compartí tu estado</span>
-        <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ flex: 1, height: 1, background: T.highlightBg }} />
+        <span style={{ color: T.textDisabled, fontSize: 10 }}>o compartí tu estado</span>
+        <div style={{ flex: 1, height: 1, background: T.highlightBg }} />
       </div>
       <button onClick={function() {
         var link = "https://mentorcito.vercel.app?estado=" + encodeURIComponent(estado);
@@ -1138,7 +1138,7 @@ function PantallaPostDiagnostico(props) {
           navigator.clipboard.writeText(texto);
           alert("Link copiado. Compartilo con quien creas que esta en el mismo estado.");
         }
-      }} style={{ width: "100%", marginTop: 10, padding: "10px 16px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+      }} style={{ width: "100%", marginTop: 10, padding: "10px 16px", background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
         Compartir mi estado con un colega
       </button>
     </div>
@@ -1174,9 +1174,9 @@ function RoadmapNoventa(props) {
   var roadmap = ROADMAP_META[estado] || ROADMAP_META["Estancamiento"];
 
   return (
-    <div style={{ marginTop: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "18px 16px", marginBottom: 12 }}>
-      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Tu roadmap de 90 días</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Generado para tu perfil de {estado.toLowerCase()}</div>
+    <div style={{ marginTop: 12, background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 14, padding: "18px 16px", marginBottom: 12 }}>
+      <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Tu roadmap de 90 días</div>
+      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Generado para tu perfil de {estado.toLowerCase()}</div>
       {roadmap.map(function(fase, i) {
         return (
           <div key={i} style={{ marginBottom: 12, opacity: fase.bloqueado ? 0.6 : 1 }}>
@@ -1190,25 +1190,25 @@ function RoadmapNoventa(props) {
               return (
                 <div key={j} style={{ display: "flex", gap: 7, marginBottom: 4 }}>
                   <span style={{ color: "#4361ee", fontSize: 11, flexShrink: 0 }}>·</span>
-                  <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "1.4" }}>{item}</span>
+                  <span style={{ color: T.textSub, fontSize: 12, lineHeight: "1.4" }}>{item}</span>
                 </div>
               );
             })}
             {fase.bloqueado && (
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>Desbloqueado con mentoría personalizada</div>
+              <div style={{ fontSize: 11, color: T.textDisabled, fontStyle: "italic" }}>Desbloqueado con mentoría personalizada</div>
             )}
           </div>
         );
       })}
       <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "16px 0" }} />
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 16, lineHeight: "1.6" }}>
+      <div style={{ fontSize: 12, color: T.textSub, marginBottom: 16, lineHeight: "1.6" }}>
         ¿Querés que un mentor te ayude a ejecutar este plan?
       </div>
       <a href={onWA} target="_blank" rel="noopener noreferrer"
         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "14px 20px", background: "#25D366", border: "none", borderRadius: 12, color: "#003d14", fontSize: 14, fontWeight: 800, textDecoration: "none", marginBottom: 8 }}>
         💬 Hablar con el equipo sobre mi diagnóstico
       </a>
-      <div style={{ textAlign: "center", color: "rgba(255,255,255,0.45)", fontSize: 10, lineHeight: "1.5" }}>
+      <div style={{ textAlign: "center", color: T.textMuted, fontSize: 10, lineHeight: "1.5" }}>
         El equipo responde en menos de 24h. No es una llamada de ventas — es una conversación sobre tu diagnóstico.
       </div>
     </div>
@@ -1232,7 +1232,7 @@ function CtaAccordion(props) {
       {/* Separador */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-        <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>¿Cómo querés avanzar?</span>
+        <span style={{ color: T.textDisabled, fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>¿Cómo querés avanzar?</span>
         <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
       </div>
 
@@ -1243,15 +1243,15 @@ function CtaAccordion(props) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}>🗺️</span>
             <div style={{ textAlign: "left" }}>
-              <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>Quiero un plan de acción</div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Roadmap de 90 días + conversación con el equipo</div>
+              <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700 }}>Quiero un plan de acción</div>
+              <div style={{ color: T.textMuted, fontSize: 11 }}>Roadmap de 90 días + conversación con el equipo</div>
             </div>
           </div>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, transform: open === "roadmap" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
+          <span style={{ color: T.textSub, fontSize: 16, transform: open === "roadmap" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
         </button>
         {open === "roadmap" && (
-          <div style={{ padding: "0 18px 16px", background: "rgba(255,255,255,0.03)" }}>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, paddingTop: 12 }}>
+          <div style={{ padding: "0 18px 16px", background: T.sectionBg }}>
+            <div style={{ color: T.text, fontSize: 12, lineHeight: "1.6", marginBottom: 14, paddingTop: 12 }}>
               Te mostramos tu roadmap de 90 días personalizado y te conectamos con el equipo para entender qué opciones tenés. Sin presión de venta.
             </div>
             <button onClick={onRoadmap}
@@ -1270,8 +1270,8 @@ function CtaAccordion(props) {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>✨</span>
               <div style={{ textAlign: "left" }}>
-                <div style={{ color: "white", fontSize: 13, fontWeight: 700 }}>Quiero contratar una mentoría</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Ver el paquete personalizado con opciones A, B y C</div>
+                <div style={{ color: T.textWhite, fontSize: 13, fontWeight: 700 }}>Quiero contratar una mentoría</div>
+                <div style={{ color: T.textMuted, fontSize: 11 }}>Ver el paquete personalizado con opciones A, B y C</div>
               </div>
             </div>
             <span style={{ color: "rgba(123,47,247,0.8)", fontSize: 16, transform: open === "paquete" ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>›</span>
@@ -1284,7 +1284,7 @@ function CtaAccordion(props) {
         </div>
       )}
 
-      <div style={{ textAlign: "center", marginTop: 10, color: "rgba(255,255,255,0.2)", fontSize: 10 }}>
+      <div style={{ textAlign: "center", marginTop: 10, color: T.textDisabled, fontSize: 10 }}>
         Podés explorar las dos opciones antes de decidir
       </div>
     </div>
@@ -1351,32 +1351,32 @@ function DiagnosisPanel(props) {
   if (step === "email") {
     return (
       <div style={{ marginTop: 16 }}>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "22px 18px" }}>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Antes de continuar</div>
-          <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+        <div style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 16, padding: "22px 18px" }}>
+          <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Antes de continuar</div>
+          <div style={{ color: T.textWhite, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
             Te mandamos tu diagnóstico por email
           </div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: "1.6", marginBottom: 18 }}>
+          <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 18 }}>
             Para que lo tengas guardado y puedas revisarlo cuando quieras. Es opcional.
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600, marginBottom: 5 }}>Tu nombre</div>
+            <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 5 }}>Tu nombre</div>
             <input
               value={userName}
               onChange={function(e) { setUserName(e.target.value); }}
               placeholder="Ej: Martín García"
-              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.9)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              style={{ width: "100%", padding: "10px 12px", background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 8, color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600, marginBottom: 5 }}>Tu email</div>
+            <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, marginBottom: 5 }}>Tu email</div>
             <input
               value={userEmail}
               onChange={function(e) { setUserEmail(e.target.value); }}
               placeholder="tu@email.com"
               type="email"
-              style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, color: "rgba(255,255,255,0.9)", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+              style={{ width: "100%", padding: "10px 12px", background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 8, color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
 
           <button onClick={function() {
@@ -1397,7 +1397,7 @@ function DiagnosisPanel(props) {
           </button>
 
           <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
-            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer" }}>
+            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
             Continuar sin guardar
           </button>
         </div>
@@ -1409,7 +1409,7 @@ function DiagnosisPanel(props) {
   if (step === "mentores") {
     return (
       <div style={{ marginTop: 16 }}>
-        <div style={{ background: C.bgCard, border: "1px solid " + C.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
+        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
             <RadarChart data={diagnosis} />
           </div>
@@ -1434,7 +1434,7 @@ function DiagnosisPanel(props) {
                   <span style={{ color: C.text, fontSize: 12, fontWeight: 600 }}>{lbl[key]}</span>
                   <span style={{ color: gap > 0 ? C.gap : C.primary, fontSize: 11, fontWeight: 600 }}>{act} → {obj}</span>
                 </div>
-                <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, position: "relative" }}>
+                <div style={{ height: 5, background: T.highlightBg, borderRadius: 3, position: "relative" }}>
                   <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: (act*10)+"%", background: C.primary, borderRadius: 3 }} />
                   {gap > 0 && <div style={{ position: "absolute", left: (act*10)+"%", top: 0, height: "100%", width: (gap*10)+"%", background: "rgba(247,37,133,0.5)", borderRadius: 3 }} />}
                 </div>
@@ -1466,10 +1466,10 @@ function DiagnosisPanel(props) {
                     <MentorAvatar src={m.foto} nombre={m.nombre} sz={48} border={"2px solid "+(i===0?C.primaryBorder:C.border)} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: C.text, fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nombre}</div>
-                      <div style={{ color: "#6b87f5", fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
-                      <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: "rgba(67,97,238,0.18)", padding: "7px 10px", borderRadius: 7, fontStyle: "italic", color: "rgba(255,255,255,0.88)", border: "1px solid rgba(255,255,255,0.1)" }}>{m.razon}</div>
+                      <div style={{ color: T.msgLabel, fontSize: 11, marginBottom: 8 }}>{m.titulo}</div>
+                      <div style={{ color: "rgba(67,97,238,0.9)", fontSize: 12, lineHeight: "1.4", marginBottom: 10, background: "rgba(67,97,238,0.18)", padding: "7px 10px", borderRadius: 7, fontStyle: "italic", color: T.text, border: "1px solid " + T.border }}>{m.razon}</div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
-                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(67,97,238,0.25)", color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
+                        {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(67,97,238,0.25)", color: T.text, fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
                       </div>
                       <a href={m.url} target="_blank" rel="noopener noreferrer"
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: i===0?C.primary:"transparent", color: i===0?"white":C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
@@ -1560,30 +1560,30 @@ function EstadoLanding(props) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d0d1a", display: "flex", flexDirection: "column", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#0d0d1a", display: "flex", flexDirection: "column", fontFamily: "'Plus Jakarta Sans', sans-serif", color: T.text, alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}"}</style>
 
       <div style={{ maxWidth: 420, width: "100%", animation: "fadeUp 0.4s ease forwards" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, justifyContent: "center" }}>
           <span style={{ fontSize: 20 }}>💠</span>
-          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600 }}>Mentorcito · Mentores con Propósito</span>
+          <span style={{ color: T.textMuted, fontSize: 13, fontWeight: 600 }}>Mentorcito · Mentores con Propósito</span>
         </div>
 
         <div style={{ background: m.color + "10", border: "2px solid " + m.color + "40", borderRadius: 20, padding: "28px 24px", marginBottom: 20, textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>{m.icono}</div>
           <div style={{ fontSize: 10, color: m.color, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Un colega tuyo esta en</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: "white", marginBottom: 14 }}>{estado}</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: "1.5", fontStyle: "italic", marginBottom: 16, borderLeft: "3px solid " + m.color, paddingLeft: 14, textAlign: "left" }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: T.textWhite, marginBottom: 14 }}>{estado}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: T.text, lineHeight: "1.5", fontStyle: "italic", marginBottom: 16, borderLeft: "3px solid " + m.color, paddingLeft: 14, textAlign: "left" }}>
             {m.tagline}
           </div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: "1.6" }}>
+          <div style={{ color: T.textSub, fontSize: 13, lineHeight: "1.6" }}>
             {m.descripcion}
           </div>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "18px 20px", marginBottom: 20, textAlign: "center" }}>
-          <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{PREGUNTAS[estado]}</div>
-          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "18px 20px", marginBottom: 20, textAlign: "center" }}>
+          <div style={{ color: T.textWhite, fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{PREGUNTAS[estado]}</div>
+          <div style={{ color: T.textMuted, fontSize: 12 }}>
             Hace tu diagnostico gratis y descubri en que punto del loop profesional estas vos.
           </div>
         </div>
@@ -1607,7 +1607,7 @@ function EstadoLanding(props) {
           style={{ width: "100%", padding: "16px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 14, color: "white", fontSize: 15, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
           Hacer mi diagnostico gratis
         </button>
-        <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 11 }}>
+        <div style={{ textAlign: "center", color: T.textDisabled, fontSize: 11 }}>
           5 minutos - Sin registro - 100% gratuito
         </div>
       </div>
@@ -1645,43 +1645,73 @@ export default function MentorAgent() {
 
   // Theme tokens
   var T = darkMode ? {
-    bg:        "#0d0d1a",
-    header:    "rgba(13,13,26,0.97)",
-    card:      "rgba(255,255,255,0.04)",
-    border:    "rgba(255,255,255,0.08)",
-    pillars:   "rgba(255,255,255,0.015)",
-    chat:      "#0d0d1a",
-    inputBg:   "rgba(255,255,255,0.04)",
-    inputBorder:"rgba(255,255,255,0.1)",
-    text:      "rgba(255,255,255,0.88)",
-    textSub:   "rgba(255,255,255,0.5)",
-    textMuted: "rgba(255,255,255,0.35)",
-    msgUser:   "rgba(67,97,238,0.14)",
-    msgUserBorder:"rgba(67,97,238,0.35)",
-    msgBot:    "rgba(255,255,255,0.05)",
-    msgBotBorder:"rgba(255,255,255,0.08)",
-    toggle:    "🌙",
-    toggleBg:  "rgba(255,255,255,0.06)",
-    toggleColor:"rgba(255,255,255,0.6)",
+    // Fondos
+    bg:              "#0d0d1a",
+    header:          "rgba(13,13,26,0.97)",
+    card:            "rgba(255,255,255,0.04)",
+    cardHover:       "rgba(255,255,255,0.06)",
+    border:          "rgba(255,255,255,0.08)",
+    borderStrong:    "rgba(255,255,255,0.15)",
+    pillars:         "rgba(255,255,255,0.015)",
+    chat:            "#0d0d1a",
+    inputBg:         "rgba(255,255,255,0.04)",
+    inputBorder:     "rgba(255,255,255,0.1)",
+    sectionBg:       "rgba(255,255,255,0.03)",
+    highlightBg:     "rgba(255,255,255,0.06)",
+    // Texto
+    text:            "rgba(255,255,255,0.88)",
+    textSub:         "rgba(255,255,255,0.55)",
+    textMuted:       "rgba(255,255,255,0.45)",
+    textDisabled:    "rgba(255,255,255,0.25)",
+    textOnPrimary:   "white",
+    textWhite:       "white",
+    // Mensajes
+    msgUser:         "rgba(67,97,238,0.14)",
+    msgUserBorder:   "rgba(67,97,238,0.35)",
+    msgBot:          "rgba(255,255,255,0.05)",
+    msgBotBorder:    "rgba(255,255,255,0.08)",
+    msgLabel:        "#6b87f5",
+    // Toggle
+    toggle:          "🌙",
+    toggleBg:        "rgba(255,255,255,0.06)",
+    // Back button
+    backBtn:         "rgba(255,255,255,0.06)",
+    backBtnBorder:   "rgba(255,255,255,0.1)",
+    backBtnColor:    "rgba(255,255,255,0.6)",
   } : {
-    bg:        "#f0f2f8",
-    header:    "rgba(255,255,255,0.97)",
-    card:      "rgba(255,255,255,0.9)",
-    border:    "rgba(0,0,0,0.1)",
-    pillars:   "rgba(0,0,0,0.03)",
-    chat:      "#f0f2f8",
-    inputBg:   "rgba(255,255,255,0.9)",
-    inputBorder:"rgba(0,0,0,0.15)",
-    text:      "rgba(0,0,0,0.85)",
-    textSub:   "rgba(0,0,0,0.55)",
-    textMuted: "rgba(0,0,0,0.4)",
-    msgUser:   "rgba(67,97,238,0.1)",
-    msgUserBorder:"rgba(67,97,238,0.3)",
-    msgBot:    "rgba(255,255,255,0.85)",
-    msgBotBorder:"rgba(0,0,0,0.08)",
-    toggle:    "☀️",
-    toggleBg:  "rgba(0,0,0,0.06)",
-    toggleColor:"rgba(0,0,0,0.6)",
+    // Fondos
+    bg:              "#f4f6fb",
+    header:          "rgba(255,255,255,0.98)",
+    card:            "rgba(255,255,255,0.95)",
+    cardHover:       "rgba(255,255,255,1)",
+    border:          "rgba(0,0,0,0.09)",
+    borderStrong:    "rgba(0,0,0,0.18)",
+    pillars:         "rgba(0,0,0,0.03)",
+    chat:            "#f4f6fb",
+    inputBg:         "rgba(255,255,255,1)",
+    inputBorder:     "rgba(0,0,0,0.15)",
+    sectionBg:       "rgba(0,0,0,0.03)",
+    highlightBg:     "rgba(0,0,0,0.05)",
+    // Texto
+    text:            "rgba(0,0,0,0.85)",
+    textSub:         "rgba(0,0,0,0.55)",
+    textMuted:       "rgba(0,0,0,0.45)",
+    textDisabled:    "rgba(0,0,0,0.25)",
+    textOnPrimary:   "white",
+    textWhite:       "rgba(0,0,0,0.85)",
+    // Mensajes
+    msgUser:         "rgba(67,97,238,0.1)",
+    msgUserBorder:   "rgba(67,97,238,0.3)",
+    msgBot:          "rgba(255,255,255,0.95)",
+    msgBotBorder:    "rgba(0,0,0,0.08)",
+    msgLabel:        "#4361ee",
+    // Toggle
+    toggle:          "☀️",
+    toggleBg:        "rgba(0,0,0,0.06)",
+    // Back button
+    backBtn:         "rgba(0,0,0,0.05)",
+    backBtnBorder:   "rgba(0,0,0,0.12)",
+    backBtnColor:    "rgba(0,0,0,0.55)",
   };
 
   // Mostrar landing si viene con ?estado=
@@ -1886,14 +1916,14 @@ export default function MentorAgent() {
         ].join("\n")}
       </style>
 
-      <div style={{ height: "100vh", background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)" }}>
+      <div style={{ height: "100vh", background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: T.text }}>
 
-        <div style={{ padding: "0 16px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ padding: "0 16px", height: 56, borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="https://mentoresconproposito.vercel.app/" style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", fontSize: 16, textDecoration: "none", flexShrink: 0 }}>←</a>
+            <a href="https://mentoresconproposito.vercel.app/" style={{ width: 32, height: 32, borderRadius: 8, background: T.highlightBg, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontSize: 16, textDecoration: "none", flexShrink: 0 }}>←</a>
             <span style={{ fontSize: 22 }}>💠</span>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>Mentores con Propósito</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>Mentores con Propósito</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
             </div>
           </div>
@@ -1910,7 +1940,7 @@ export default function MentorAgent() {
         </div>
 
         <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", borderBottom: "1px solid " + T.border, background: T.pillars, flexShrink: 0, overflowX: "auto" }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginRight: 4 }}>Exploramos:</span>
+          <span style={{ fontSize: 11, color: T.textMuted, marginRight: 4 }}>Exploramos:</span>
           {[{ icon: "🔧", label: "Tecnología", color: "#3a86ff" }, { icon: "📦", label: "Producto", color: "#9b5fff" }, { icon: "💼", label: "Negocio", color: "#f72585" }].map(function(p) {
             return (
               <div key={p.label} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: p.color + "18", border: "1px solid " + p.color + "35" }}>
@@ -1945,7 +1975,7 @@ export default function MentorAgent() {
           {loading && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(67,97,238,0.15)", border: "1px solid rgba(67,97,238,0.35)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>💠</div>
-              <div style={{ borderRadius: "4px 18px 18px 18px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", padding: "12px 16px", display: "flex", gap: 5 }}>
+              <div style={{ borderRadius: "4px 18px 18px 18px", background: T.card, border: "1px solid " + T.border, padding: "12px 16px", display: "flex", gap: 5 }}>
                 {[0, 1, 2].map(function(i) {
                   return <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: C.primary, animation: "pulse 1.2s ease-in-out infinite", animationDelay: (i * 0.2) + "s", opacity: 0.5 }} />;
                 })}
@@ -1956,18 +1986,18 @@ export default function MentorAgent() {
         </div>
 
         <div style={{ padding: "8px 12px 16px", borderTop: "1px solid " + T.border, background: T.header, flexShrink: 0 }}>
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "10px 14px" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: T.card, border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "10px 14px" }}>
             <textarea value={input} onChange={function(e) { setInput(e.target.value); }} onKeyDown={handleKey}
               placeholder="Contame sobre tu situación actual..."
               rows={2}
-              style={{ flex: 1, background: "transparent", border: "none", color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: "1.5", caretColor: "#4361ee" }} />
+              style={{ flex: 1, background: "transparent", border: "none", color: T.text, fontSize: 14, lineHeight: "1.5", caretColor: "#4361ee" }} />
             <button onClick={sendMessage} disabled={loading || !input.trim()}
               style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() && !loading) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", border: "none", cursor: (input.trim() && !loading) ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, color: (input.trim() && !loading) ? "white" : "rgba(255,255,255,0.25)" }}>
               ➤
             </button>
           </div>
           <div style={{ textAlign: "center", marginTop: 6 }}>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>En desktop: Enter para enviar · En mobile: botón ➤</span>
+            <span style={{ fontSize: 10, color: T.textDisabled }}>En desktop: Enter para enviar · En mobile: botón ➤</span>
           </div>
         </div>
       </div>
