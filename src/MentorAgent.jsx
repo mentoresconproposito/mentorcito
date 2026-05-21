@@ -384,6 +384,25 @@ var DISCOUNT = 0.20;
 // ─────────────────────────────────────────────
 // RADAR CHART
 // ─────────────────────────────────────────────
+// ── Tema global — se actualiza desde MentorAgent ─────────────
+var _theme = {
+  bg: "#0d0d1a", header: "rgba(13,13,26,0.97)", card: "rgba(255,255,255,0.04)",
+  cardHover: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(255,255,255,0.15)", pillars: "rgba(255,255,255,0.015)",
+  chat: "#0d0d1a", inputBg: "rgba(255,255,255,0.04)", inputBorder: "rgba(255,255,255,0.1)",
+  sectionBg: "rgba(255,255,255,0.03)", highlightBg: "rgba(255,255,255,0.06)",
+  text: "rgba(255,255,255,0.88)", textSub: "rgba(255,255,255,0.55)",
+  textMuted: "rgba(255,255,255,0.45)", textDisabled: "rgba(255,255,255,0.25)",
+  textOnPrimary: "white", textWhite: "white",
+  msgUser: "rgba(67,97,238,0.14)", msgUserBorder: "rgba(67,97,238,0.35)",
+  msgBot: "rgba(255,255,255,0.05)", msgBotBorder: "rgba(255,255,255,0.08)",
+  msgLabel: "#6b87f5", toggle: "🌙", toggleBg: "rgba(255,255,255,0.06)",
+  backBtn: "rgba(255,255,255,0.06)", backBtnBorder: "rgba(255,255,255,0.1)",
+  backBtnColor: "rgba(255,255,255,0.6)",
+};
+// Alias global para subcomponentes
+var T = _theme;
+
 function RadarChart(props) {
   var data = props.data;
   if (!data) return null;
@@ -1297,6 +1316,7 @@ function DiagnosisPanel(props) {
   var trackEvent   = props.trackEvent  || function() {};
   var postToSheets = props.postToSheets || function() {};
   var diagKey      = props.diagKey     || null;
+  var darkMode     = props.darkMode;   // triggers re-render on theme change
   var [step, setStep]       = useState("insight");
   var [userEmail, setUserEmail] = useState("");
   var [userName, setUserName]   = useState("");
@@ -1342,7 +1362,8 @@ function DiagnosisPanel(props) {
       <div style={{ marginTop: 16 }}>
         <PantallaPostDiagnostico
           diagnosis={Object.assign({}, diagnosis, { estado: estado })}
-          onContinuar={function() { setStep("email"); }} />
+          onContinuar={function() { setStep("email"); }}
+          darkMode={darkMode} />
       </div>
     );
   }
@@ -1507,6 +1528,7 @@ function DiagnosisPanel(props) {
           allMessages={allMessages}
           trackEvent={trackEvent}
           hasMatch={hasMatch}
+          darkMode={darkMode}
         />
       </div>
     );
@@ -1515,7 +1537,7 @@ function DiagnosisPanel(props) {
   // STEP 3 — Roadmap 90 días + WA directo
   return (
     <div style={{ marginTop: 16 }}>
-      <RoadmapNoventa estado={estado} score={score} onWA={buildWaMsg()} />
+      <RoadmapNoventa estado={estado} score={score} onWA={buildWaMsg()} darkMode={darkMode} />
     </div>
   );
 }
@@ -1644,80 +1666,48 @@ export default function MentorAgent() {
   var bottomRef = useRef(null);
 
   // Theme tokens
-  var T = darkMode ? {
-    // Fondos
-    bg:              "#0d0d1a",
-    header:          "rgba(13,13,26,0.97)",
-    card:            "rgba(255,255,255,0.04)",
-    cardHover:       "rgba(255,255,255,0.06)",
-    border:          "rgba(255,255,255,0.08)",
-    borderStrong:    "rgba(255,255,255,0.15)",
-    pillars:         "rgba(255,255,255,0.015)",
-    chat:            "#0d0d1a",
-    inputBg:         "rgba(255,255,255,0.04)",
-    inputBorder:     "rgba(255,255,255,0.1)",
-    sectionBg:       "rgba(255,255,255,0.03)",
-    highlightBg:     "rgba(255,255,255,0.06)",
-    // Texto
-    text:            "rgba(255,255,255,0.88)",
-    textSub:         "rgba(255,255,255,0.55)",
-    textMuted:       "rgba(255,255,255,0.45)",
-    textDisabled:    "rgba(255,255,255,0.25)",
-    textOnPrimary:   "white",
-    textWhite:       "white",
-    // Mensajes
-    msgUser:         "rgba(67,97,238,0.14)",
-    msgUserBorder:   "rgba(67,97,238,0.35)",
-    msgBot:          "rgba(255,255,255,0.05)",
-    msgBotBorder:    "rgba(255,255,255,0.08)",
-    msgLabel:        "#6b87f5",
-    // Toggle
-    toggle:          "🌙",
-    toggleBg:        "rgba(255,255,255,0.06)",
-    // Back button
-    backBtn:         "rgba(255,255,255,0.06)",
-    backBtnBorder:   "rgba(255,255,255,0.1)",
-    backBtnColor:    "rgba(255,255,255,0.6)",
-  } : {
-    // Fondos
-    bg:              "#f4f6fb",
-    header:          "rgba(255,255,255,0.98)",
-    card:            "rgba(255,255,255,0.95)",
-    cardHover:       "rgba(255,255,255,1)",
-    border:          "rgba(0,0,0,0.09)",
-    borderStrong:    "rgba(0,0,0,0.18)",
-    pillars:         "rgba(0,0,0,0.03)",
-    chat:            "#f4f6fb",
-    inputBg:         "rgba(255,255,255,1)",
-    inputBorder:     "rgba(0,0,0,0.15)",
-    sectionBg:       "rgba(0,0,0,0.03)",
-    highlightBg:     "rgba(0,0,0,0.05)",
-    // Texto
-    text:            "rgba(0,0,0,0.85)",
-    textSub:         "rgba(0,0,0,0.55)",
-    textMuted:       "rgba(0,0,0,0.45)",
-    textDisabled:    "rgba(0,0,0,0.25)",
-    textOnPrimary:   "white",
-    textWhite:       "rgba(0,0,0,0.85)",
-    // Mensajes
-    msgUser:         "rgba(67,97,238,0.1)",
-    msgUserBorder:   "rgba(67,97,238,0.3)",
-    msgBot:          "rgba(255,255,255,0.95)",
-    msgBotBorder:    "rgba(0,0,0,0.08)",
-    msgLabel:        "#4361ee",
-    // Toggle
-    toggle:          "☀️",
-    toggleBg:        "rgba(0,0,0,0.06)",
-    // Back button
-    backBtn:         "rgba(0,0,0,0.05)",
-    backBtnBorder:   "rgba(0,0,0,0.12)",
-    backBtnColor:    "rgba(0,0,0,0.55)",
-  };
+  // T is the global _theme object, synced via useEffect
 
   // Mostrar landing si viene con ?estado=
   if (showLanding && estadoNormalizado) {
     return <EstadoLanding estado={estadoNormalizado} onStart={function() { setShowLanding(false); }} />;
   }
+
+  // Sync theme global con estado de darkMode
+  useEffect(function() {
+    var dark = {
+      bg: "#0d0d1a", header: "rgba(13,13,26,0.97)", card: "rgba(255,255,255,0.04)",
+      cardHover: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.08)",
+      borderStrong: "rgba(255,255,255,0.15)", pillars: "rgba(255,255,255,0.015)",
+      chat: "#0d0d1a", inputBg: "rgba(255,255,255,0.04)", inputBorder: "rgba(255,255,255,0.1)",
+      sectionBg: "rgba(255,255,255,0.03)", highlightBg: "rgba(255,255,255,0.06)",
+      text: "rgba(255,255,255,0.88)", textSub: "rgba(255,255,255,0.55)",
+      textMuted: "rgba(255,255,255,0.45)", textDisabled: "rgba(255,255,255,0.25)",
+      textOnPrimary: "white", textWhite: "white",
+      msgUser: "rgba(67,97,238,0.14)", msgUserBorder: "rgba(67,97,238,0.35)",
+      msgBot: "rgba(255,255,255,0.05)", msgBotBorder: "rgba(255,255,255,0.08)",
+      msgLabel: "#6b87f5", toggle: "🌙", toggleBg: "rgba(255,255,255,0.06)",
+      backBtn: "rgba(255,255,255,0.06)", backBtnBorder: "rgba(255,255,255,0.1)",
+      backBtnColor: "rgba(255,255,255,0.6)",
+    };
+    var light = {
+      bg: "#f4f6fb", header: "rgba(255,255,255,0.98)", card: "rgba(255,255,255,0.95)",
+      cardHover: "rgba(255,255,255,1)", border: "rgba(0,0,0,0.09)",
+      borderStrong: "rgba(0,0,0,0.18)", pillars: "rgba(0,0,0,0.03)",
+      chat: "#f4f6fb", inputBg: "rgba(255,255,255,1)", inputBorder: "rgba(0,0,0,0.15)",
+      sectionBg: "rgba(0,0,0,0.03)", highlightBg: "rgba(0,0,0,0.05)",
+      text: "rgba(0,0,0,0.85)", textSub: "rgba(0,0,0,0.55)",
+      textMuted: "rgba(0,0,0,0.45)", textDisabled: "rgba(0,0,0,0.25)",
+      textOnPrimary: "white", textWhite: "rgba(0,0,0,0.85)",
+      msgUser: "rgba(67,97,238,0.1)", msgUserBorder: "rgba(67,97,238,0.3)",
+      msgBot: "rgba(255,255,255,0.95)", msgBotBorder: "rgba(0,0,0,0.08)",
+      msgLabel: "#4361ee", toggle: "☀️", toggleBg: "rgba(0,0,0,0.06)",
+      backBtn: "rgba(0,0,0,0.05)", backBtnBorder: "rgba(0,0,0,0.12)",
+      backBtnColor: "rgba(0,0,0,0.55)",
+    };
+    var next = darkMode ? dark : light;
+    Object.assign(_theme, next);
+  }, [darkMode]);
 
   // Auto-scroll al último mensaje
   useEffect(function() {
@@ -1965,7 +1955,7 @@ export default function MentorAgent() {
                   <div style={{ padding: "13px 16px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "4px 18px 18px 18px", background: msg.role === "user" ? "rgba(67,97,238,0.14)" : "rgba(255,255,255,0.05)", border: "1px solid " + (msg.role === "user" ? "rgba(67,97,238,0.35)" : "rgba(255,255,255,0.08)"), fontSize: 14, lineHeight: "1.6" }}>
                     {formatMessage(msg.content)}
                     {msg.role === "assistant" && diagnosis && i === messages.length - 1 && (
-                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} />
+                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} darkMode={darkMode} />
                     )}
                   </div>
                 </div>
