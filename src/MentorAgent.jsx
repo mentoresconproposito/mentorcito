@@ -1634,6 +1634,7 @@ export default function MentorAgent() {
   }
 
   var [showLanding, setShowLanding] = useState(!!estadoNormalizado);
+  var [darkMode, setDarkMode] = useState(true);
   var [messages, setMessages] = useState([INITIAL_MSG]);
   var [input, setInput] = useState("");
   var [loading, setLoading] = useState(false);
@@ -1641,6 +1642,47 @@ export default function MentorAgent() {
   var [phase, setPhase] = useState("intro");
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
   var bottomRef = useRef(null);
+
+  // Theme tokens
+  var T = darkMode ? {
+    bg:        "#0d0d1a",
+    header:    "rgba(13,13,26,0.97)",
+    card:      "rgba(255,255,255,0.04)",
+    border:    "rgba(255,255,255,0.08)",
+    pillars:   "rgba(255,255,255,0.015)",
+    chat:      "#0d0d1a",
+    inputBg:   "rgba(255,255,255,0.04)",
+    inputBorder:"rgba(255,255,255,0.1)",
+    text:      "rgba(255,255,255,0.88)",
+    textSub:   "rgba(255,255,255,0.5)",
+    textMuted: "rgba(255,255,255,0.35)",
+    msgUser:   "rgba(67,97,238,0.14)",
+    msgUserBorder:"rgba(67,97,238,0.35)",
+    msgBot:    "rgba(255,255,255,0.05)",
+    msgBotBorder:"rgba(255,255,255,0.08)",
+    toggle:    "🌙",
+    toggleBg:  "rgba(255,255,255,0.06)",
+    toggleColor:"rgba(255,255,255,0.6)",
+  } : {
+    bg:        "#f0f2f8",
+    header:    "rgba(255,255,255,0.97)",
+    card:      "rgba(255,255,255,0.9)",
+    border:    "rgba(0,0,0,0.1)",
+    pillars:   "rgba(0,0,0,0.03)",
+    chat:      "#f0f2f8",
+    inputBg:   "rgba(255,255,255,0.9)",
+    inputBorder:"rgba(0,0,0,0.15)",
+    text:      "rgba(0,0,0,0.85)",
+    textSub:   "rgba(0,0,0,0.55)",
+    textMuted: "rgba(0,0,0,0.4)",
+    msgUser:   "rgba(67,97,238,0.1)",
+    msgUserBorder:"rgba(67,97,238,0.3)",
+    msgBot:    "rgba(255,255,255,0.85)",
+    msgBotBorder:"rgba(0,0,0,0.08)",
+    toggle:    "☀️",
+    toggleBg:  "rgba(0,0,0,0.06)",
+    toggleColor:"rgba(0,0,0,0.6)",
+  };
 
   // Mostrar landing si viene con ?estado=
   if (showLanding && estadoNormalizado) {
@@ -1807,7 +1849,13 @@ export default function MentorAgent() {
   }
 
   function handleKey(e) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    // Solo enviar con Enter en desktop (no mobile)
+    // En mobile, Enter = nueva línea siempre
+    var isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+    if (e.key === "Enter" && !e.shiftKey && !isMobile) {
+      e.preventDefault();
+      sendMessage();
+    }
   }
 
   function formatMessage(text) {
@@ -1838,7 +1886,7 @@ export default function MentorAgent() {
         ].join("\n")}
       </style>
 
-      <div style={{ height: "100vh", background: "#0d0d1a", display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)" }}>
+      <div style={{ height: "100vh", background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)" }}>
 
         <div style={{ padding: "0 16px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1855,7 +1903,7 @@ export default function MentorAgent() {
           </div>
         </div>
 
-        <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)", flexShrink: 0, overflowX: "auto" }}>
+        <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", borderBottom: "1px solid " + T.border, background: T.pillars, flexShrink: 0, overflowX: "auto" }}>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginRight: 4 }}>Exploramos:</span>
           {[{ icon: "🔧", label: "Tecnología", color: "#3a86ff" }, { icon: "📦", label: "Producto", color: "#9b5fff" }, { icon: "💼", label: "Negocio", color: "#f72585" }].map(function(p) {
             return (
@@ -1867,7 +1915,7 @@ export default function MentorAgent() {
           })}
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 12, WebkitOverflowScrolling: "touch" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 12, WebkitOverflowScrolling: "touch", background: T.chat }}>
           {messages.map(function(msg, i) {
             return (
               <div key={i} className="msg-appear" style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start" }}>
@@ -1901,7 +1949,7 @@ export default function MentorAgent() {
           <div ref={bottomRef} style={{ height: 1, flexShrink: 0 }} />
         </div>
 
-        <div style={{ padding: "8px 12px 16px", borderTop: "1px solid rgba(255,255,255,0.07)", background: "rgba(13,13,26,0.97)", flexShrink: 0 }}>
+        <div style={{ padding: "8px 12px 16px", borderTop: "1px solid " + T.border, background: T.header, flexShrink: 0 }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "10px 14px" }}>
             <textarea value={input} onChange={function(e) { setInput(e.target.value); }} onKeyDown={handleKey}
               placeholder="Contame sobre tu situación actual..."
@@ -1913,7 +1961,7 @@ export default function MentorAgent() {
             </button>
           </div>
           <div style={{ textAlign: "center", marginTop: 6 }}>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Enter para enviar · Shift+Enter para nueva línea</span>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>En desktop: Enter para enviar · En mobile: botón ➤</span>
           </div>
         </div>
       </div>
