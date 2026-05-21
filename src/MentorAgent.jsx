@@ -1673,41 +1673,39 @@ export default function MentorAgent() {
     return <EstadoLanding estado={estadoNormalizado} onStart={function() { setShowLanding(false); }} />;
   }
 
-  // Sync theme global con estado de darkMode
-  useEffect(function() {
-    var dark = {
-      bg: "#0d0d1a", header: "rgba(13,13,26,0.97)", card: "rgba(255,255,255,0.04)",
-      cardHover: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.08)",
-      borderStrong: "rgba(255,255,255,0.15)", pillars: "rgba(255,255,255,0.015)",
-      chat: "#0d0d1a", inputBg: "rgba(255,255,255,0.04)", inputBorder: "rgba(255,255,255,0.1)",
-      sectionBg: "rgba(255,255,255,0.03)", highlightBg: "rgba(255,255,255,0.06)",
-      text: "rgba(255,255,255,0.88)", textSub: "rgba(255,255,255,0.55)",
-      textMuted: "rgba(255,255,255,0.45)", textDisabled: "rgba(255,255,255,0.25)",
-      textOnPrimary: "white", textWhite: "white",
-      msgUser: "rgba(67,97,238,0.14)", msgUserBorder: "rgba(67,97,238,0.35)",
-      msgBot: "rgba(255,255,255,0.05)", msgBotBorder: "rgba(255,255,255,0.08)",
-      msgLabel: "#6b87f5", toggle: "🌙", toggleBg: "rgba(255,255,255,0.06)",
-      backBtn: "rgba(255,255,255,0.06)", backBtnBorder: "rgba(255,255,255,0.1)",
-      backBtnColor: "rgba(255,255,255,0.6)",
-    };
-    var light = {
-      bg: "#f4f6fb", header: "rgba(255,255,255,0.98)", card: "rgba(255,255,255,0.95)",
-      cardHover: "rgba(255,255,255,1)", border: "rgba(0,0,0,0.09)",
-      borderStrong: "rgba(0,0,0,0.18)", pillars: "rgba(0,0,0,0.03)",
-      chat: "#f4f6fb", inputBg: "rgba(255,255,255,1)", inputBorder: "rgba(0,0,0,0.15)",
-      sectionBg: "rgba(0,0,0,0.03)", highlightBg: "rgba(0,0,0,0.05)",
-      text: "rgba(0,0,0,0.85)", textSub: "rgba(0,0,0,0.55)",
-      textMuted: "rgba(0,0,0,0.45)", textDisabled: "rgba(0,0,0,0.25)",
-      textOnPrimary: "white", textWhite: "rgba(0,0,0,0.85)",
-      msgUser: "rgba(67,97,238,0.1)", msgUserBorder: "rgba(67,97,238,0.3)",
-      msgBot: "rgba(255,255,255,0.95)", msgBotBorder: "rgba(0,0,0,0.08)",
-      msgLabel: "#4361ee", toggle: "☀️", toggleBg: "rgba(0,0,0,0.06)",
-      backBtn: "rgba(0,0,0,0.05)", backBtnBorder: "rgba(0,0,0,0.12)",
-      backBtnColor: "rgba(0,0,0,0.55)",
-    };
-    var next = darkMode ? dark : light;
-    Object.assign(_theme, next);
-  }, [darkMode]);
+  // Calcular tema actual en cada render y sincronizar global T
+  var _currentTheme = darkMode ? {
+    bg: "#0d0d1a", header: "rgba(13,13,26,0.97)", card: "rgba(255,255,255,0.04)",
+    cardHover: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.08)",
+    borderStrong: "rgba(255,255,255,0.15)", pillars: "rgba(255,255,255,0.015)",
+    chat: "#0d0d1a", inputBg: "rgba(255,255,255,0.04)", inputBorder: "rgba(255,255,255,0.1)",
+    sectionBg: "rgba(255,255,255,0.03)", highlightBg: "rgba(255,255,255,0.06)",
+    text: "rgba(255,255,255,0.88)", textSub: "rgba(255,255,255,0.55)",
+    textMuted: "rgba(255,255,255,0.45)", textDisabled: "rgba(255,255,255,0.25)",
+    textOnPrimary: "white", textWhite: "white",
+    msgUser: "rgba(67,97,238,0.14)", msgUserBorder: "rgba(67,97,238,0.35)",
+    msgBot: "rgba(255,255,255,0.05)", msgBotBorder: "rgba(255,255,255,0.08)",
+    msgLabel: "#6b87f5", toggle: "🌙", toggleBg: "rgba(255,255,255,0.06)",
+    backBtn: "rgba(255,255,255,0.06)", backBtnBorder: "rgba(255,255,255,0.1)",
+    backBtnColor: "rgba(255,255,255,0.6)",
+  } : {
+    bg: "#f4f6fb", header: "rgba(255,255,255,0.98)", card: "rgba(255,255,255,0.95)",
+    cardHover: "rgba(255,255,255,1)", border: "rgba(0,0,0,0.09)",
+    borderStrong: "rgba(0,0,0,0.18)", pillars: "rgba(0,0,0,0.03)",
+    chat: "#f4f6fb", inputBg: "rgba(255,255,255,1)", inputBorder: "rgba(0,0,0,0.15)",
+    sectionBg: "rgba(0,0,0,0.03)", highlightBg: "rgba(0,0,0,0.05)",
+    text: "#0C1223", textSub: "rgba(12,18,35,0.6)",
+    textMuted: "rgba(12,18,35,0.45)", textDisabled: "rgba(12,18,35,0.3)",
+    textOnPrimary: "white", textWhite: "#0C1223",
+    msgUser: "rgba(67,97,238,0.12)", msgUserBorder: "rgba(67,97,238,0.3)",
+    msgBot: "#ffffff", msgBotBorder: "rgba(0,0,0,0.1)",
+    msgLabel: "#4361ee", toggle: "☀️", toggleBg: "rgba(0,0,0,0.06)",
+    backBtn: "rgba(0,0,0,0.05)", backBtnBorder: "rgba(0,0,0,0.12)",
+    backBtnColor: "#0C1223",
+  };
+  // Mutar el objeto global en cada render — subcomponentes leen T en su render
+  Object.assign(_theme, _currentTheme);
+  var T = _theme; // referencia local para este componente
 
   // Auto-scroll al último mensaje
   useEffect(function() {
