@@ -384,6 +384,36 @@ var DISCOUNT = 0.20;
 // ─────────────────────────────────────────────
 // RADAR CHART
 // ─────────────────────────────────────────────
+// ── Tokens de tema (dark mode fijo) ──────────────────────────
+var T = {
+  bg:           "#0d0d1a",
+  header:       "rgba(13,13,26,0.97)",
+  card:         "rgba(255,255,255,0.04)",
+  border:       "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(255,255,255,0.15)",
+  pillars:      "rgba(255,255,255,0.015)",
+  chat:         "#0d0d1a",
+  inputBg:      "rgba(255,255,255,0.04)",
+  inputBorder:  "rgba(255,255,255,0.1)",
+  sectionBg:    "rgba(255,255,255,0.03)",
+  highlightBg:  "rgba(255,255,255,0.06)",
+  text:         "rgba(255,255,255,0.88)",
+  textSub:      "rgba(255,255,255,0.55)",
+  textMuted:    "rgba(255,255,255,0.45)",
+  textDisabled: "rgba(255,255,255,0.25)",
+  textOnPrimary:"white",
+  textWhite:    "white",
+  msgUser:      "rgba(67,97,238,0.14)",
+  msgUserBorder:"rgba(67,97,238,0.35)",
+  msgBot:       "rgba(255,255,255,0.05)",
+  msgBotBorder: "rgba(255,255,255,0.08)",
+  msgLabel:     "#6b87f5",
+  toggleBg:     "rgba(255,255,255,0.06)",
+  backBtn:      "rgba(255,255,255,0.06)",
+  backBtnBorder:"rgba(255,255,255,0.1)",
+  backBtnColor: "rgba(255,255,255,0.6)",
+};
+
 function RadarChart(props) {
   var data = props.data;
   if (!data) return null;
@@ -1652,21 +1682,6 @@ export default function MentorAgent() {
   }
 
   // Calcular tema actual en cada render y sincronizar global T
-  var T = {
-    bg: "#0d0d1a", header: "rgba(13,13,26,0.97)", card: "rgba(255,255,255,0.04)",
-    border: "rgba(255,255,255,0.08)", borderStrong: "rgba(255,255,255,0.15)",
-    pillars: "rgba(255,255,255,0.015)", chat: "#0d0d1a",
-    inputBg: "rgba(255,255,255,0.04)", inputBorder: "rgba(255,255,255,0.1)",
-    sectionBg: "rgba(255,255,255,0.03)", highlightBg: "rgba(255,255,255,0.06)",
-    text: "rgba(255,255,255,0.88)", textSub: "rgba(255,255,255,0.55)",
-    textMuted: "rgba(255,255,255,0.45)", textDisabled: "rgba(255,255,255,0.25)",
-    textOnPrimary: "white", textWhite: "white",
-    msgUser: "rgba(67,97,238,0.14)", msgUserBorder: "rgba(67,97,238,0.35)",
-    msgBot: "rgba(255,255,255,0.05)", msgBotBorder: "rgba(255,255,255,0.08)",
-    msgLabel: "#6b87f5", toggleBg: "rgba(255,255,255,0.06)",
-    backBtn: "rgba(255,255,255,0.06)", backBtnBorder: "rgba(255,255,255,0.1)",
-    backBtnColor: "rgba(255,255,255,0.6)",
-  };
 
   // Auto-scroll al último mensaje
   useEffect(function() {
