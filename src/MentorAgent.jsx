@@ -1897,9 +1897,15 @@ export default function MentorAgent() {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: phaseColor[phase] }} />
-            <span style={{ fontSize: 11, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={function(){ setDarkMode(!darkMode); }}
+              style={{ width: 32, height: 32, borderRadius: 8, background: T.toggleBg, border: "1px solid " + T.border, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {T.toggle}
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: phaseColor[phase] }} />
+              <span style={{ fontSize: 11, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
+            </div>
           </div>
         </div>
 
