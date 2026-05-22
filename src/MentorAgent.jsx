@@ -1161,7 +1161,7 @@ function PantallaPostDiagnostico(props) {
       </div>
       <button onClick={function() {
         var link = "https://mentorcito.vercel.app?estado=" + encodeURIComponent(estado);
-        var texto = meta.icono + " Estoy en " + estado + "\n\n" + tagline + "\n\nHace tu diagnostico gratis:\n" + link;
+        var texto = meta.icono + " Estoy en " + estado + "\n\n" + tagline + "\n\nHacé tu diagnóstico gratis:\n" + link;
         if (navigator.share) {
           navigator.share({ title: "Mentorcito - Mi estado profesional", text: texto, url: link });
         } else if (navigator.clipboard) {
@@ -1586,9 +1586,9 @@ function EstadoLanding(props) {
   if (!m) return null;
 
   var PREGUNTAS = {
-    "Estancamiento": "Cuanto hace que sentis que no avanzas?",
-    "Liderazgo":     "Ya sabes que queres liderar, pero no encontraste como?",
-    "Reinvención":   "Estas en un momento de cambio sin saber bien hacia donde?",
+    "Estancamiento": "¿Cuánto hace que sentís que no avanzás?",
+    "Liderazgo":     "¿Ya sabés que querés liderar, pero no encontraste cómo?",
+    "Reinvención":   "¿Estás en un momento de cambio sin saber bien hacia dónde?",
   };
 
   return (
@@ -1603,7 +1603,7 @@ function EstadoLanding(props) {
 
         <div style={{ background: m.color + "10", border: "2px solid " + m.color + "40", borderRadius: 20, padding: "28px 24px", marginBottom: 20, textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>{m.icono}</div>
-          <div style={{ fontSize: 10, color: m.color, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Un colega tuyo esta en</div>
+          <div style={{ fontSize: 10, color: m.color, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Un colega tuyo está en</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: T.textWhite, marginBottom: 14 }}>{estado}</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: T.text, lineHeight: "1.5", fontStyle: "italic", marginBottom: 16, borderLeft: "3px solid " + m.color, paddingLeft: 14, textAlign: "left" }}>
             {m.tagline}
@@ -1616,7 +1616,7 @@ function EstadoLanding(props) {
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "18px 20px", marginBottom: 20, textAlign: "center" }}>
           <div style={{ color: T.textWhite, fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{PREGUNTAS[estado]}</div>
           <div style={{ color: T.textMuted, fontSize: 12 }}>
-            Hace tu diagnostico gratis y descubri en que punto del loop profesional estas vos.
+            Hacé tu diagnóstico gratis y descubrí en qué punto del loop profesional estás vos.
           </div>
         </div>
 
@@ -1637,10 +1637,10 @@ function EstadoLanding(props) {
 
         <button onClick={onStart}
           style={{ width: "100%", padding: "16px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 14, color: "white", fontSize: 15, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
-          Hacer mi diagnostico gratis
+          Hacer mi diagnóstico gratis →
         </button>
         <div style={{ textAlign: "center", color: T.textDisabled, fontSize: 11 }}>
-          5 minutos - Sin registro - 100% gratuito
+          5 minutos · Sin registro · 100% gratuito
         </div>
       </div>
     </div>
