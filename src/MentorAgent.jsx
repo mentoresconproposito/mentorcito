@@ -1672,6 +1672,7 @@ export default function MentorAgent() {
   var [diagnosis, setDiagnosis] = useState(null);
   var [phase, setPhase] = useState("intro");
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
+  var [liveStats, setLiveStats] = useState(null);
   var bottomRef = useRef(null);
 
   // Theme tokens
@@ -1689,6 +1690,16 @@ export default function MentorAgent() {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, loading]);
+
+  // Fetch stats en tiempo real para el header
+  useEffect(function() {
+    fetch("/api/sheets?action=stats")
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d && d.total) setLiveStats(d);
+      })
+      .catch(function() {});
+  }, []);
 
   // URL del Google Apps Script — reemplazá con la tuya
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
@@ -1882,18 +1893,30 @@ export default function MentorAgent() {
 
       <div style={{ height: "100vh", background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: T.text }}>
 
-        <div style={{ padding: "0 16px", height: 56, borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="https://mentoresconproposito.vercel.app/" style={{ width: 32, height: 32, borderRadius: 8, background: T.highlightBg, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontSize: 16, textDecoration: "none", flexShrink: 0 }}>←</a>
-            <span style={{ fontSize: 22 }}>💠</span>
+        <div style={{ padding: "0 12px", height: 56, borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10, gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <a href="https://mentoresconproposito.vercel.app/" style={{ width: 30, height: 30, borderRadius: 8, background: T.highlightBg, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontSize: 15, textDecoration: "none", flexShrink: 0 }}>←</a>
+            <span style={{ fontSize: 20 }}>💠</span>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>Mentores con Propósito</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite, lineHeight: 1.2 }}>Mentores con Propósito</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: phaseColor[phase] }} />
-              <span style={{ fontSize: 11, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
+
+          {/* Stats en tiempo real */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            {liveStats && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderRadius: 20, background: "rgba(6,214,160,0.08)", border: "1px solid rgba(6,214,160,0.2)" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: "#06d6a0", fontWeight: 700, whiteSpace: "nowrap" }}>
+                  {liveStats.total} diagnósticos · {liveStats.total ? Math.round((liveStats.match_count / liveStats.total) * 100) : 0}% con match
+                </span>
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: phaseColor[phase] }} />
+              <span style={{ fontSize: 10, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
+            </div>
           </div>
         </div>
 
