@@ -1942,7 +1942,7 @@ export default function MentorAgent() {
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4, padding: "5px 12px", borderRadius: 20, background: "rgba(6,214,160,0.07)", border: "1px solid rgba(6,214,160,0.18)", alignSelf: "flex-start" }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", flexShrink: 0 }} />
                       <span style={{ fontSize: 11, color: "#06d6a0", fontWeight: 600 }}>
-                        {liveStats.total} profesionales ya lo hicieron · {Math.round(liveStats.match_count / liveStats.total * 100)}% encontraron su mentor
+                        {liveStats.total} profesionales ya lo hicieron · {Math.round(liveStats.match_count / liveStats.total * 100)}% encontraron su mentor/a
                       </span>
                     </div>
                   )}
