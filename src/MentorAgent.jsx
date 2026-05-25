@@ -1893,8 +1893,8 @@ export default function MentorAgent() {
 
       <div style={{ height: "100vh", background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", color: T.text }}>
 
-        <div style={{ padding: "0 12px", height: 56, borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10, gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <div style={{ padding: "0 12px", height: 56, borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(13,13,26,0.97)", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <a href="https://mentoresconproposito.vercel.app/" style={{ width: 30, height: 30, borderRadius: 8, background: T.highlightBg, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontSize: 15, textDecoration: "none", flexShrink: 0 }}>←</a>
             <span style={{ fontSize: 20 }}>💠</span>
             <div>
@@ -1902,21 +1902,9 @@ export default function MentorAgent() {
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
             </div>
           </div>
-
-          {/* Stats en tiempo real */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            {liveStats && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 10px", borderRadius: 20, background: "rgba(6,214,160,0.08)", border: "1px solid rgba(6,214,160,0.2)" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: "#06d6a0", fontWeight: 700, whiteSpace: "nowrap" }}>
-                  {liveStats.total} diagnósticos · {liveStats.total ? Math.round((liveStats.match_count / liveStats.total) * 100) : 0}% con match
-                </span>
-              </div>
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: phaseColor[phase] }} />
-              <span style={{ fontSize: 10, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: phaseColor[phase] }} />
+            <span style={{ fontSize: 10, color: phaseColor[phase], fontWeight: 600 }}>{phaseLabel[phase]}</span>
           </div>
         </div>
 
@@ -1949,6 +1937,15 @@ export default function MentorAgent() {
                       <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} />
                     )}
                   </div>
+                  {/* Social proof debajo del primer mensaje */}
+                  {msg.role === "assistant" && i === 0 && liveStats && liveStats.total > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4, padding: "5px 12px", borderRadius: 20, background: "rgba(6,214,160,0.07)", border: "1px solid rgba(6,214,160,0.18)", alignSelf: "flex-start" }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: "#06d6a0", fontWeight: 600 }}>
+                        {liveStats.total} profesionales ya lo hicieron · {Math.round(liveStats.match_count / liveStats.total * 100)}% encontraron su mentor
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
