@@ -1284,63 +1284,189 @@ function PantallaPostDiagnostico(props) {
   );
 }
 
+// ─────────────────────────────────────────────
+// Por qué 90 días: es el horizonte mínimo para
+// generar un cambio de patrón real y medible.
+// Menos tiempo → insights sin anclaje conductual.
+// Más tiempo → pérdida de foco y urgencia.
+// ─────────────────────────────────────────────
 var ROADMAP_META = {
-  "Estancamiento": [
-    { mes: "MES 1", titulo: "Diagnóstico profundo", items: ["Mapear tu sistema actual de trabajo", "Identificar el cuello de botella real", "Primer experimento de cambio", "Medir y ajustar"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de sistema", items: ["Diseñar tu sistema de producto propio", "Implementar rutinas de decisión"], bloqueado: true },
-    { mes: "MES 3", titulo: "Escalado y visibilidad", items: ["Consolidar el cambio", "Posicionarte para el próximo paso"], bloqueado: true },
-  ],
-  "Liderazgo": [
-    { mes: "MES 1", titulo: "Claridad de transición", items: ["Mapear tu brecha actual hacia el liderazgo", "Identificar tu estilo de influencia", "Primer proyecto de liderazgo sin autoridad", "Medir impacto"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de presencia", items: ["Desarrollar tu voz estratégica", "Gestionar hacia arriba y hacia los lados"], bloqueado: true },
-    { mes: "MES 3", titulo: "Consolidación del rol", items: ["Asumir responsabilidades de liderazgo", "Hacer visible el cambio"], bloqueado: true },
-  ],
-  "Reinvención": [
-    { mes: "MES 1", titulo: "Aterrizaje del cambio", items: ["Mapear tus transferencias reales de valor", "Validar la nueva dirección con evidencia", "Primer paso concreto en el nuevo contexto", "Reducir el riesgo del salto"], bloqueado: false },
-    { mes: "MES 2", titulo: "Construcción de credibilidad", items: ["Generar prueba social en el nuevo rol", "Conectar con la nueva comunidad"], bloqueado: true },
-    { mes: "MES 3", titulo: "Consolidación", items: ["Cerrar el ciclo anterior", "Abrazar la nueva identidad"], bloqueado: true },
-  ],
+  "Estancamiento": {
+    logica: "90 días es el tiempo mínimo para romper un patrón de estancamiento. El Mes 1 abre el sistema. El Mes 2 lo reconstruye. El Mes 3 lo consolida para que no vuelva a cerrarse.",
+    hito_final: "Al día 90: tenés un sistema propio de toma de decisiones, una posición clara de dónde querés ir, y evidencia concreta de que el patrón cambió.",
+    fases: [
+      {
+        mes: "MES 1", titulo: "Diagnóstico profundo", bloqueado: false,
+        descripcion: "El objetivo no es resolver el problema — es entenderlo realmente. La mayoría de los estancamientos tienen una causa raíz diferente a lo que parece.",
+        items: [
+          "Mapear cómo tomás decisiones hoy y dónde se corta el flujo",
+          "Identificar el cuello de botella real (no el síntoma)",
+          "Diseñar y ejecutar un primer experimento de cambio acotado",
+          "Medir qué funcionó y por qué",
+        ],
+        resultado: "Tenés un diagnóstico honesto de tu situación y un experimento corriendo."
+      },
+      {
+        mes: "MES 2", titulo: "Construcción de sistema", bloqueado: true,
+        descripcion: "Con el diagnóstico claro, se construye el sistema que reemplaza el patrón viejo.",
+        items: ["Diseñar tu sistema de producto propio", "Implementar rutinas de decisión con criterio propio"],
+        resultado: "Tenés un sistema que no depende de la motivación del día."
+      },
+      {
+        mes: "MES 3", titulo: "Escalado y posicionamiento", bloqueado: true,
+        descripcion: "El sistema ya funciona. Ahora se consolida y se hace visible.",
+        items: ["Consolidar el cambio como hábito", "Posicionarte para el próximo salto profesional"],
+        resultado: "Al día 90 podés articular con precisión dónde estás y hacia dónde vas."
+      },
+    ],
+  },
+  "Liderazgo": {
+    logica: "La transición a liderazgo no es una promoción — es un cambio de identidad. 90 días es el tiempo necesario para anclar una nueva forma de operar sin perder lo que ya construiste.",
+    hito_final: "Al día 90: influís con criterio propio, gestionás hacia arriba y hacia los lados con claridad, y tenés un proyecto de liderazgo concreto para mostrar.",
+    fases: [
+      {
+        mes: "MES 1", titulo: "Claridad de transición", bloqueado: false,
+        descripcion: "Antes de liderar a otros, necesitás saber exactamente qué tipo de líder querés ser — y qué te falta para llegar ahí.",
+        items: [
+          "Mapear la brecha real entre dónde estás y el liderazgo que querés ejercer",
+          "Identificar tu estilo natural de influencia (y sus límites)",
+          "Diseñar y ejecutar un primer proyecto de liderazgo sin autoridad formal",
+          "Medir el impacto y ajustar el enfoque",
+        ],
+        resultado: "Tenés claridad de tu punto de partida real y un primer ejercicio de liderazgo en marcha."
+      },
+      {
+        mes: "MES 2", titulo: "Construcción de presencia", bloqueado: true,
+        descripcion: "La presencia se construye con consistencia, no con gestos aislados.",
+        items: ["Desarrollar tu voz estratégica en reuniones y decisiones", "Gestionar hacia arriba, hacia los lados y hacia el equipo con intención"],
+        resultado: "Tu entorno empieza a verte diferente — y vos también te ves diferente."
+      },
+      {
+        mes: "MES 3", titulo: "Consolidación del rol", bloqueado: true,
+        descripcion: "El liderazgo se consolida cuando se vuelve el modo por defecto, no el esfuerzo extra.",
+        items: ["Asumir responsabilidades de liderazgo con naturalidad", "Hacer visible tu evolución a las personas que importan"],
+        resultado: "Al día 90 tenés evidencia concreta de tu nuevo nivel de impacto."
+      },
+    ],
+  },
+  "Reinvención": {
+    logica: "Las reinvenciones fracasan por falta de estructura en el momento crítico, no por falta de talento. 90 días es el período donde se define si el cambio aterriza o se convierte en otro ciclo incompleto.",
+    hito_final: "Al día 90: tenés un pie firme en el nuevo contexto, prueba social de tu valor en la nueva dirección, y claridad sobre el próximo paso.",
+    fases: [
+      {
+        mes: "MES 1", titulo: "Aterrizaje del cambio", bloqueado: false,
+        descripcion: "El primer mes no es para acelerar — es para aterrizar bien. Un cambio bien aterrizado avanza más rápido en los meses siguientes.",
+        items: [
+          "Mapear qué habilidades y experiencias sí se transfieren al nuevo contexto",
+          "Validar la nueva dirección con evidencia real (no con suposiciones)",
+          "Dar el primer paso concreto y medible en el nuevo contexto",
+          "Reducir el riesgo del salto identificando qué podés hacer hoy sin dejarlo todo",
+        ],
+        resultado: "Tenés una hipótesis validada de tu nueva dirección y al menos un paso concreto dado."
+      },
+      {
+        mes: "MES 2", titulo: "Construcción de credibilidad", bloqueado: true,
+        descripcion: "La credibilidad en un nuevo rol no se declara — se demuestra.",
+        items: ["Generar prueba social tangible en el nuevo contexto", "Conectar con la comunidad o red relevante de la nueva dirección"],
+        resultado: "Tenés casos concretos que demuestran tu valor en el nuevo rol."
+      },
+      {
+        mes: "MES 3", titulo: "Consolidación de identidad", bloqueado: true,
+        descripcion: "El último mes es el cierre de un ciclo y la apertura del siguiente.",
+        items: ["Cerrar formalmente el ciclo anterior con intención", "Abrazar la nueva identidad profesional con evidencia que la sostenga"],
+        resultado: "Al día 90 la reinvención dejó de ser una intención y se convirtió en una realidad."
+      },
+    ],
+  },
 };
 
 function RoadmapNoventa(props) {
-  var estado = props.estado || "Estancamiento";
-  var score  = props.score  || 50;
-  var nivel  = nivelScore(score);
-  var onWA   = props.onWA;
+  var estado   = props.estado || "Estancamiento";
+  var score    = props.score  || 50;
+  var nivel    = nivelScore(score);
+  var onWA     = props.onWA;
+  var [mesAbierto, setMesAbierto] = useState(null);
+
   if (estado.indexOf("Liderazgo") !== -1 || estado.indexOf("Transici") !== -1) estado = "Liderazgo";
   else if (estado.indexOf("Reinven") !== -1) estado = "Reinvención";
   else estado = "Estancamiento";
-  var roadmap = ROADMAP_META[estado] || ROADMAP_META["Estancamiento"];
+
+  var meta    = ROADMAP_META[estado] || ROADMAP_META["Estancamiento"];
+  var roadmap = meta.fases;
 
   return (
     <div style={{ marginTop: 12, background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 14, padding: "18px 16px", marginBottom: 12 }}>
-      <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>Tu roadmap de 90 días</div>
-      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Generado para tu perfil de {estado.toLowerCase()}</div>
+
+      {/* Header */}
+      <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>
+        Tu plan estratégico a 90 días
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite, marginBottom: 8 }}>
+        Diseñado para tu perfil de {estado.toLowerCase()}
+      </div>
+
+      {/* Por qué 90 días */}
+      <div style={{ background: "rgba(67,97,238,0.08)", border: "1px solid rgba(67,97,238,0.2)", borderRadius: 8, padding: "10px 12px", marginBottom: 14 }}>
+        <div style={{ fontSize: 10, color: "#6b87f5", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>¿Por qué 90 días?</div>
+        <div style={{ fontSize: 12, color: T.textSub, lineHeight: "1.6" }}>{meta.logica}</div>
+      </div>
+
+      {/* Fases */}
       {roadmap.map(function(fase, i) {
+        var isOpen = mesAbierto === i;
         return (
-          <div key={i} style={{ marginBottom: 12, opacity: fase.bloqueado ? 0.6 : 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: fase.bloqueado ? "rgba(255,255,255,0.3)" : "#4361ee", textTransform: "uppercase" }}>{fase.mes}</div>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-              {fase.bloqueado && <span style={{ fontSize: 12 }}>🔒</span>}
+          <div key={i} style={{ marginBottom: 8 }}>
+            <div
+              onClick={function(){ if (!fase.bloqueado) setMesAbierto(isOpen ? null : i); }}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: fase.bloqueado ? "rgba(255,255,255,0.02)" : (isOpen ? "rgba(67,97,238,0.1)" : "rgba(255,255,255,0.04)"), borderRadius: 8, border: "1px solid " + (fase.bloqueado ? T.border : isOpen ? "rgba(67,97,238,0.35)" : T.border), cursor: fase.bloqueado ? "default" : "pointer", opacity: fase.bloqueado ? 0.6 : 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: fase.bloqueado ? T.textDisabled : "#6b87f5", textTransform: "uppercase", flexShrink: 0 }}>{fase.mes}</div>
+              <div style={{ flex: 1, fontWeight: 700, color: fase.bloqueado ? T.textMuted : T.textWhite, fontSize: 12 }}>{fase.titulo}</div>
+              {fase.bloqueado
+                ? <span style={{ fontSize: 12 }}>🔒</span>
+                : <span style={{ color: T.textMuted, fontSize: 14 }}>{isOpen ? "▾" : "▸"}</span>
+              }
             </div>
-            <div style={{ fontWeight: 700, color: fase.bloqueado ? "rgba(255,255,255,0.4)" : "white", fontSize: 13, marginBottom: 6 }}>{fase.titulo}</div>
-            {!fase.bloqueado && fase.items.map(function(item, j) {
-              return (
-                <div key={j} style={{ display: "flex", gap: 7, marginBottom: 4 }}>
-                  <span style={{ color: "#4361ee", fontSize: 11, flexShrink: 0 }}>·</span>
-                  <span style={{ color: T.textSub, fontSize: 12, lineHeight: "1.4" }}>{item}</span>
+
+            {/* Contenido expandido — Mes 1 */}
+            {!fase.bloqueado && isOpen && (
+              <div style={{ padding: "12px 14px", background: "rgba(67,97,238,0.05)", borderRadius: "0 0 8px 8px", marginTop: -2, border: "1px solid rgba(67,97,238,0.2)", borderTop: "none" }}>
+                <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 10, fontStyle: "italic" }}>{fase.descripcion}</div>
+                <div style={{ fontSize: 10, color: "#6b87f5", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Qué trabajamos</div>
+                {fase.items.map(function(item, j) {
+                  return (
+                    <div key={j} style={{ display: "flex", gap: 7, marginBottom: 5 }}>
+                      <span style={{ color: "#4361ee", fontSize: 11, flexShrink: 0, marginTop: 1 }}>▸</span>
+                      <span style={{ color: T.textSub, fontSize: 12, lineHeight: "1.4" }}>{item}</span>
+                    </div>
+                  );
+                })}
+                <div style={{ marginTop: 10, padding: "8px 10px", background: "rgba(6,214,160,0.07)", borderRadius: 6, border: "1px solid rgba(6,214,160,0.2)" }}>
+                  <div style={{ fontSize: 10, color: "#06d6a0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Resultado al final del mes</div>
+                  <div style={{ fontSize: 12, color: T.textSub, lineHeight: "1.5" }}>{fase.resultado}</div>
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {/* Bloqueados: mostrar resultado prometido */}
             {fase.bloqueado && (
-              <div style={{ fontSize: 11, color: T.textDisabled, fontStyle: "italic" }}>Desbloqueado con mentoría personalizada</div>
+              <div style={{ padding: "8px 12px", marginTop: -2 }}>
+                <div style={{ fontSize: 11, color: T.textDisabled, fontStyle: "italic" }}>
+                  🔒 Desbloqueado con mentoría — {fase.resultado}
+                </div>
+              </div>
             )}
           </div>
         );
       })}
-      <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "16px 0" }} />
-      <div style={{ fontSize: 12, color: T.textSub, marginBottom: 16, lineHeight: "1.6" }}>
+
+      {/* Hito final */}
+      <div style={{ background: "rgba(6,214,160,0.06)", border: "1px solid rgba(6,214,160,0.2)", borderRadius: 8, padding: "10px 12px", margin: "14px 0" }}>
+        <div style={{ fontSize: 10, color: "#06d6a0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Al finalizar los 90 días</div>
+        <div style={{ fontSize: 12, color: T.textSub, lineHeight: "1.6" }}>{meta.hito_final}</div>
+      </div>
+
+      <div style={{ height: 1, background: T.border, margin: "14px 0" }} />
+      <div style={{ fontSize: 12, color: T.textSub, marginBottom: 14, lineHeight: "1.6" }}>
         ¿Querés que un mentor te ayude a ejecutar este plan?
       </div>
       <a href={onWA} target="_blank" rel="noopener noreferrer"
