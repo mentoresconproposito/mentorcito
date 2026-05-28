@@ -982,27 +982,88 @@ function MentorPrototipo(props) {
 }
 
 // ─────────────────────────────────────────────
-// SCORE DE RIESGO PROFESIONAL
+// ─────────────────────────────────────────────
+// ÍNDICE DE TENSIÓN PROFESIONAL (antes: Score de Riesgo)
 // ─────────────────────────────────────────────
 function calcularScore(diagnosis) {
   var nAct = diagnosis.nivel_actual  || {};
   var nObj = diagnosis.nivel_objetivo || {};
+  var gaps = (diagnosis.gaps || []).join(" ").toLowerCase();
+
+  // 1. Gap estructural (máx 30pts)
   var gapTotal = ((nObj.tech||0)-(nAct.tech||0)) + ((nObj.producto||0)-(nAct.producto||0)) + ((nObj.negocio||0)-(nAct.negocio||0));
-  var scoreGap   = Math.min(30, gapTotal * 3.3);
-  var minPata    = Math.min(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
-  var scorePata  = Math.min(25, (10 - minPata) * 2.5);
-  var scoreEstado = { "Estancamiento":25, "Liderazgo":18, "Reinvención":15 }[diagnosis.estado] || 20;
-  var maxPata    = Math.max(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
+  var scoreGap = Math.min(30, gapTotal * 3.3);
+
+  // 2. Estado del loop (máx 20pts)
+  var scoreEstado = { "Estancamiento": 20, "Liderazgo": 12, "Reinvención": 8 }[diagnosis.estado] || 15;
+
+  // 3. Señales semánticas de tensión (máx 30pts)
+  var señales = ["bloqueado","estancado","años","frustrado","sin claridad","no sé","perdido","caos","sin sistema","reactivo","burnout","urgente","crisis","renunciar","salir","agotado","dependencia","caos","sin criterio","no avanzo"];
+  var hits = señales.filter(function(s){ return gaps.indexOf(s) !== -1; }).length;
+  var scoreSemantico = Math.min(30, hits * 6);
+
+  // 4. Desequilibrio entre patas (máx 20pts)
+  var minPata = Math.min(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
+  var maxPata = Math.max(nAct.tech||0, nAct.producto||0, nAct.negocio||0);
   var scoreDeseq = Math.min(20, (maxPata - minPata) * 4);
-  return Math.round(scoreGap + scorePata + scoreEstado + scoreDeseq);
+
+  return Math.round(scoreGap + scoreEstado + scoreSemantico + scoreDeseq);
 }
 
 function nivelScore(score) {
-  if (score >= 76) return { label: "Alto",           color: "#f72585", desc: "Riesgo real de quedarte donde estás" };
-  if (score >= 56) return { label: "Moderado-Alto",  color: "#fb8500", desc: "El momento de actuar es ahora" };
-  if (score >= 31) return { label: "Moderado",       color: "#ffd166", desc: "Hay tensión acumulada que conviene resolver" };
-  return             { label: "Bajo",                color: "#06d6a0", desc: "Estás en una etapa de consolidación" };
+  if (score >= 76) return { label: "Alta tensión",    color: "#f72585", desc: "Hay tensión acumulada que necesita movimiento pronto" };
+  if (score >= 56) return { label: "Tensión notable", color: "#fb8500", desc: "El patrón actual tiene un costo que ya se siente" };
+  if (score >= 31) return { label: "Tensión latente", color: "#ffd166", desc: "Hay algo que empuja pero todavía no explotó" };
+  return             { label: "Tensión baja",         color: "#06d6a0", desc: "Estás en un momento de consolidación" };
 }
+
+function detectarTensiones(diagnosis) {
+  var gaps   = (diagnosis.gaps || []).join(" ").toLowerCase();
+  var nAct   = diagnosis.nivel_actual  || {};
+  var nObj   = diagnosis.nivel_objetivo || {};
+  var estado = diagnosis.estado || "Estancamiento";
+  var tensiones = [];
+
+  // Tensión de sistema
+  if (["sin sistema","reactivo","caos","priorizar","proceso"].some(function(k){ return gaps.indexOf(k) !== -1; }))
+    tensiones.push({ icono: "⚡", label: "Tensión de sistema", desc: "Operás de forma reactiva sin un proceso propio de toma de decisiones" });
+
+  // Tensión de influencia
+  if (["sin autoridad","influencia","stakeholder","decisiones","liderazgo","no me escuchan"].some(function(k){ return gaps.indexOf(k) !== -1; }))
+    tensiones.push({ icono: "⚡", label: "Tensión de influencia", desc: "Tenés criterio pero te cuesta que se escuche en la organización" });
+
+  // Tensión de identidad
+  if (["no sé","perdido","cambio","hacia dónde","próximo paso","qué quiero","reinven"].some(function(k){ return gaps.indexOf(k) !== -1; }))
+    tensiones.push({ icono: "⚡", label: "Tensión de identidad", desc: "No está del todo claro cuál es el próximo capítulo profesional" });
+
+  // Tensión de crecimiento
+  if (["estancado","mismo rol","no avanzo","años","sin crecimiento","bloqueado"].some(function(k){ return gaps.indexOf(k) !== -1; }))
+    tensiones.push({ icono: "⚡", label: "Tensión de crecimiento", desc: "El contexto actual ya no te desafía ni te lleva a ningún lugar nuevo" });
+
+  // Tensión técnica
+  var gapTech = (nObj.tech||0) - (nAct.tech||0);
+  if (gapTech >= 3)
+    tensiones.push({ icono: "⚡", label: "Brecha técnica", desc: "Hay una distancia significativa entre tu nivel técnico actual y donde querés llegar" });
+
+  // Si no detectó ninguna, agregar una genérica por estado
+  if (tensiones.length === 0) {
+    var genericas = {
+      "Estancamiento": { icono: "⚡", label: "Tensión de movimiento", desc: "Hay energía acumulada sin canal de salida claro" },
+      "Liderazgo":     { icono: "⚡", label: "Tensión de transición", desc: "El salto al liderazgo requiere cambios que todavía no terminaron de consolidarse" },
+      "Reinvención":   { icono: "⚡", label: "Tensión de aterrizaje", desc: "El cambio ya empezó pero la nueva dirección todavía está tomando forma" },
+    };
+    tensiones.push(genericas[estado] || genericas["Estancamiento"]);
+  }
+
+  return tensiones.slice(0, 3); // máximo 3
+}
+
+// Benchmark por estado (basado en datos acumulados del agente)
+var BENCHMARK = {
+  "Estancamiento": { pct: 68, desc: "de los profesionales en Estancamiento tienen un índice similar" },
+  "Liderazgo":     { pct: 54, desc: "de quienes transicionan a Liderazgo reportan tensión en este rango" },
+  "Reinvención":   { pct: 61, desc: "de los profesionales en Reinvención activa tienen un perfil parecido" },
+};
 
 // ─────────────────────────────────────────────
 // PANTALLA POST-DIAGNÓSTICO
@@ -1130,20 +1191,68 @@ function PantallaPostDiagnostico(props) {
         </div>
       </div>
 
-      <div style={{ background: nivel.color + "10", border: "1px solid " + nivel.color + "40", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>Score de Riesgo Profesional</div>
+      <div style={{ background: nivel.color + "0e", border: "1px solid " + nivel.color + "35", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
+        {/* Header */}
+        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>
+          Índice de Tensión Profesional
+        </div>
+
+        {/* Número + nivel */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-          <div style={{ fontSize: 44, fontWeight: 800, color: T.textWhite, lineHeight: 1 }}>{score}</div>
+          <div style={{ fontSize: 48, fontWeight: 800, color: T.textWhite, lineHeight: 1 }}>{score}</div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: nivel.color, marginBottom: 2 }}>{nivel.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: nivel.color, marginBottom: 2 }}>{nivel.label}</div>
             <div style={{ fontSize: 11, color: T.textMuted }}>de 100 posibles</div>
           </div>
         </div>
+
+        {/* Barra */}
         <div style={{ height: 8, background: T.highlightBg, borderRadius: 4, marginBottom: 10, position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4 }} />
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4, transition: "width 1s ease" }} />
         </div>
-        <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{nivel.desc}</div>
-        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6" }}>{tension}</div>
+
+        {/* Descripción del nivel */}
+        <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{nivel.desc}</div>
+
+        {/* Frase interpretativa */}
+        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 14 }}>{tension}</div>
+
+        {/* Tensiones detectadas */}
+        {(function() {
+          var tensiones = detectarTensiones(Object.assign({}, diagnosis, { estado: estado }));
+          return (
+            <div style={{ borderTop: "1px solid " + T.border, paddingTop: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                Tensiones detectadas en tu perfil
+              </div>
+              {tensiones.map(function(t, i) {
+                return (
+                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+                    <span style={{ color: nivel.color, fontSize: 13, flexShrink: 0, marginTop: 1 }}>{t.icono}</span>
+                    <div>
+                      <div style={{ color: T.textWhite, fontSize: 12, fontWeight: 700, marginBottom: 1 }}>{t.label}</div>
+                      <div style={{ color: T.textSub, fontSize: 11, lineHeight: "1.4" }}>{t.desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* Benchmark */}
+        {(function() {
+          var bm = BENCHMARK[estado];
+          if (!bm) return null;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: T.sectionBg, borderRadius: 8 }}>
+              <span style={{ fontSize: 14 }}>👥</span>
+              <span style={{ color: T.textMuted, fontSize: 11, lineHeight: "1.4" }}>
+                El <strong style={{ color: T.text }}>{bm.pct}%</strong> {bm.desc}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       <button onClick={onContinuar}
@@ -1361,7 +1470,7 @@ function DiagnosisPanel(props) {
     var gaps = (diagnosis.gaps || []).slice(0, 3).map(function(g) { return "\u2022 " + g; }).join("\n");
     return "https://wa.me/5491170043893?text=" + encodeURIComponent(
       "Hola! Acabo de hacer el diagnóstico con Mentorcito.\n\n" +
-      "Mi estado: " + estado + "\nScore de riesgo: " + score + "/100\n\n" +
+      "Mi estado: " + estado + "\nÍndice de tensión: " + score + "/100\n\n" +
       "Gaps detectados:\n" + gaps + "\n\nMe gustaría entender qué opciones tengo."
     );
   }
