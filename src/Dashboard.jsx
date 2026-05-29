@@ -77,7 +77,7 @@ function Bar(props) {
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
       <div style={{ width: props.labelWidth || 140, color: "rgba(255,255,255,0.65)", fontSize: 12, flexShrink: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{props.label}</div>
       <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, position: "relative" }}>
-        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: pct + "%", background: props.color || PRIMARY, borderRadius: 3, transition: "width 0.6s ease" }} />
+        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: Math.min(100, pct) + "%", background: props.color || PRIMARY, borderRadius: 3, transition: "width 0.6s ease" }} />
       </div>
       <div style={{ width: 28, textAlign: "right", color: "rgba(255,255,255,0.5)", fontSize: 11, fontFamily: "monospace", flexShrink: 0 }}>{props.value}</div>
     </div>
@@ -401,7 +401,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)", paddingBottom: 60 }}>
+    <div style={{ minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif", color: "rgba(255,255,255,0.88)", paddingBottom: 60, overflowX: "hidden" }}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: rgba(67,97,238,0.3); border-radius: 2px; } @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } } .card { animation: fadeUp 0.4s ease forwards; }"}</style>
 
       {/* Error banner */}
@@ -416,7 +416,7 @@ export default function Dashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 22 }}>📊</span>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "white" }}>Mentorcito Analytics — Estados</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
               {lastRefresh ? "Actualizado " + lastRefresh.toLocaleTimeString("es-AR") : "Dashboard de demanda del Marketplace"}
             </div>
@@ -450,7 +450,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div style={{ padding: "16px 12px" }}>
+      <div style={{ padding: "16px 12px", overflowX: "hidden" }}>
 
         {/* ── OVERVIEW ── */}
         {tab === "overview" && (
@@ -604,7 +604,7 @@ export default function Dashboard() {
                       {/* Barra de frecuencia */}
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-                          <div style={{ height: "100%", width: pct + "%", background: isTop3 ? ACCENT : PRIMARY, borderRadius: 2, transition: "width 0.6s" }} />
+                          <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: isTop3 ? ACCENT : PRIMARY, borderRadius: 2, transition: "width 0.6s" }} />
                         </div>
                         <span style={{ color: isTop3 ? ACCENT : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700, flexShrink: 0, fontFamily: "monospace" }}>
                           {g[1]}x
@@ -633,7 +633,7 @@ export default function Dashboard() {
 
         {/* ── DEMANDA INSATISFECHA ── */}
         {tab === "demanda" && (
-          <div>
+          <div style={{ overflowX: "hidden", maxWidth: "100%" }}>
             <div style={{ background: "rgba(247,37,133,0.06)", border: "1px solid rgba(247,37,133,0.2)", borderRadius: 14, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <span style={{ fontSize: 20 }}>⚠️</span>
@@ -676,7 +676,7 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: "white", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{name}</div>
                       <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-                        <div style={{ height: "100%", width: pct + "%", background: col, borderRadius: 2, transition: "width 0.6s" }} />
+                        <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: col, borderRadius: 2, transition: "width 0.6s" }} />
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -714,7 +714,7 @@ export default function Dashboard() {
 
         {/* ── MENTORES ── */}
         {tab === "buscados" && (
-          <div>
+          <div style={{ overflowX: "hidden", maxWidth: "100%" }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 20 }}>
               Perfiles solicitados sin match en el catalogo. Cada uno es una oportunidad de reclutamiento con demanda garantizada.
             </div>
@@ -746,7 +746,8 @@ export default function Dashboard() {
                 prototipo_custom:        { nombre: "Perfil personalizado",  icono: "🧩", color: "rgba(255,255,255,0.4)", desc: "El agente genero un prototipo personalizado porque ningun mentor existente cubria los gaps especificos.", gaps_tipicos: [] },
               };
               var meta = BUSCADOS_META[id] || { nombre: id, icono: "🎯", color: PRIMARY, desc: "", gaps_tipicos: [] };
-              var pct = stats.no_match_count ? Math.round(count / stats.no_match_count * 100) : 0;
+              var denominator = stats.no_match_count && stats.no_match_count > 0 ? stats.no_match_count : total;
+              var pct = denominator ? Math.min(100, Math.round(count / denominator * 100)) : 0;
               var pctTotal = total ? Math.round(count / total * 100) : 0;
               var gapCount2 = {};
               records.forEach(function(r) {
@@ -761,25 +762,25 @@ export default function Dashboard() {
               return (
                 <div key={id} className="card" style={{ background: CARD, border: "1px solid " + meta.color + "30", borderRadius: 14, padding: "20px 20px", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                       <div style={{ width: 44, height: 44, borderRadius: 12, background: meta.color + "18", border: "1px solid " + meta.color + "35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{meta.icono}</div>
                       <div>
                         <div style={{ color: "white", fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{meta.nombre}</div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <span style={{ color: meta.color, fontSize: 22, fontWeight: 800 }}>{count}</span>
+                          <span style={{ color: meta.color, fontSize: 18, fontWeight: 800 }}>{count}</span>
                           <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11 }}>solicitudes</span>
                           <span style={{ padding: "2px 8px", borderRadius: 20, background: meta.color + "18", border: "1px solid " + meta.color + "35", color: meta.color, fontSize: 10, fontWeight: 700 }}>{pctTotal}% del total</span>
                         </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, marginBottom: 4 }}>del total sin match</div>
-                      <div style={{ color: meta.color, fontSize: 18, fontWeight: 700 }}>{pct}%</div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, marginBottom: 4 }}>de sin match</div>
+                      <div style={{ color: meta.color, fontSize: 15, fontWeight: 700 }}>{Math.min(100,pct)}%</div>
                     </div>
                   </div>
 
                   <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, marginBottom: 14 }}>
-                    <div style={{ height: "100%", width: pct + "%", background: meta.color, borderRadius: 3, transition: "width 0.6s" }} />
+                    <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: meta.color, borderRadius: 3, transition: "width 0.6s" }} />
                   </div>
 
                   <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.6", marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, borderLeft: "3px solid " + meta.color }}>
@@ -875,7 +876,7 @@ export default function Dashboard() {
                       <div style={{ color: "white", fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{item.pata.split(" ").slice(1).join(" ")}</div>
                       <div style={{ fontSize: 28, fontWeight: 800, color: item.color, marginBottom: 6 }}>{item.count}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>/{item.total}</span></div>
                       <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginBottom: 10 }}>
-                        <div style={{ height: "100%", width: pct + "%", background: item.color, borderRadius: 2 }} />
+                        <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: item.color, borderRadius: 2 }} />
                       </div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>Gap: {item.gap}</div>
                     </div>
