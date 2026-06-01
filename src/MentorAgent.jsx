@@ -1885,7 +1885,7 @@ function EstadoLanding(props) {
 
 var INITIAL_MSG = {
   role: "assistant",
-  content: "Hola, soy Mentorcito 💠\n\nSi llegaste hasta acá, probablemente algo en tu carrera en producto no está donde querés que esté. Quizás te sentís estancado/a. Quizás estás en medio de un cambio. Quizás querés dar el salto al liderazgo y no sabés por dónde empezar.\n\nLo que vamos a hacer juntos es entender en qué punto del loop profesional estás hoy — entre **Reinvención**, **Estancamiento** y **Liderazgo** — y conectarte con quien puede ayudarte a avanzar.\n\nNo es un test. Es una conversación. Y lleva 5 minutos aprox.\n\n¿Cómo te llamás?",
+  content: "Hola, soy **Mentorcito** 💠\n\nSi llegaste hasta acá, probablemente algo en tu carrera en producto no está donde querés que esté. Quizás te sentís estancado/a. Quizás estás en medio de un cambio. Quizás querés dar el salto al liderazgo y no sabés por dónde empezar.\n\nLo que vamos a hacer juntos es entender en qué punto del loop profesional estás hoy — entre **Reinvención**, **Estancamiento** y **Liderazgo** — y conectarte con quien puede ayudarte a avanzar.\n\nNo es un test. Es una conversación. Y lleva 5 minutos aprox.\n\n**¿Cómo te llamás?**",
 };
 
 export default function MentorAgent() {
