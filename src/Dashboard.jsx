@@ -137,8 +137,8 @@ var SHEETS_URL = "/api/sheets";
 function buildStatsFromSeed(records) {
   var total = records.length;
   if (!total) return null;
-  var matches   = records.filter(function(r){ return r.tiene_match; });
-  var noMatches = records.filter(function(r){ return !r.tiene_match; });
+  var matches   = records.filter(function(r){ return r.tiene_match === true || r.tiene_match === "SI"; });
+  var noMatches = records.filter(function(r){ return r.tiene_match !== true && r.tiene_match !== "SI"; });
   var gapCount = {}, mentorCount = {}, buscadoCount = {};
   records.forEach(function(r) {
     (r.gaps||[]).forEach(function(g){ gapCount[g]=(gapCount[g]||0)+1; });
@@ -521,7 +521,7 @@ export default function Dashboard() {
                   var from = Date.now() - (daysAgo+1)*86400000;
                   var to   = Date.now() - daysAgo*86400000;
                   var dayRecords = records.filter(function(r){ return r.ts >= from && r.ts < to; });
-                  var dayMatches = dayRecords.filter(function(r){ return r.tiene_match; }).length;
+                  var dayMatches = dayRecords.filter(function(r){ return r.tiene_match === true || r.tiene_match === "SI"; }).length;
                   var dayNoMatch = dayRecords.length - dayMatches;
                   var maxH = 64;
                   var d = new Date(to);
@@ -1310,7 +1310,7 @@ export default function Dashboard() {
               Mostrando los últimos {Math.min(records.length, 20)} diagnósticos
             </div>
             {records.slice(0, 20).map(function(r, i) {
-              var hasMatch = r.tiene_match;
+              var hasMatch = r.tiene_match === true || r.tiene_match === "SI";
               var buscadoName = r.mentor_buscado_id ? (BUSCADOS_NAMES[r.mentor_buscado_id] || r.mentor_buscado_id) : null;
               return (
                 <div key={i} className="card" style={{ background: CARD, border: "1px solid " + (hasMatch ? "rgba(6,214,160,0.15)" : "rgba(247,37,133,0.15)"), borderRadius: 12, padding: "14px 16px", marginBottom: 8 }}>
