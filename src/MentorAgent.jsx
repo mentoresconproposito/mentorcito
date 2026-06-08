@@ -2210,7 +2210,12 @@ export default function MentorAgent() {
             </button>
           </div>
           <div style={{ textAlign: "center", marginTop: 6 }}>
-            <span style={{ fontSize: 10, color: T.textDisabled }}>En desktop: Enter para enviar · En mobile: botón ➤</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+              <span style={{ fontSize: 10, color: T.textDisabled }}>En desktop: Enter para enviar · En mobile: botón ➤</span>
+              <a href="/privacidad" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.textDisabled, textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                Política de privacidad
+              </a>
+            </div>
           </div>
         </div>
       </div>
