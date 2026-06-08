@@ -1883,12 +1883,16 @@ function EstadoLanding(props) {
 }
 
 
-var INITIAL_MSG = {
-  role: "assistant",
-  content: "Hola, soy **Mentorcito** 💠\n\nSi llegaste hasta acá, probablemente algo en tu carrera en producto no está donde querés que esté. Quizás te sentís estancado/a. Quizás estás en medio de un cambio. Quizás querés dar el salto al liderazgo y no sabés por dónde empezar.\n\nLo que vamos a hacer juntos es entender en qué punto del loop profesional estás hoy — entre **Reinvención**, **Estancamiento** y **Liderazgo** — y conectarte con quien puede ayudarte a avanzar.\n\nNo es un test. Es una conversación. Y lleva 5 minutos aprox.\n\n**¿Cómo te llamás?**",
-};
 
-export default function MentorAgent() {
+export default function MentorAgent(props) {
+  var empresaConfig = props.empresaConfig || null;
+
+  var INITIAL_MSG = {
+    role: "assistant",
+    content: empresaConfig
+      ? "Hola, soy **Mentorcito** 💠\n\n**" + empresaConfig.nombre + "** está invirtiendo en entender en qué momento de carrera está su equipo de producto.\n\nEn los próximos 5 minutos vamos a explorar juntos en qué punto del loop profesional estás hoy — y qué necesitás para avanzar.\n\nNo es un test, ni una evaluación de desempeño. Es confidencial. Y te sirve a vos.\n\n**¿Cómo te llamás?**"
+      : "Hola, soy **Mentorcito** 💠\n\nSi llegaste hasta acá, probablemente algo en tu carrera en producto no está donde querés que esté. Quizás te sentís estancado/a. Quizás estás en medio de un cambio. Quizás querés dar el salto al liderazgo y no sabés por dónde empezar.\n\nLo que vamos a hacer juntos es entender en qué punto del loop profesional estás hoy — entre **Reinvención**, **Estancamiento** y **Liderazgo** — y conectarte con quien puede ayudarte a avanzar.\n\nNo es un test. Es una conversación. Y lleva 5 minutos aprox.\n\n**¿Cómo te llamás?**",
+  };
   // Detectar ?estado= en la URL para landing compartida
   var urlParams = new URLSearchParams(window.location.search);
   var estadoParam = urlParams.get("estado");
@@ -2072,6 +2076,7 @@ export default function MentorAgent() {
               nombre: nombreDetectado,
               email: "",
               resumen: resumen,
+              empresa_id: empresaConfig ? empresaConfig.empresa : "",
             });
           }
         } catch (e) {}
@@ -2133,8 +2138,12 @@ export default function MentorAgent() {
             <a href="https://mentoresconproposito.vercel.app/" style={{ width: 30, height: 30, borderRadius: 8, background: T.highlightBg, border: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontSize: 15, textDecoration: "none", flexShrink: 0 }}>←</a>
             <span style={{ fontSize: 20 }}>💠</span>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite, lineHeight: 1.2 }}>Mentores con Propósito</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>Agente de diagnóstico</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite, lineHeight: 1.2 }}>
+                {empresaConfig ? empresaConfig.icono + "  " + empresaConfig.nombre : "Mentores con Propósito"}
+              </div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>
+                {empresaConfig ? "Diagnóstico de equipo · Mentorcito" : "Agente de diagnóstico"}
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: phaseColor[phase] + "18", border: "1px solid " + phaseColor[phase] + "44" }}>
