@@ -72,11 +72,10 @@ export default function EmpresaDashboard() {
 
   function loadData() {
     setLoading(true);
-    fetch("/api/sheets?action=stats")
+    fetch("/api/sheets?action=records")
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d && d.records) {
-          // Filtrar solo los diagnósticos de esta empresa
           var filtered = d.records.filter(function(r) {
             return r.empresa_id === slug;
           });
