@@ -1503,7 +1503,7 @@ function CtaAccordion(props) {
 
       {/* Opción A — Plan de acción */}
       <div style={{ marginBottom: 8, border: "1px solid " + (open === "roadmap" ? "rgba(67,97,238,0.5)" : "rgba(255,255,255,0.09)"), borderRadius: 12, overflow: "hidden", transition: "border 0.2s" }}>
-        <button onClick={function() { setOpen(open === "roadmap" ? null : "roadmap"); }}
+        <button onClick={function() { var opening = open !== "roadmap"; setOpen(opening ? "roadmap" : null); if(opening){ trackEvent("eligen_roadmap", true); } }}
           style={{ width: "100%", padding: "14px 18px", background: open === "roadmap" ? "rgba(67,97,238,0.12)" : "rgba(255,255,255,0.03)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}>🗺️</span>
@@ -1530,7 +1530,7 @@ function CtaAccordion(props) {
       {/* Opción B — Paquete directo (solo si hay match) */}
       {hasMatch && (
         <div style={{ marginBottom: 4, border: "1px solid " + (open === "paquete" ? "rgba(123,47,247,0.5)" : "rgba(255,255,255,0.09)"), borderRadius: 12, overflow: "hidden", transition: "border 0.2s" }}>
-          <button onClick={function() { setOpen(open === "paquete" ? null : "paquete"); trackEvent("vio_paquete", true); }}
+          <button onClick={function() { var opening = open !== "paquete"; setOpen(opening ? "paquete" : null); if(opening){ trackEvent("eligen_mentoria", true); trackEvent("vio_paquete", true); } }}
             style={{ width: "100%", padding: "14px 18px", background: open === "paquete" ? "rgba(123,47,247,0.12)" : "rgba(255,255,255,0.03)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>✨</span>
@@ -1562,9 +1562,11 @@ function DiagnosisPanel(props) {
   var trackEvent   = props.trackEvent  || function() {};
   var postToSheets = props.postToSheets || function() {};
   var diagKey      = props.diagKey     || null;
-  var [step, setStep]       = useState("insight");
-  var [userEmail, setUserEmail] = useState("");
-  var [userName, setUserName]   = useState("");
+  var empresaCtx   = props.empresaCtx  || null;
+  var [step, setStep]           = useState("insight");
+  var [userEmail, setUserEmail]     = useState("");
+  var [userName, setUserName]       = useState("");
+  var [compartirEmpresa, setCompartirEmpresa] = useState(false);
   if (!diagnosis) return null;
 
   var mentorsToShow = (diagnosis.mentores_recomendados || []).map(function(rec) {
@@ -1645,6 +1647,24 @@ function DiagnosisPanel(props) {
               style={{ width: "100%", padding: "10px 12px", background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 8, color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
           </div>
 
+          {/* Opt-in compartir con empresa */}
+          {empresaCtx && (
+            <div onClick={function(){ setCompartirEmpresa(!compartirEmpresa); }}
+              style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", background: compartirEmpresa ? "rgba(6,214,160,0.06)" : "rgba(255,255,255,0.03)", border: "1px solid " + (compartirEmpresa ? "rgba(6,214,160,0.2)" : "rgba(255,255,255,0.08)"), borderRadius: 8, cursor: "pointer", marginBottom: 16, transition: "all 0.2s" }}>
+              <div style={{ width: 16, height: 16, borderRadius: 4, background: compartirEmpresa ? "#06d6a0" : "transparent", border: "2px solid " + (compartirEmpresa ? "#06d6a0" : "rgba(255,255,255,0.25)"), flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {compartirEmpresa && <span style={{ color: "#003d14", fontSize: 10, fontWeight: 900 }}>✓</span>}
+              </div>
+              <div>
+                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: 600, marginBottom: 2 }}>
+                  Compartir mi diagnóstico con {empresaCtx.nombre}
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, lineHeight: "1.4" }}>
+                  Para que puedan acompañarte. Solo lo verá tu equipo de RRHH o liderazgo de producto. Si no tildás, aparecés como anónimo.
+                </div>
+              </div>
+            </div>
+          )}
+
           <button onClick={function() {
             if (userEmail && diagKey) {
               postToSheets({
@@ -1652,6 +1672,7 @@ function DiagnosisPanel(props) {
                 diag_key: diagKey,
                 nombre: userName,
                 email: userEmail,
+                compartir_empresa: compartirEmpresa,
               });
               trackEvent("dejo_email", true);
             }
@@ -2178,7 +2199,7 @@ export default function MentorAgent(props) {
                   <div style={{ padding: "13px 16px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "4px 18px 18px 18px", background: msg.role === "user" ? "rgba(67,97,238,0.14)" : "rgba(255,255,255,0.05)", border: "1px solid " + (msg.role === "user" ? "rgba(67,97,238,0.35)" : "rgba(255,255,255,0.08)"), fontSize: 14, lineHeight: "1.6" }}>
                     {formatMessage(msg.content)}
                     {msg.role === "assistant" && diagnosis && i === messages.length - 1 && (
-                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} />
+                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} empresaCtx={empresaConfig} />
                     )}
                   </div>
                   {/* Social proof debajo del primer mensaje */}
