@@ -23,6 +23,20 @@ var LOOP_COLORS = {
   "Liderazgo":    "#4361ee",
 };
 
+var MENTORES_NOMBRES = {
+  GustavoLoustalet:  "Gustavo Loustalet",
+  FranciscoSantolo:  "Francisco Santolo",
+  MarinaRamirez:     "Marina Ramirez",
+  MichelHauzeur:     "Michel Hauzeur",
+  MartinGiorgetti:   "Martín Giorgetti",
+  AnaMarcuse:        "Ana Marcuse",
+  NataliaJimenez:    "Natalia Jiménez",
+  LuciaCostilla:     "Lucía Costilla",
+  JimenaSosa:        "Jimena Sosa",
+  NicolasMusa:       "Nicolas Musa",
+  JuanCejas:         "Juan Cejas",
+};
+
 function Stat({ icon, value, label, sub, color }) {
   return (
     <div style={{ textAlign: "center" }}>
@@ -336,36 +350,98 @@ export default function EmpresaDashboard() {
             {/* ── PERSONAS ──────────────────────────────────── */}
             {tab === "personas" && (
               <div>
-                <div style={{ background: "rgba(251,133,0,0.08)", border: "1px solid rgba(251,133,0,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 16, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                  ⚠️  Los datos individuales son confidenciales. Solo se muestran si la persona dejó su nombre. Los resultados sin nombre aparecen como anónimos.
+                <div style={{ background: "rgba(6,214,160,0.06)", border: "1px solid rgba(6,214,160,0.2)", borderRadius: 10, padding: "12px 14px", marginBottom: 16, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                  ✅  Solo aparecen con nombre las personas que eligieron compartir su diagnóstico. El resto aparece como anónimo.
                 </div>
+
+                {/* Stats de opt-in */}
+                {(function() {
+                  var compartieron = records.filter(function(r){ return r.compartir_empresa; }).length;
+                  var pctOpt = total ? Math.round(compartieron / total * 100) : 0;
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+                      {[
+                        { label: "Compartieron", value: compartieron, pct: pctOpt, color: GREEN },
+                        { label: "Eligieron roadmap", value: records.filter(function(r){ return r.eligen_roadmap; }).length, pct: total ? Math.round(records.filter(function(r){ return r.eligen_roadmap; }).length / total * 100) : 0, color: PRIMARY },
+                        { label: "Eligieron mentoría", value: records.filter(function(r){ return r.eligen_mentoria; }).length, pct: total ? Math.round(records.filter(function(r){ return r.eligen_mentoria; }).length / total * 100) : 0, color: PURPLE },
+                      ].map(function(s, i) {
+                        return (
+                          <div key={i} style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 10, padding: "10px 12px", textAlign: "center" }}>
+                            <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
+                            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{s.label}</div>
+                            <div style={{ fontSize: 9, color: s.color, fontWeight: 600 }}>{s.pct}%</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {records.map(function(r, i) {
                   var estado = r.estado || "Estancamiento";
                   var color = LOOP_COLORS[estado] || PRIMARY;
                   var iconos = { "Reinvención": "🔀", "Estancamiento": "🔁", "Liderazgo": "📈" };
-                  var nombre = r.nombre || "Anónimo";
+                  var nombre = r.compartir_empresa ? (r.nombre || "Sin nombre") : "Anónimo";
                   var fecha = r.fecha ? r.fecha.split(",")[0] : "";
+                  var hasMatch = r.tiene_match === true || r.tiene_match === "SI";
+                  var eligioRoadmap = r.eligen_roadmap;
+                  var eligioMentoria = r.eligen_mentoria;
                   return (
-                    <div key={i} style={{ background: CARD, border: "1px solid " + color + "25", borderRadius: 10, padding: "14px 16px", marginBottom: 8 }}>
+                    <div key={i} style={{ background: CARD, border: "1px solid " + color + "25", borderRadius: 10, padding: "14px 16px", marginBottom: 8, opacity: r.compartir_empresa ? 1 : 0.65 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{iconos[estado] || "👤"}</div>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{r.compartir_empresa ? (iconos[estado] || "👤") : "🔒"}</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ color: "white", fontWeight: 700, fontSize: 13 }}>{nombre}</div>
+                          <div style={{ color: r.compartir_empresa ? "white" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: 13 }}>{nombre}</div>
                           <div style={{ color, fontSize: 11, fontWeight: 600 }}>{estado} · {fecha}</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Match</div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: r.tiene_match === "SI" ? GREEN : AMBER }}>
-                            {r.tiene_match === "SI" ? "✅ Sí" : "⚠️ No"}
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Match</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: hasMatch ? GREEN : AMBER }}>
+                            {hasMatch ? "✅" : "⚠️"}
                           </div>
                         </div>
                       </div>
-                      {r.gaps && r.gaps.length > 0 && (
-                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
-                          {r.gaps.slice(0, 3).map(function(g, j) {
-                            return <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: color + "12", border: "1px solid " + color + "25", color: "rgba(255,255,255,0.55)", fontSize: 10 }}>{g}</span>;
-                          })}
+
+                      {r.compartir_empresa && (
+                        <div>
+                          {r.gaps && r.gaps.length > 0 && (
+                            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 8 }}>
+                              {r.gaps.slice(0, 3).map(function(g, j) {
+                                return <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: color + "12", border: "1px solid " + color + "25", color: "rgba(255,255,255,0.55)", fontSize: 10 }}>{g}</span>;
+                              })}
+                            </div>
+                          )}
+
+                          {/* Mentores matcheados */}
+                          {r.mentores_ids && r.mentores_ids.length > 0 && (
+                            <div style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>
+                                Mentor{r.mentores_ids.length > 1 ? "es" : ""} matcheado{r.mentores_ids.length > 1 ? "s" : ""}
+                              </div>
+                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                                {r.mentores_ids.slice(0, 3).map(function(id, j) {
+                                  var nombre = MENTORES_NOMBRES[id] || id;
+                                  return (
+                                    <span key={j} style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(6,214,160,0.08)", border: "1px solid rgba(6,214,160,0.2)", color: GREEN, fontSize: 10, fontWeight: 600 }}>
+                                      👤 {nombre}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            {eligioRoadmap && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(67,97,238,0.1)", border: "1px solid rgba(67,97,238,0.25)", color: "#6b87f5", fontSize: 10, fontWeight: 600 }}>🗺️ Eligió roadmap 90 días</span>}
+                            {eligioMentoria && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(155,95,255,0.1)", border: "1px solid rgba(155,95,255,0.25)", color: PURPLE, fontSize: 10, fontWeight: 600 }}>👥 Interesado en mentoría</span>}
+                            {!eligioRoadmap && !eligioMentoria && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>No eligió acompañamiento aún</span>}
+                          </div>
+                        </div>
+                      )}
+
+                      {!r.compartir_empresa && (
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+                          Esta persona eligió mantener su diagnóstico privado.
                         </div>
                       )}
                     </div>
