@@ -107,6 +107,13 @@ export default function EmpresaDashboard() {
   useEffect(function() { loadData(); }, []);
 
   var total = records.length;
+  var tensionCount = {};
+  records.forEach(function(r) {
+    (r.tensiones || []).forEach(function(t) {
+      if (t) tensionCount[t] = (tensionCount[t] || 0) + 1;
+    });
+  });
+  var topTensiones = Object.entries(tensionCount).sort(function(a,b){ return b[1]-a[1]; }).slice(0, 5);
   var matches = records.filter(function(r) { return r.tiene_match === "SI"; }).length;
   var matchPct = total ? Math.round(matches / total * 100) : 0;
 
@@ -308,6 +315,34 @@ export default function EmpresaDashboard() {
                   );
                 })}
 
+                {/* Tensiones transversales */}
+                {topTensiones.length > 0 && (
+                  <div style={{ background: CARD, border: "1px solid rgba(155,95,255,0.2)", borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, color: PURPLE, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+                      ⚡ Tensiones transversales del equipo
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>
+                      Patrones psicológicos detectados en el lenguaje de los diagnósticos
+                    </div>
+                    {topTensiones.map(function(t, i) {
+                      var pct = total ? Math.round(t[1] / total * 100) : 0;
+                      var colors = [PURPLE, "#b57bee", "#c99eff", "#9b5fff", "#ddc5ff"];
+                      var color = colors[i] || PURPLE;
+                      return (
+                        <div key={i} style={{ marginBottom: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: i === 0 ? 700 : 400 }}>⚡ {t[0]}</span>
+                            <span style={{ fontSize: 11, color, fontWeight: 700 }}>{t[1]} ({pct}%)</span>
+                          </div>
+                          <div style={{ height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 3 }}>
+                            <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: color, borderRadius: 3, transition: "width 0.8s" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Recomendación de intervención */}
                 <div style={{ background: "rgba(67,97,238,0.06)", border: "1px solid rgba(67,97,238,0.2)", borderRadius: 12, padding: "16px 18px", marginTop: 8 }}>
                   <div style={{ fontSize: 10, color: "#6b87f5", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Recomendación de intervención</div>
@@ -409,6 +444,24 @@ export default function EmpresaDashboard() {
                               {r.gaps.slice(0, 3).map(function(g, j) {
                                 return <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: color + "12", border: "1px solid " + color + "25", color: "rgba(255,255,255,0.55)", fontSize: 10 }}>{g}</span>;
                               })}
+                            </div>
+                          )}
+
+                          {/* Tensiones psicológicas */}
+                          {r.tensiones && r.tensiones.length > 0 && (
+                            <div style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>
+                                Tensión{r.tensiones.length > 1 ? "es" : ""} detectada{r.tensiones.length > 1 ? "s" : ""}
+                              </div>
+                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                                {r.tensiones.map(function(t, j) {
+                                  return (
+                                    <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(155,95,255,0.1)", border: "1px solid rgba(155,95,255,0.2)", color: PURPLE, fontSize: 10 }}>
+                                      ⚡ {t}
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
 
