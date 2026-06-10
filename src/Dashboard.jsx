@@ -151,6 +151,7 @@ function buildStatsFromSeed(records) {
     avg_actual:   {tech:af("nivel_actual","tech"),   producto:af("nivel_actual","producto"),   negocio:af("nivel_actual","negocio")},
     avg_objetivo: {tech:af("nivel_objetivo","tech"), producto:af("nivel_objetivo","producto"), negocio:af("nivel_objetivo","negocio")},
     top_gaps:     Object.entries(gapCount).sort(function(a,b){return b[1]-a[1];}).slice(0,8),
+    top_tensiones: Object.entries(tensionCount).sort(function(a,b){return b[1]-a[1];}),
     top_mentores: Object.entries(mentorCount).sort(function(a,b){return b[1]-a[1];}),
     buscado_count:Object.entries(buscadoCount).sort(function(a,b){return b[1]-a[1];}),
     funnel: {
@@ -329,7 +330,8 @@ export default function Dashboard() {
   var total      = stats.total || 0;
   var matchCount = stats.match_count || 0;
   var matchRate  = total ? Math.round(matchCount / total * 100) : 0;
-  var topGaps    = stats.top_gaps    || [];
+  var topGaps      = stats.top_gaps      || [];
+  var topTensiones = stats.top_tensiones || [];
   var topMentores= stats.top_mentores|| [];
   var topBuscados= stats.buscado_count || [];
   var avgActual  = stats.avg_actual  || {tech:0,producto:0,negocio:0};
@@ -512,6 +514,35 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
+
+            {/* Tensiones transversales */}
+            {topTensiones.length > 0 && (
+              <div className="card" style={{ background: CARD, border: "1px solid rgba(155,95,255,0.2)", borderRadius: 14, padding: "20px 22px", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <span style={{ fontSize: 16 }}>⚡</span>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: PURPLE, textTransform: "uppercase", letterSpacing: 1 }}>Tensiones transversales detectadas</div>
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 14 }}>
+                  Patrones psicológicos identificados en el lenguaje de los diagnósticos
+                </div>
+                {topTensiones.slice(0, 5).map(function(t, i) {
+                  var pct = topTensiones[0][1] ? Math.round(t[1] / total * 100) : 0;
+                  var colors = [PURPLE, "#9b5fff", "#b57bee", "#c99eff", "#ddc5ff"];
+                  var color = colors[i] || PURPLE;
+                  return (
+                    <div key={i} style={{ marginBottom: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: i === 0 ? 700 : 400 }}>⚡ {t[0]}</span>
+                        <span style={{ fontSize: 11, color, fontWeight: 700 }}>{t[1]} ({pct}%)</span>
+                      </div>
+                      <div style={{ height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 3 }}>
+                        <div style={{ height: "100%", width: Math.min(100, pct) + "%", background: color, borderRadius: 3, transition: "width 0.8s" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Match rate by day */}
             <div className="card" style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 14, padding: "20px 22px" }}>
@@ -1332,6 +1363,13 @@ export default function Dashboard() {
                         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                           {r.mentores_ids.map(function(id) {
                             return <span key={id} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(67,97,238,0.12)", color: PRIMARY, fontSize: 10, fontWeight: 600 }}>{MENTOR_NAMES[id] || id}</span>;
+                          })}
+                        </div>
+                      )}
+                      {r.tensiones && r.tensiones.length > 0 && (
+                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>
+                          {r.tensiones.slice(0, 2).map(function(t, j) {
+                            return <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(155,95,255,0.1)", border: "1px solid rgba(155,95,255,0.2)", color: PURPLE, fontSize: 10 }}>⚡ {t}</span>;
                           })}
                         </div>
                       )}
