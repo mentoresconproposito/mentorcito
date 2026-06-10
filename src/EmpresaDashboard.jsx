@@ -107,6 +107,30 @@ export default function EmpresaDashboard() {
   useEffect(function() { loadData(); }, []);
 
   var total = records.length;
+
+  // Riesgo de rotación — Senior + Estancamiento + tensión de crecimiento/identidad
+  var altaRotacion = records.filter(function(r) {
+    var esSenior      = r.seniority === "Senior";
+    var estancado     = (r.estado || "").includes("Estancamiento");
+    var tensTensas    = (r.tensiones || []).some(function(t) {
+      return t.includes("crecimiento") || t.includes("identidad") || t.includes("sistema");
+    });
+    return esSenior && estancado && tensTensas;
+  }).length;
+
+  var riesgoMedio = records.filter(function(r) {
+    var estancado = (r.estado || "").includes("Estancamiento");
+    var sinMatch  = r.tiene_match !== true && r.tiene_match !== "SI";
+    return estancado && sinMatch;
+  }).length;
+
+  // Benchmark vs mercado (datos de los 100+ diagnósticos de Mentorcito)
+  var BENCHMARK = {
+    estados: { "Reinvención": 12, "Estancamiento": 33, "Liderazgo": 55 },
+    tensiones: { "Tensión de sistema": 24, "Tensión de influencia": 19, "Tensión de crecimiento": 15, "Tensión de identidad": 12, "Brecha técnica": 8 },
+    matchRate: 97,
+    seniorPct: 58,
+  };
   var tensionCount = {};
   records.forEach(function(r) {
     (r.tensiones || []).forEach(function(t) {
@@ -148,10 +172,11 @@ export default function EmpresaDashboard() {
   var accentColor = config.color || PRIMARY;
 
   var tabs = [
-    { key: "overview",  label: "📊 Resumen ejecutivo" },
-    { key: "estados",   label: "🔁 Estados del loop" },
-    { key: "gaps",      label: "🔍 Tensiones del equipo" },
-    { key: "personas",  label: "👥 Por persona" },
+    { key: "overview",   label: "📊 Resumen ejecutivo" },
+    { key: "riesgos",    label: "🔴 Riesgos y benchmark" },
+    { key: "estados",    label: "🔁 Estados del loop" },
+    { key: "gaps",       label: "🔍 Tensiones del equipo" },
+    { key: "personas",   label: "👥 Por persona" },
   ];
 
   return (
@@ -285,6 +310,137 @@ export default function EmpresaDashboard() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* ── RIESGOS Y BENCHMARK ───────────────────── */}
+            {tab === "riesgos" && (
+              <div>
+
+                {/* Riesgo de rotación */}
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>
+                  Estimación basada en combinación de estado del loop, seniority y tensiones detectadas.
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 16 }}>
+                  <div style={{ background: altaRotacion > 0 ? "rgba(247,37,133,0.08)" : CARD, border: "1px solid " + (altaRotacion > 0 ? "rgba(247,37,133,0.3)" : BORDER), borderRadius: 12, padding: "16px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 32, fontWeight: 800, color: altaRotacion > 0 ? "#f72585" : GREEN }}>{altaRotacion}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, fontWeight: 600 }}>Riesgo alto</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Senior + Estancamiento + tensión crítica</div>
+                  </div>
+                  <div style={{ background: riesgoMedio > 0 ? "rgba(251,133,0,0.08)" : CARD, border: "1px solid " + (riesgoMedio > 0 ? "rgba(251,133,0,0.3)" : BORDER), borderRadius: 12, padding: "16px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 32, fontWeight: 800, color: riesgoMedio > 0 ? AMBER : GREEN }}>{riesgoMedio}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, fontWeight: 600 }}>Riesgo medio</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Estancamiento sin match de mentor</div>
+                  </div>
+                  <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 12, padding: "16px 14px", textAlign: "center" }}>
+                    <div style={{ fontSize: 32, fontWeight: 800, color: GREEN }}>{total - altaRotacion - riesgoMedio}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 4, fontWeight: 600 }}>Sin señal de riesgo</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Sin indicadores críticos</div>
+                  </div>
+                </div>
+
+                {altaRotacion > 0 && (
+                  <div style={{ background: "rgba(247,37,133,0.06)", border: "1px solid rgba(247,37,133,0.2)", borderRadius: 10, padding: "14px 16px", marginBottom: 16, fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
+                    ⚠️ <strong style={{ color: "white" }}>Acción recomendada:</strong> Las {altaRotacion} persona{altaRotacion > 1 ? "s" : ""} en riesgo alto tienen un costo de reemplazo estimado de <strong style={{ color: "#f72585" }}>USD {(altaRotacion * 15000).toLocaleString()}</strong> si se van (1× salario anual promedio en producto Latam). Una mentoría de USD {altaRotacion * 440} puede prevenir esa pérdida.
+                  </div>
+                )}
+
+                <div style={{ height: 1, background: BORDER, margin: "20px 0" }} />
+
+                {/* Benchmark vs mercado */}
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
+                  📊 Benchmark vs. mercado Latam
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 16 }}>
+                  Comparación con los datos de 100+ diagnósticos de Mentorcito en equipos de producto de Latam.
+                </div>
+
+                {/* Benchmark estados */}
+                <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Estados del loop</div>
+                  {Object.entries({ "Reinvención": "#f72585", "Estancamiento": AMBER, "Liderazgo": PRIMARY }).map(function([estado, color]) {
+                    var tuEquipo = total ? Math.round((estados[estado] || 0) / total * 100) : 0;
+                    var mercado  = BENCHMARK.estados[estado] || 0;
+                    var diff     = tuEquipo - mercado;
+                    var mejor    = estado === "Liderazgo" ? diff > 0 : diff < 0;
+                    return (
+                      <div key={estado} style={{ marginBottom: 16 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>{estado}</span>
+                          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Mercado: {mercado}%</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color }}>Tu equipo: {tuEquipo}%</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: mejor ? GREEN : "#f72585" }}>
+                              {diff > 0 ? "+" : ""}{diff}%
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ position: "relative", height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 4 }}>
+                          {/* Barra mercado */}
+                          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: mercado + "%", background: "rgba(255,255,255,0.15)", borderRadius: 4 }} />
+                          {/* Barra equipo */}
+                          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: tuEquipo + "%", background: color, borderRadius: 4, opacity: 0.85, transition: "width 0.8s" }} />
+                        </div>
+                        <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.25)" }}>░ Mercado Latam</span>
+                          <span style={{ fontSize: 9, color }}>█ Tu equipo</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Benchmark tensiones */}
+                {topTensiones.length > 0 && (
+                  <div style={{ background: CARD, border: "1px solid rgba(155,95,255,0.2)", borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, color: PURPLE, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Tensiones vs. mercado</div>
+                    {topTensiones.map(function(t, i) {
+                      var tuEquipo = total ? Math.round(t[1] / total * 100) : 0;
+                      var mercado  = BENCHMARK.tensiones[t[0]] || 0;
+                      var diff     = tuEquipo - mercado;
+                      var alerta   = diff > 10;
+                      return (
+                        <div key={i} style={{ marginBottom: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>⚡ {t[0]}</span>
+                            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Mercado: {mercado}%</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: PURPLE }}>Tu equipo: {tuEquipo}%</span>
+                              {alerta && <span style={{ fontSize: 10, color: "#f72585", fontWeight: 700 }}>+{diff}% ⚠️</span>}
+                            </div>
+                          </div>
+                          <div style={{ position: "relative", height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3 }}>
+                            <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: (mercado || 0) + "%", background: "rgba(155,95,255,0.2)", borderRadius: 3 }} />
+                            <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: Math.min(100, tuEquipo) + "%", background: alerta ? "#f72585" : PURPLE, borderRadius: 3, transition: "width 0.8s" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Match rate benchmark */}
+                <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: 12, padding: "16px 18px" }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Tasa de match</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: matchPct >= BENCHMARK.matchRate ? GREEN : AMBER }}>{matchPct}%</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Tu equipo</div>
+                    </div>
+                    <div style={{ fontSize: 24, color: "rgba(255,255,255,0.15)" }}>vs.</div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "rgba(255,255,255,0.4)" }}>{BENCHMARK.matchRate}%</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Promedio Latam</div>
+                    </div>
+                    <div style={{ padding: "6px 14px", borderRadius: 20, background: matchPct >= BENCHMARK.matchRate ? "rgba(6,214,160,0.1)" : "rgba(251,133,0,0.1)", border: "1px solid " + (matchPct >= BENCHMARK.matchRate ? "rgba(6,214,160,0.3)" : "rgba(251,133,0,0.3)") }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: matchPct >= BENCHMARK.matchRate ? GREEN : AMBER }}>
+                        {matchPct >= BENCHMARK.matchRate ? "✅ Por encima" : "⚠️ Por debajo"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 
