@@ -2083,6 +2083,11 @@ export default function MentorAgent(props) {
                 nombreDetectado = m.content.trim();
               }
             });
+            // Calcular tensiones del diagnóstico para guardar en Sheet
+            var estadoDiag = diag.estado || "Estancamiento";
+            var tensionesDiag = detectarTensiones(Object.assign({}, diag, { estado: estadoDiag }));
+            var tensionesStr = tensionesDiag.map(function(t){ return t.label; }).join(" | ");
+
             postToSheets({
               action: "new_diagnosis",
               ts: Date.now(),
@@ -2098,6 +2103,7 @@ export default function MentorAgent(props) {
               email: "",
               resumen: resumen,
               empresa_id: empresaConfig ? empresaConfig.empresa : "",
+              tensiones: tensionesStr,
             });
           }
         } catch (e) {}
