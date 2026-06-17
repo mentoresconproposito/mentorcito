@@ -1676,16 +1676,69 @@ function DiagnosisPanel(props) {
               });
               trackEvent("dejo_email", true);
             }
-            setStep("mentores");
+            setStep(score >= 31 ? "nudo" : "mentores");
             trackEvent("vio_paquete", true);
           }}
             style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
             Ver mi plan de acción →
           </button>
 
-          <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
+          <button onClick={function() { setStep(score >= 31 ? "nudo" : "mentores"); trackEvent("vio_paquete", true); }}
             style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
             Continuar sin guardar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP NUDO — bloque de derivación cuando score >= 31
+  if (step === "nudo") {
+    var nudoUrl = "https://www.mauriciojimenezpsicologo.com/";
+    return (
+      <div style={{ marginTop: 16 }}>
+        <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 16, padding: "22px 18px", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(123,47,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>🔮</div>
+            <div>
+              <div style={{ fontSize: 10, color: "#9b5fff", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 }}>Diagnóstico adicional</div>
+              <div style={{ color: "white", fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>NUDO Mindset</div>
+            </div>
+          </div>
+          <div style={{ background: "rgba(123,47,247,0.1)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+            <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 1.7 }}>
+              Detectamos indicadores consistentes con <strong style={{ color: "#c99eff" }}>bloqueo estructural</strong>. Tu principal desafío actual no parece estar relacionado únicamente con conocimientos, habilidades o estrategia.
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6, marginTop: 8 }}>
+              Una conversación NUDO puede ayudarte a identificar los patrones que están sosteniendo esta situación y limitando tu capacidad de avance.
+            </div>
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Qué es NUDO Mindset</div>
+            {[
+              ["🔷", "No es terapia ni coaching", "Es intervención estructural focalizada en tu posición como líder."],
+              ["🔷", "No busca reducir el estrés", "Trabaja los patrones que lo sostienen: bloqueos, repeticiones y crisis de crecimiento."],
+              ["🔷", "Es para líderes y fundadores", "Que saben lo que deben hacer pero algo los detiene."],
+            ].map(function(item, i) {
+              return (
+                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item[0]}</span>
+                  <div>
+                    <span style={{ color: "#c99eff", fontSize: 12, fontWeight: 700 }}>{item[1]}: </span>
+                    <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{item[2]}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <a href={nudoUrl} target="_blank" rel="noopener noreferrer"
+            onClick={function() { trackEvent("abrio_nudo", true); }}
+            style={{ display: "block", width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #7b2ff7, #9b5fff)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", textDecoration: "none", textAlign: "center", boxSizing: "border-box", marginBottom: 10 }}>
+            Hacer el diagnóstico NUDO →
+          </a>
+          <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
+            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
+            Continuar con mis mentores →
           </button>
         </div>
       </div>
