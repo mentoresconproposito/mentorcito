@@ -138,6 +138,9 @@ export default function EmpresaDashboard() {
     });
   });
   var topTensiones = Object.entries(tensionCount).sort(function(a,b){ return b[1]-a[1]; }).slice(0, 5);
+  var nudoPrioritario = records.filter(function(r){ return r.nudo_nivel === "prioritario"; }).length;
+  var nudoExploratorio = records.filter(function(r){ return r.nudo_nivel === "exploratorio"; }).length;
+  var nudoTotal = nudoPrioritario + nudoExploratorio;
   var matches = records.filter(function(r) { return r.tiene_match === "SI"; }).length;
   var matchPct = total ? Math.round(matches / total * 100) : 0;
 
@@ -471,6 +474,34 @@ export default function EmpresaDashboard() {
                   );
                 })}
 
+                {/* NUDO — bloqueo estructural */}
+                {nudoTotal > 0 && (
+                  <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, color: PURPLE, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+                      🔮 Bloqueo estructural del equipo (NUDO)
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+                      {[
+                        { label: "Sin bloqueo", value: total - nudoTotal, color: GREEN },
+                        { label: "Exploratorio", value: nudoExploratorio, color: AMBER },
+                        { label: "Prioritario", value: nudoPrioritario, color: ACCENT },
+                      ].map(function(s, i) {
+                        return (
+                          <div key={i} style={{ background: "rgba(123,47,247,0.08)", borderRadius: 8, padding: "10px 8px", textAlign: "center" }}>
+                            <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+                            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{s.label}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {nudoPrioritario > 0 && (
+                      <div style={{ background: "rgba(247,37,133,0.08)", border: "1px solid rgba(247,37,133,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+                        ⚠️ <strong style={{ color: "#f72585" }}>{nudoPrioritario} persona{nudoPrioritario > 1 ? "s" : ""}</strong> con bloqueo prioritario — derivación recomendada a NUDO Mindset antes del acompañamiento profesional.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Tensiones transversales */}
                 {topTensiones.length > 0 && (
                   <div style={{ background: CARD, border: "1px solid rgba(155,95,255,0.2)", borderRadius: 12, padding: "16px 18px", marginBottom: 12 }}>
@@ -643,7 +674,9 @@ export default function EmpresaDashboard() {
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                             {eligioRoadmap && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(67,97,238,0.1)", border: "1px solid rgba(67,97,238,0.25)", color: "#6b87f5", fontSize: 10, fontWeight: 600 }}>🗺️ Eligió roadmap 90 días</span>}
                             {eligioMentoria && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(155,95,255,0.1)", border: "1px solid rgba(155,95,255,0.25)", color: PURPLE, fontSize: 10, fontWeight: 600 }}>👥 Interesado en mentoría</span>}
-                            {!eligioRoadmap && !eligioMentoria && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>No eligió acompañamiento aún</span>}
+                            {r.nudo_nivel === "prioritario" && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(247,37,133,0.1)", border: "1px solid rgba(247,37,133,0.3)", color: "#f72585", fontSize: 10, fontWeight: 700 }}>🔮 NUDO prioritario · {r.score_nudo}pts</span>}
+                            {r.nudo_nivel === "exploratorio" && <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(251,133,0,0.1)", border: "1px solid rgba(251,133,0,0.3)", color: "#fb8500", fontSize: 10, fontWeight: 700 }}>🔮 NUDO exploratorio · {r.score_nudo}pts</span>}
+                            {!eligioRoadmap && !eligioMentoria && (!r.nudo_nivel || r.nudo_nivel === "ninguno") && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>No eligió acompañamiento aún</span>}
                           </div>
                         </div>
                       )}
