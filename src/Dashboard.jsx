@@ -332,6 +332,10 @@ export default function Dashboard() {
   var matchRate  = total ? Math.round(matchCount / total * 100) : 0;
   var topGaps      = stats.top_gaps      || [];
   var topTensiones = stats.top_tensiones || [];
+  var nudoCount    = stats.nudo_count    || { ninguno: 0, exploratorio: 0, prioritario: 0 };
+  var nudoTotal    = stats.nudo_total    || 0;
+  var vioNudo      = stats.vio_nudo      || 0;
+  var abrioNudo    = stats.abrio_nudo    || 0;
   var topMentores= stats.top_mentores|| [];
   var topBuscados= stats.buscado_count || [];
   var avgActual  = stats.avg_actual  || {tech:0,producto:0,negocio:0};
@@ -385,6 +389,8 @@ export default function Dashboard() {
     { key: "diagnostico",      label: "Diagnóstico generado",     count: funnel.diagnostico      || total,       color: PRIMARY,   icon: "🧭" },
     { key: "con_match",        label: "Con mentor matcheado",     count: funnel.con_match        || matchCount,  color: "#3a86ff", icon: "✅" },
     { key: "vio_paquete",      label: "Vió el insight + score",   count: funnel.vio_paquete      || 0,           color: PURPLE,    icon: "💡" },
+    { key: "vio_nudo",         label: "Activó bloque NUDO",       count: funnel.vio_nudo         || vioNudo,     color: "#9b5fff", icon: "🔮" },
+    { key: "abrio_nudo",       label: "Abrió link NUDO",          count: funnel.abrio_nudo       || abrioNudo,   color: "#c99eff", icon: "🔗" },
     { key: "dejo_email",       label: "Dejó su email",            count: funnel.dejo_email       || 0,           color: "#06d6a0", icon: "📧" },
     { key: "abrio_formulario", label: "Eligió plan o paquete",    count: funnel.abrio_formulario || 0,           color: AMBER,     icon: "🗺️" },
     { key: "envio_wa",         label: "Inició conversación WA",   count: funnel.envio_wa         || 0,           color: "#25D366", icon: "💬" },
@@ -514,6 +520,44 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
+
+            {/* NUDO — bloqueo estructural */}
+            {nudoTotal > 0 && (
+              <div className="card" style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 14, padding: "20px 22px", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <span style={{ fontSize: 16 }}>🔮</span>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: PURPLE, textTransform: "uppercase", letterSpacing: 1 }}>Bloqueo estructural detectado (NUDO)</div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 14 }}>
+                  {[
+                    { label: "Ninguno", value: nudoCount.ninguno, pct: total ? Math.round(nudoCount.ninguno/total*100) : 0, color: GREEN },
+                    { label: "Exploratorio (31-45)", value: nudoCount.exploratorio, pct: total ? Math.round(nudoCount.exploratorio/total*100) : 0, color: AMBER },
+                    { label: "Prioritario (46-60)", value: nudoCount.prioritario, pct: total ? Math.round(nudoCount.prioritario/total*100) : 0, color: ACCENT },
+                  ].map(function(s, i) {
+                    return (
+                      <div key={i} style={{ background: "rgba(123,47,247,0.08)", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: s.color, fontWeight: 700 }}>{s.pct}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: PURPLE, fontWeight: 700 }}>{vioNudo}</span> vieron el bloque NUDO
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: PURPLE, fontWeight: 700 }}>{abrioNudo}</span> abrieron el link NUDO
+                  </div>
+                  {vioNudo > 0 && (
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                      Conversión NUDO: <span style={{ color: PURPLE, fontWeight: 700 }}>{Math.round(abrioNudo/vioNudo*100)}%</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Tensiones transversales */}
             {topTensiones.length > 0 && (
@@ -1371,6 +1415,11 @@ export default function Dashboard() {
                           {r.tensiones.slice(0, 2).map(function(t, j) {
                             return <span key={j} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(155,95,255,0.1)", border: "1px solid rgba(155,95,255,0.2)", color: PURPLE, fontSize: 10 }}>⚡ {t}</span>;
                           })}
+                          {r.nudo_nivel && r.nudo_nivel !== "ninguno" && (
+                            <span style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(123,47,247,0.15)", border: "1px solid rgba(123,47,247,0.35)", color: "#c99eff", fontSize: 10, fontWeight: 700 }}>
+                              🔮 NUDO {r.nudo_nivel === "prioritario" ? "prioritario" : "exploratorio"} · {r.score_nudo}pts
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
