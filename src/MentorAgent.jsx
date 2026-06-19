@@ -1695,6 +1695,16 @@ function DiagnosisPanel(props) {
   // STEP NUDO — bloque de derivación cuando score >= 31
   if (step === "nudo") {
     var nudoUrl = "https://www.mauriciojimenezpsicologo.com/";
+    // Calcular nivel NUDO basado en score del diagnóstico
+    var nudoNivel = score >= 46 ? "prioritario" : "exploratorio";
+    var nudoLabel = score >= 46 ? "Derivación prioritaria NUDO" : "Conversación exploratoria NUDO";
+    var nudoColor = score >= 46 ? "#f72585" : "#fb8500";
+
+    // Registrar que llegó al bloque NUDO (una sola vez)
+    if (diagKey && !window._nudoRegistrado) {
+      window._nudoRegistrado = true;
+      postToSheets({ action: "funnel_event", diag_key: diagKey, vio_nudo: true, nudo_nivel: nudoNivel });
+    }
     return (
       <div style={{ marginTop: 16 }}>
         <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 16, padding: "22px 18px", marginBottom: 12 }}>
@@ -1732,7 +1742,10 @@ function DiagnosisPanel(props) {
             })}
           </div>
           <a href={nudoUrl} target="_blank" rel="noopener noreferrer"
-            onClick={function() { trackEvent("abrio_nudo", true); }}
+            onClick={function() {
+              trackEvent("abrio_nudo", true);
+              if (diagKey) postToSheets({ action: "funnel_event", diag_key: diagKey, abrio_nudo: true });
+            }}
             style={{ display: "block", width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #7b2ff7, #9b5fff)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", textDecoration: "none", textAlign: "center", boxSizing: "border-box", marginBottom: 10 }}>
             Hacer el diagnóstico NUDO →
           </a>
@@ -2157,6 +2170,8 @@ export default function MentorAgent(props) {
               resumen: resumen,
               empresa_id: empresaConfig ? empresaConfig.empresa : "",
               tensiones: tensionesStr,
+              score_nudo: calcularScore(diag),
+              nudo_nivel: calcularScore(diag) >= 46 ? "prioritario" : calcularScore(diag) >= 31 ? "exploratorio" : "ninguno",
             });
           }
         } catch (e) {}
