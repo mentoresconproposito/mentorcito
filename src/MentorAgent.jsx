@@ -1692,67 +1692,226 @@ function DiagnosisPanel(props) {
     );
   }
 
-  // STEP NUDO — bloque de derivación cuando score >= 31
+  // STEP NUDO — diagnóstico conversacional de 5 preguntas dentro del agente
   if (step === "nudo") {
-    var nudoUrl = "https://www.mauriciojimenezpsicologo.com/";
-    // Calcular nivel NUDO basado en score del diagnóstico
-    var nudoNivel = score >= 46 ? "prioritario" : "exploratorio";
-    var nudoLabel = score >= 46 ? "Derivación prioritaria NUDO" : "Conversación exploratoria NUDO";
-    var nudoColor = score >= 46 ? "#f72585" : "#fb8500";
+    // Las 5 preguntas del sistema NUDO con escala 0-3
+    var NUDO_PREGUNTAS = [
+      {
+        id: "inhibicion",
+        dim: "Barrera decisional",
+        pregunta: "¿Con qué frecuencia postergás decisiones importantes aunque ya sabés qué tenés que hacer?",
+        opciones: ["0 — Casi nunca", "1 — A veces", "2 — Con frecuencia", "3 — Casi siempre"],
+      },
+      {
+        id: "repeticion",
+        dim: "Patrones de liderazgo",
+        pregunta: "¿Los mismos conflictos o bloqueos reaparecen en tu trabajo, aunque cambies de contexto o de equipo?",
+        opciones: ["0 — Casi nunca", "1 — A veces", "2 — Con frecuencia", "3 — Casi siempre"],
+      },
+      {
+        id: "dependencia",
+        dim: "Criterio propio",
+        pregunta: "¿Necesitás la validación o aprobación de otros para sostener tus decisiones bajo presión?",
+        opciones: ["0 — Casi nunca", "1 — A veces", "2 — Con frecuencia", "3 — Casi siempre"],
+      },
+      {
+        id: "angustia",
+        dim: "Crecimiento del rol",
+        pregunta: "¿Las oportunidades de crecimiento o expansión de responsabilidades te generan más tensión que entusiasmo?",
+        opciones: ["0 — Casi nunca", "1 — A veces", "2 — Con frecuencia", "3 — Casi siempre"],
+      },
+      {
+        id: "identidad",
+        dim: "Identidad profesional",
+        pregunta: "¿Sentís que tu valor como persona depende fuertemente de tu rendimiento o tu rol actual?",
+        opciones: ["0 — Casi nunca", "1 — A veces", "2 — Con frecuencia", "3 — Casi siempre"],
+      },
+    ];
 
-    // Registrar que llegó al bloque NUDO (una sola vez)
-    if (diagKey && !window._nudoRegistrado) {
-      window._nudoRegistrado = true;
-      postToSheets({ action: "funnel_event", diag_key: diagKey, vio_nudo: true, nudo_nivel: nudoNivel });
+    // Estado local del cuestionario NUDO — guardado en window para persistir entre renders
+    if (!window._nudoState) {
+      window._nudoState = { respuestas: {}, preguntaActual: -1 }; // -1 = intro
     }
+    var nudoState    = window._nudoState;
+    var pregActual   = nudoState.preguntaActual;
+    var respuestas   = nudoState.respuestas;
+    var totalPreg    = NUDO_PREGUNTAS.length;
+    var respondidas  = Object.keys(respuestas).length;
+    var completado   = respondidas === totalPreg;
+
+    // Calcular score NUDO cuando está completo
+    var scoreNudo = 0;
+    if (completado) {
+      Object.values(respuestas).forEach(function(v) { scoreNudo += v; });
+      scoreNudo = Math.round(scoreNudo / totalPreg * 20); // normalizar 0-60 → 0-100
+    }
+    var nivelNudo = scoreNudo >= 77 ? "prioritario" : scoreNudo >= 52 ? "exploratorio" : "ninguno";
+    var colorNudo = nivelNudo === "prioritario" ? "#f72585" : nivelNudo === "exploratorio" ? "#fb8500" : "#06d6a0";
+
+    // Guardar cuando completa
+    if (completado && !window._nudoGuardado) {
+      window._nudoGuardado = true;
+      if (diagKey) {
+        postToSheets({ action: "funnel_event", diag_key: diagKey, vio_nudo: true, abrio_nudo: true, nudo_nivel: nivelNudo });
+        postToSheets({ action: "update_nudo", diag_key: diagKey, score_nudo: scoreNudo, nudo_nivel: nivelNudo });
+      }
+    }
+
+    function responder(pregIdx, valor) {
+      var pregId = NUDO_PREGUNTAS[pregIdx].id;
+      window._nudoState = {
+        respuestas: Object.assign({}, respuestas, { [pregId]: valor }),
+        preguntaActual: pregIdx + 1 < totalPreg ? pregIdx + 1 : totalPreg,
+      };
+      // Forzar re-render incrementando un contador en window
+      window._nudoRender = (window._nudoRender || 0) + 1;
+      // Disparar re-render usando un pequeño truco: setStep al mismo valor
+      setStep("nudo");
+    }
+
     return (
       <div style={{ marginTop: 16 }}>
-        <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 16, padding: "22px 18px", marginBottom: 12 }}>
+        <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 16, padding: "20px 18px", marginBottom: 12 }}>
+
+          {/* Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(123,47,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>🔮</div>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(123,47,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🔮</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, color: "#9b5fff", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 }}>Diagnóstico adicional · NUDO Mindset</div>
+              <div style={{ color: "white", fontSize: 14, fontWeight: 800 }}>
+                {completado ? "Diagnóstico completo" : pregActual === -1 ? "5 preguntas · 2 minutos" : "Pregunta " + (pregActual + 1) + " de " + totalPreg}
+              </div>
+            </div>
+            {/* Barra de progreso */}
+            {pregActual >= 0 && !completado && (
+              <div style={{ width: 60, height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ width: (respondidas / totalPreg * 100) + "%", height: "100%", background: "#9b5fff", borderRadius: 2, transition: "width 0.3s" }} />
+              </div>
+            )}
+          </div>
+
+          {/* PANTALLA INTRO */}
+          {pregActual === -1 && (
             <div>
-              <div style={{ fontSize: 10, color: "#9b5fff", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 }}>Diagnóstico adicional</div>
-              <div style={{ color: "white", fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>NUDO Mindset</div>
-            </div>
-          </div>
-          <div style={{ background: "rgba(123,47,247,0.1)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
-            <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 1.7 }}>
-              Detectamos indicadores consistentes con <strong style={{ color: "#c99eff" }}>bloqueo estructural</strong>. Tu principal desafío actual no parece estar relacionado únicamente con conocimientos, habilidades o estrategia.
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6, marginTop: 8 }}>
-              Una conversación NUDO puede ayudarte a identificar los patrones que están sosteniendo esta situación y limitando tu capacidad de avance.
-            </div>
-          </div>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Qué es NUDO Mindset</div>
-            {[
-              ["🔷", "No es terapia ni coaching", "Es intervención estructural focalizada en tu posición como líder."],
-              ["🔷", "No busca reducir el estrés", "Trabaja los patrones que lo sostienen: bloqueos, repeticiones y crisis de crecimiento."],
-              ["🔷", "Es para líderes y fundadores", "Que saben lo que deben hacer pero algo los detiene."],
-            ].map(function(item, i) {
-              return (
-                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item[0]}</span>
-                  <div>
-                    <span style={{ color: "#c99eff", fontSize: 12, fontWeight: 700 }}>{item[1]}: </span>
-                    <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>{item[2]}</span>
-                  </div>
+              <div style={{ background: "rgba(123,47,247,0.1)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+                <div style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 1.7, marginBottom: 8 }}>
+                  Tu índice de tensión indica que puede haber <strong style={{ color: "#c99eff" }}>barreras invisibles al crecimiento</strong> que van más allá de habilidades o estrategia.
                 </div>
-              );
-            })}
-          </div>
-          <a href={nudoUrl} target="_blank" rel="noopener noreferrer"
-            onClick={function() {
-              trackEvent("abrio_nudo", true);
-              if (diagKey) postToSheets({ action: "funnel_event", diag_key: diagKey, abrio_nudo: true });
-            }}
-            style={{ display: "block", width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #7b2ff7, #9b5fff)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", textDecoration: "none", textAlign: "center", boxSizing: "border-box", marginBottom: 10 }}>
-            Hacer el diagnóstico NUDO →
-          </a>
-          <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
-            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
-            Continuar con mis mentores →
-          </button>
+                <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6 }}>
+                  Antes de ver tus mentores, quiero hacerte 5 preguntas más del equipo de NUDO Mindset. Son rápidas — te ayudarán a entender mejor qué está sosteniendo la situación.
+                </div>
+              </div>
+              <button
+                onClick={function() {
+                  window._nudoState = { respuestas: {}, preguntaActual: 0 };
+                  if (diagKey && !window._nudoRegistrado) {
+                    window._nudoRegistrado = true;
+                    postToSheets({ action: "funnel_event", diag_key: diagKey, vio_nudo: true, nudo_nivel: "pendiente" });
+                  }
+                  setStep("nudo");
+                }}
+                style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #7b2ff7, #9b5fff)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
+                Hacer las 5 preguntas →
+              </button>
+              <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
+                style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
+                Saltar · Ir a mis mentores →
+              </button>
+            </div>
+          )}
+
+          {/* PREGUNTAS UNA POR UNA */}
+          {pregActual >= 0 && !completado && (function() {
+            var pq = NUDO_PREGUNTAS[pregActual];
+            return (
+              <div>
+                {/* Respuestas anteriores como historial */}
+                {pregActual > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    {NUDO_PREGUNTAS.slice(0, pregActual).map(function(p, i) {
+                      var val = respuestas[p.id];
+                      return (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", borderRadius: 8, background: "rgba(123,47,247,0.05)", marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{p.dim}</span>
+                          <span style={{ fontSize: 11, color: "#c99eff", fontWeight: 700 }}>{"★".repeat(val) + "☆".repeat(3 - val)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Pregunta actual */}
+                <div style={{ background: "rgba(123,47,247,0.08)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, color: "#9b5fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{pq.dim}</div>
+                  <div style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, lineHeight: 1.7 }}>{pq.pregunta}</div>
+                </div>
+
+                {/* Opciones 0-3 */}
+                {pq.opciones.map(function(op, i) {
+                  return (
+                    <button key={i}
+                      onClick={function() { responder(pregActual, i); }}
+                      style={{
+                        width: "100%", padding: "11px 14px", marginBottom: 8,
+                        background: "rgba(123,47,247,0.08)",
+                        border: "1px solid rgba(123,47,247,0.2)",
+                        borderRadius: 10, color: "rgba(255,255,255,0.8)",
+                        fontSize: 13, cursor: "pointer", textAlign: "left",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={function(e) { e.target.style.background = "rgba(123,47,247,0.2)"; e.target.style.borderColor = "rgba(123,47,247,0.5)"; }}
+                      onMouseLeave={function(e) { e.target.style.background = "rgba(123,47,247,0.08)"; e.target.style.borderColor = "rgba(123,47,247,0.2)"; }}>
+                      {op}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* RESULTADO FINAL */}
+          {completado && (
+            <div>
+              {/* Score visual */}
+              <div style={{ background: "rgba(123,47,247,0.08)", border: "1px solid " + colorNudo + "44", borderRadius: 12, padding: "18px 16px", marginBottom: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Índice de arquitectura interna</div>
+                <div style={{ fontSize: 44, fontWeight: 900, color: colorNudo, lineHeight: 1, marginBottom: 6 }}>{scoreNudo}</div>
+                <div style={{ fontSize: 13, color: colorNudo, fontWeight: 700, marginBottom: 8 }}>
+                  {nivelNudo === "prioritario" ? "Barreras significativas detectadas" : nivelNudo === "exploratorio" ? "Señales moderadas de bloqueo estructural" : "Sin bloqueo estructural significativo"}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+                  {nivelNudo === "prioritario" ? "Las barreras invisibles pueden estar frenando el avance más que los gaps técnicos." : nivelNudo === "exploratorio" ? "Puede haber patrones que vale la pena explorar junto a la mentoría." : "Tu principal palanca de crecimiento es el acompañamiento técnico y estratégico."}
+                </div>
+              </div>
+
+              {/* Resumen de respuestas */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Tus respuestas</div>
+                {NUDO_PREGUNTAS.map(function(pq, i) {
+                  var val = respuestas[pq.id];
+                  var pct = val / 3 * 100;
+                  return (
+                    <div key={i} style={{ marginBottom: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{pq.dim}</span>
+                        <span style={{ fontSize: 11, color: val >= 2 ? colorNudo : "rgba(255,255,255,0.35)", fontWeight: 700 }}>{pq.opciones[val].split(" — ")[1]}</span>
+                      </div>
+                      <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ width: pct + "%", height: "100%", background: val >= 2 ? colorNudo : "rgba(123,47,247,0.4)", borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* CTA → mentores */}
+              <button onClick={function() { setStep("mentores"); trackEvent("vio_paquete", true); }}
+                style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+                Ver mis mentores →
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     );
