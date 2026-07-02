@@ -390,7 +390,7 @@ export default function Dashboard() {
     { key: "con_match",        label: "Con mentor matcheado",     count: funnel.con_match        || matchCount,  color: "#3a86ff", icon: "✅" },
     { key: "vio_paquete",      label: "Vió el insight + score",   count: funnel.vio_paquete      || 0,           color: PURPLE,    icon: "💡" },
     { key: "vio_nudo",         label: "Activó bloque NUDO",       count: funnel.vio_nudo         || vioNudo,     color: "#9b5fff", icon: "🔮" },
-    { key: "abrio_nudo",       label: "Abrió link NUDO",          count: funnel.abrio_nudo       || abrioNudo,   color: "#c99eff", icon: "🔗" },
+    { key: "abrio_nudo",       label: "Completó diagnóstico NUDO", count: funnel.abrio_nudo       || abrioNudo,   color: "#c99eff", icon: "✅" },
     { key: "dejo_email",       label: "Dejó su email",            count: funnel.dejo_email       || 0,           color: "#06d6a0", icon: "📧" },
     { key: "abrio_formulario", label: "Eligió plan o paquete",    count: funnel.abrio_formulario || 0,           color: AMBER,     icon: "🗺️" },
     { key: "envio_wa",         label: "Inició conversación WA",   count: funnel.envio_wa         || 0,           color: "#25D366", icon: "💬" },
@@ -548,11 +548,11 @@ export default function Dashboard() {
                     <span style={{ color: PURPLE, fontWeight: 700 }}>{vioNudo}</span> vieron el bloque NUDO
                   </div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                    <span style={{ color: PURPLE, fontWeight: 700 }}>{abrioNudo}</span> abrieron el link NUDO
+                    <span style={{ color: PURPLE, fontWeight: 700 }}>{abrioNudo}</span> completaron el diagnóstico NUDO
                   </div>
                   {vioNudo > 0 && (
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                      Conversión NUDO: <span style={{ color: PURPLE, fontWeight: 700 }}>{Math.round(abrioNudo/vioNudo*100)}%</span>
+                      Completaron las 5 preguntas: <span style={{ color: PURPLE, fontWeight: 700 }}>{Math.round(abrioNudo/vioNudo*100)}%</span>
                     </div>
                   )}
                 </div>
