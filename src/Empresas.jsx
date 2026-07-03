@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
 var EMAIL   = "hola@mentoresconproposito.com";
 
 var PAQUETES = [
