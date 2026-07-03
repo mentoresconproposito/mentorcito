@@ -79,7 +79,7 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "100+", label: "diagnósticos en 3 semanas", color: "#4361EE" },
+  { numero: "100+", label: "diagnósticos en 4 semanas", color: "#4361EE" },
   { numero: "97%", label: "encontraron un mentor relevante", color: "#06D6A0" },
   { numero: "33%", label: "de PMs en Latam en Estancamiento", color: "#F72585" },
 ];
@@ -98,6 +98,59 @@ export default function Empresas() {
   useEffect(function() {
     var t = setTimeout(function() { setVisible(true); }, 80);
     return function() { clearTimeout(t); };
+  }, []);
+
+  // Meta tags dinámicos para /empresas
+  useEffect(function() {
+    var prevTitle       = document.title;
+    var prevDesc        = document.querySelector('meta[name="description"]');
+    var prevOgTitle     = document.querySelector('meta[property="og:title"]');
+    var prevOgDesc      = document.querySelector('meta[property="og:description"]');
+    var prevOgUrl       = document.querySelector('meta[property="og:url"]');
+
+    // Title
+    document.title = "Mentorcito para empresas — Diagnóstico de liderazgo en producto";
+
+    // Description
+    var desc = document.createElement("meta");
+    desc.name = "description";
+    desc.content = "Diagnosticá a tu equipo de producto en 5 minutos. Mapa de estados del loop profesional, tensiones y bloqueos estructurales. Dashboard en tiempo real. Piloto gratuito para 3 personas.";
+    if (prevDesc) prevDesc.remove();
+    document.head.appendChild(desc);
+
+    // OG Title
+    var ogTitle = document.createElement("meta");
+    ogTitle.setAttribute("property", "og:title");
+    ogTitle.content = "Mentorcito para empresas — Diagnóstico de liderazgo en producto";
+    if (prevOgTitle) prevOgTitle.remove();
+    document.head.appendChild(ogTitle);
+
+    // OG Description
+    var ogDesc = document.createElement("meta");
+    ogDesc.setAttribute("property", "og:description");
+    ogDesc.content = "¿Sabés en qué punto de carrera está cada persona de tu equipo de producto? Diagnóstico en 5 minutos. Dashboard del equipo. Piloto gratuito.";
+    if (prevOgDesc) prevOgDesc.remove();
+    document.head.appendChild(ogDesc);
+
+    // OG URL
+    var ogUrl = document.createElement("meta");
+    ogUrl.setAttribute("property", "og:url");
+    ogUrl.content = "https://mentorcito.vercel.app/empresas";
+    if (prevOgUrl) prevOgUrl.remove();
+    document.head.appendChild(ogUrl);
+
+    // Cleanup al desmontar
+    return function() {
+      document.title = prevTitle;
+      document.querySelector('meta[name="description"]')?.remove();
+      document.querySelector('meta[property="og:title"]')?.remove();
+      document.querySelector('meta[property="og:description"]')?.remove();
+      document.querySelector('meta[property="og:url"]')?.remove();
+      if (prevDesc)    document.head.appendChild(prevDesc);
+      if (prevOgTitle) document.head.appendChild(prevOgTitle);
+      if (prevOgDesc)  document.head.appendChild(prevOgDesc);
+      if (prevOgUrl)   document.head.appendChild(prevOgUrl);
+    };
   }, []);
 
   return (
@@ -510,7 +563,7 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
             </div>
           </div>
         </div>
