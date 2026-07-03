@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
-var EMAIL   = "mentoresconproposito@gmail.com";
+var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var EMAIL   = "hola@mentoresconproposito.com";
 
 var PAQUETES = [
   {
     icono: "🌱",
     nombre: "Starter",
-    subtitulo: "El primer diagnóstico",
+    subtitulo: "Para startups que quieren entender el estado real de crecimiento de su equipo.",
     target: "Startups · 10-50 personas",
     precio: "USD 295",
     unit: "USD 59 por persona",
@@ -22,7 +22,7 @@ var PAQUETES = [
   {
     icono: "🚀",
     nombre: "Growth",
-    subtitulo: "Diagnóstico + seguimiento",
+    subtitulo: "Para equipos que necesitan reducir estancamiento y acelerar performance.",
     target: "Empresas medianas · 50-200 personas",
     precio: "USD 980",
     unit: "USD 49 por persona",
@@ -37,7 +37,7 @@ var PAQUETES = [
   {
     icono: "🏢",
     nombre: "Enterprise",
-    subtitulo: "Inteligencia de equipo",
+    subtitulo: "Para organizaciones que necesitan mapear riesgo de rotación y desarrollar talento crítico.",
     target: "Empresas 200+ personas",
     precio: "Desde USD 1.950",
     unit: "USD 39 por persona",
@@ -79,7 +79,7 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "100+", label: "diagnósticos en 4 semanas", color: "#4361EE" },
+  { numero: "100+", label: "diagnósticos en 3 semanas", color: "#4361EE" },
   { numero: "97%", label: "encontraron un mentor relevante", color: "#06D6A0" },
   { numero: "33%", label: "de PMs en Latam en Estancamiento", color: "#F72585" },
 ];
@@ -236,11 +236,10 @@ export default function Empresas() {
         <p style={{
           fontSize: 17, lineHeight: 1.7,
           color: "rgba(245,245,240,0.5)",
-          maxWidth: 480, margin: "0 auto 40px",
+          maxWidth: 520, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
-          El 33% de los profesionales de producto en Latam está en Estancamiento.
-          Sin ese mapa, cualquier programa de desarrollo es genérico.
+          Diagnosticamos estancamiento profesional, riesgo de rotación y bloqueos invisibles antes de invertir en capacitación o mentorías.
         </p>
 
         {/* Datos */}
@@ -290,7 +289,50 @@ export default function Empresas() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
+      {/* Pain strip */}
+      <section style={{
+        background: "rgba(255,255,255,0.025)",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        padding: "48px 24px",
+      }}>
+        <div style={{ maxWidth: 860, margin: "0 auto" }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase", color: "rgba(255,255,255,0.25)",
+            textAlign: "center", marginBottom: 36,
+          }}>
+            Lo que Mentorcito diagnostica
+          </div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 2,
+          }}>
+            {[
+              { icono: "🔁", titulo: "Estancamiento profesional", desc: "Quién domina su rol pero hace tiempo que no avanza — y está en riesgo de salir." },
+              { icono: "🔮", titulo: "Bloqueos invisibles", desc: "Patrones que frenan el crecimiento más allá de los skills técnicos o estratégicos." },
+              { icono: "⚡", titulo: "Tensiones del equipo", desc: "Las fricciones sistémicas que consumen energía del equipo sin resolverse." },
+              { icono: "📊", titulo: "Riesgo de rotación", desc: "Perfiles críticos en Estancamiento con alta probabilidad de salida en los próximos 6 meses." },
+            ].map(function(item, i) {
+              return (
+                <div key={i} style={{
+                  padding: "24px 20px",
+                  borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 10 }}>{item.icono}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#F5F5F0", marginBottom: 6 }}>
+                    {item.titulo}
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(245,245,240,0.38)", lineHeight: 1.6 }}>
+                    {item.desc}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
       <section id="como-funciona" style={{
         padding: "100px 24px",
         maxWidth: 680, margin: "0 auto",
@@ -371,7 +413,7 @@ export default function Empresas() {
             fontWeight: 400, margin: "0 0 40px",
             color: "#F5F5F0", letterSpacing: "-0.3px",
           }}>
-            La única propuesta en Latam con diagnóstico de bloqueo estructural integrado.
+            La primera plataforma en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -563,7 +605,137 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ROI — el costo de no actuar */}
+      <section style={{
+        padding: "100px 24px",
+        maxWidth: 860, margin: "0 auto",
+      }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: 3,
+          textTransform: "uppercase", color: "rgba(255,255,255,0.25)",
+          textAlign: "center", marginBottom: 16,
+        }}>
+          El costo de no actuar
+        </div>
+        <h2 style={{
+          fontFamily: "'DM Serif Display', serif",
+          fontSize: "clamp(26px, 3.5vw, 38px)",
+          fontWeight: 400, textAlign: "center",
+          margin: "0 0 16px", color: "#F5F5F0",
+          letterSpacing: "-0.3px",
+        }}>
+          Diagnosticar tarde es más caro que diagnosticar ahora.
+        </h2>
+        <p style={{
+          fontSize: 15, color: "rgba(245,245,240,0.4)",
+          textAlign: "center", maxWidth: 500,
+          margin: "0 auto 56px", lineHeight: 1.7,
+        }}>
+          Tres escenarios que ya están ocurriendo en equipos de producto sin diagnóstico.
+        </p>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 16, marginBottom: 40,
+        }}>
+          {[
+            {
+              icono: "🔁",
+              titulo: "Rotación de talento senior",
+              costo: "USD 15.000 – 25.000",
+              desc: "El costo de reemplazar un perfil PM o Head of Product Senior: tiempo de búsqueda, onboarding y pérdida de conocimiento organizacional.",
+              señal: "Señal previa: estancamiento sostenido sin intervención.",
+              color: "#F72585",
+            },
+            {
+              icono: "🔥",
+              titulo: "Burnout en el equipo",
+              costo: "3-6 meses de productividad",
+              desc: "Una Head operando como PM durante más de un año sin acompañamiento tiene alta probabilidad de agotamiento y salida. El burnout no aparece de golpe — se acumula.",
+              señal: "Señal previa: modo reactivo sostenido sin sistema.",
+              color: "#FB8500",
+            },
+            {
+              icono: "💸",
+              titulo: "Capacitación sin diagnóstico",
+              costo: "Inversión mal aplicada",
+              desc: "El 65% de los programas de desarrollo fallan no porque el contenido sea malo — sino porque intervienen en la capa equivocada. Sin diagnóstico previo, el dinero llega donde no está el problema.",
+              señal: "Señal previa: bloqueo invisible no detectado.",
+              color: "#7B2FF7",
+            },
+          ].map(function(item, i) {
+            return (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderTop: "3px solid " + item.color,
+                borderRadius: 12, padding: "24px 22px",
+              }}>
+                <div style={{ fontSize: 24, marginBottom: 12 }}>{item.icono}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#F5F5F0", marginBottom: 6 }}>
+                  {item.titulo}
+                </div>
+                <div style={{
+                  fontSize: 18, fontWeight: 700, color: item.color,
+                  fontFamily: "'DM Serif Display', serif",
+                  marginBottom: 12,
+                }}>
+                  {item.costo}
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(245,245,240,0.4)", lineHeight: 1.65, marginBottom: 12 }}>
+                  {item.desc}
+                </div>
+                <div style={{
+                  fontSize: 11, fontWeight: 600, color: item.color,
+                  letterSpacing: 0.5, opacity: 0.7,
+                }}>
+                  {item.señal}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Comparativa */}
+        <div style={{
+          background: "rgba(67,97,238,0.06)",
+          border: "1px solid rgba(67,97,238,0.15)",
+          borderRadius: 14, padding: "28px 32px",
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          gap: 24, alignItems: "center",
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+              Sin diagnóstico
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#F72585", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
+              USD 15.000+
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+              costo de rotación o burnout
+            </div>
+          </div>
+          <div style={{
+            width: 1, height: 60,
+            background: "rgba(255,255,255,0.08)",
+          }} />
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+              Con Mentorcito
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#06D6A0", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
+              USD 295 – 1.950
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+              diagnóstico + acompañamiento
             </div>
           </div>
         </div>
