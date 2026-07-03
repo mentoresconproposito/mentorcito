@@ -563,7 +563,7 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
             </div>
           </div>
         </div>
