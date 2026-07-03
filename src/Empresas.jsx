@@ -107,31 +107,46 @@ export default function Empresas() {
       fontFamily: "'Inter', -apple-system, sans-serif",
       color: "#F5F5F0",
       overflowX: "hidden",
+      margin: 0,
+      padding: 0,
+      boxSizing: "border-box",
     }}>
 
       {/* Google fonts */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" />
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; background: #0A0A14; }
+        @media (max-width: 600px) {
+          .nav-btn { display: none !important; }
+          .hero-title { font-size: 36px !important; }
+          .hero-stats { gap: 24px !important; }
+          .hero-btns { flex-direction: column !important; align-items: stretch !important; }
+          .hero-btns a { text-align: center !important; }
+        }
+      `}</style>
 
       {/* Nav */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "16px 24px",
-        background: "rgba(10,10,20,0.88)",
+        padding: "14px 20px",
+        background: "rgba(10,10,20,0.92)",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
+        gap: 12,
       }}>
-        <a href="https://mentorcito.vercel.app" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+        <a href="https://mentorcito.vercel.app" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 18 }}>💠</span>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#4361EE", letterSpacing: 0.5 }}>Mentorcito</span>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>para empresas</span>
         </a>
-        <a href={WA_LINK} target="_blank" rel="noopener noreferrer" style={{
-          padding: "8px 18px", background: "#4361EE", borderRadius: 8,
+        <a className="nav-btn" href={WA_LINK} target="_blank" rel="noopener noreferrer" style={{
+          padding: "8px 16px", background: "#4361EE", borderRadius: 8,
           color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none",
-          letterSpacing: 0.3,
+          letterSpacing: 0.3, flexShrink: 0, whiteSpace: "nowrap",
         }}>
-          Hablar con nosotros →
+          Hablar →
         </a>
       </nav>
 
@@ -139,7 +154,7 @@ export default function Empresas() {
       <section style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        padding: "120px 24px 80px",
+        padding: "80px 24px 60px",
         textAlign: "center",
         opacity: visible ? 1 : 0,
         transition: "opacity 0.6s ease",
@@ -147,28 +162,28 @@ export default function Empresas() {
         <div style={{
           fontSize: 11, fontWeight: 600, letterSpacing: 3,
           textTransform: "uppercase", color: "#4361EE",
-          marginBottom: 32,
+          marginBottom: 24,
         }}>
           Diagnóstico de liderazgo en producto
         </div>
 
-        <h1 style={{
+        <h1 className="hero-title" style={{
           fontFamily: "'DM Serif Display', serif",
-          fontSize: "clamp(36px, 7vw, 72px)",
+          fontSize: "clamp(36px, 6.5vw, 68px)",
           fontWeight: 400,
-          lineHeight: 1.08,
-          margin: "0 0 24px",
-          maxWidth: 800,
+          lineHeight: 1.1,
+          margin: "0 0 20px",
+          maxWidth: 760,
           color: "#F5F5F0",
           letterSpacing: "-0.5px",
         }}>
-          ¿Sabés en qué punto de carrera está cada PM de tu equipo?
+          ¿Sabés en qué punto de carrera está cada persona de tu equipo de producto?
         </h1>
 
         <p style={{
-          fontSize: 18, lineHeight: 1.7,
+          fontSize: 17, lineHeight: 1.7,
           color: "rgba(245,245,240,0.5)",
-          maxWidth: 520, margin: "0 auto 48px",
+          maxWidth: 480, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
           El 33% de los profesionales de producto en Latam está en Estancamiento.
@@ -176,8 +191,8 @@ export default function Empresas() {
         </p>
 
         {/* Datos */}
-        <div style={{
-          display: "flex", gap: 40, marginBottom: 56,
+        <div className="hero-stats" style={{
+          display: "flex", gap: 48, marginBottom: 48,
           flexWrap: "wrap", justifyContent: "center",
         }}>
           {DATOS.map(function(d, i) {
@@ -185,13 +200,13 @@ export default function Empresas() {
               <div key={i} style={{ textAlign: "center" }}>
                 <div style={{
                   fontFamily: "'DM Serif Display', serif",
-                  fontSize: 48, fontWeight: 400,
+                  fontSize: 44, fontWeight: 400,
                   color: d.color, lineHeight: 1,
                   marginBottom: 6,
                 }}>
                   {d.numero}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", maxWidth: 140 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", maxWidth: 130 }}>
                   {d.label}
                 </div>
               </div>
@@ -199,7 +214,7 @@ export default function Empresas() {
           })}
         </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+        <div className="hero-btns" style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
           <a href="#piloto" style={{
             padding: "14px 28px",
             background: "#4361EE",
@@ -495,7 +510,7 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
             </div>
           </div>
         </div>
