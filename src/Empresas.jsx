@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
-var EMAIL   = "hola@mentoresconproposito.com";
+var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var EMAIL   = "mentoresconproposito@gmail.com";
 
 var PAQUETES = [
   {
@@ -79,7 +79,7 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "100+", label: "diagnósticos en 3 semanas", color: "#4361EE" },
+  { numero: "100+", label: "diagnósticos en 4 semanas", color: "#4361EE" },
   { numero: "97%", label: "encontraron un mentor relevante", color: "#06D6A0" },
   { numero: "33%", label: "de PMs en Latam en Estancamiento", color: "#F72585" },
 ];
@@ -605,7 +605,7 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
             </div>
           </div>
         </div>
