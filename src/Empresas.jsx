@@ -192,7 +192,7 @@ export default function Empresas() {
         <a href="https://mentorcito.vercel.app" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 18 }}>💠</span>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#4361EE", letterSpacing: 0.5 }}>Mentorcito</span>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>para empresas</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", fontWeight: 400 }}>para empresas</span>
         </a>
         <a className="nav-btn" href={WA_LINK} target="_blank" rel="noopener noreferrer" style={{
           padding: "8px 16px", background: "#4361EE", borderRadius: 8,
@@ -235,7 +235,7 @@ export default function Empresas() {
 
         <p style={{
           fontSize: 17, lineHeight: 1.7,
-          color: "rgba(245,245,240,0.5)",
+          color: "rgba(245,245,240,0.72)",
           maxWidth: 520, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
@@ -258,7 +258,7 @@ export default function Empresas() {
                 }}>
                   {d.numero}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", maxWidth: 130 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", maxWidth: 130 }}>
                   {d.label}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function Empresas() {
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{
             fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: "uppercase", color: "rgba(255,255,255,0.25)",
+            textTransform: "uppercase", color: "rgba(255,255,255,0.45)",
             textAlign: "center", marginBottom: 36,
           }}>
             Lo que Mentorcito diagnostica
@@ -324,7 +324,7 @@ export default function Empresas() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#F5F5F0", marginBottom: 6 }}>
                     {item.titulo}
                   </div>
-                  <div style={{ fontSize: 13, color: "rgba(245,245,240,0.38)", lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 13, color: "rgba(245,245,240,0.60)", lineHeight: 1.6 }}>
                     {item.desc}
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export default function Empresas() {
       }}>
         <div style={{
           fontSize: 11, fontWeight: 600, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+          textTransform: "uppercase", color: "rgba(255,255,255,0.50)",
           marginBottom: 16, textAlign: "center",
         }}>
           El proceso
@@ -387,7 +387,7 @@ export default function Empresas() {
                   </div>
                   <p style={{
                     fontSize: 14, lineHeight: 1.7,
-                    color: "rgba(245,245,240,0.45)",
+                    color: "rgba(245,245,240,0.65)",
                     margin: 0,
                   }}>
                     {paso.desc}
@@ -413,7 +413,7 @@ export default function Empresas() {
             fontWeight: 400, margin: "0 0 40px",
             color: "#F5F5F0", letterSpacing: "-0.3px",
           }}>
-            La única propuesta en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
+            La primera plataforma en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -432,20 +432,20 @@ export default function Empresas() {
                     background: esNuestro ? "rgba(6,214,160,0.15)" : "rgba(255,255,255,0.05)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 13, marginRight: 14,
-                    color: esNuestro ? "#06D6A0" : "rgba(255,255,255,0.2)",
+                    color: esNuestro ? "#06D6A0" : "rgba(255,255,255,0.40)",
                   }}>
                     {row[2]}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontSize: 14, fontWeight: esNuestro ? 600 : 400,
-                      color: esNuestro ? "#F5F5F0" : "rgba(245,245,240,0.35)",
+                      color: esNuestro ? "#F5F5F0" : "rgba(245,245,240,0.58)",
                     }}>
                       {row[0]}
                     </div>
                     <div style={{
                       fontSize: 12,
-                      color: esNuestro ? "rgba(245,245,240,0.5)" : "rgba(245,245,240,0.2)",
+                      color: esNuestro ? "rgba(245,245,240,0.72)" : "rgba(245,245,240,0.2)",
                     }}>
                       {row[1]}
                     </div>
@@ -461,7 +461,7 @@ export default function Empresas() {
       <section id="paquetes" style={{ padding: "100px 24px", maxWidth: 900, margin: "0 auto" }}>
         <div style={{
           fontSize: 11, fontWeight: 600, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+          textTransform: "uppercase", color: "rgba(255,255,255,0.50)",
           marginBottom: 16, textAlign: "center",
         }}>
           Paquetes
@@ -530,7 +530,7 @@ export default function Empresas() {
                   {pk.precio}
                 </div>
                 <div style={{
-                  fontSize: 12, color: "rgba(255,255,255,0.3)",
+                  fontSize: 12, color: "rgba(255,255,255,0.50)",
                   marginBottom: 20,
                 }}>
                   {pk.unit}
@@ -563,7 +563,7 @@ export default function Empresas() {
                 </div>
 
                 <div style={{
-                  fontSize: 11, color: "rgba(255,255,255,0.25)",
+                  fontSize: 11, color: "rgba(255,255,255,0.45)",
                   marginBottom: 16,
                 }}>
                   Para: {pk.target}
@@ -575,7 +575,7 @@ export default function Empresas() {
                   background: pk.destacado ? "#4361EE" : "transparent",
                   border: pk.destacado ? "none" : "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 8,
-                  color: pk.destacado ? "white" : "rgba(245,245,240,0.5)",
+                  color: pk.destacado ? "white" : "rgba(245,245,240,0.72)",
                   fontSize: 13, fontWeight: 600,
                   textDecoration: "none",
                   transition: "opacity 0.15s",
@@ -604,7 +604,7 @@ export default function Empresas() {
             }}>
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
               Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
             </div>
           </div>
@@ -618,7 +618,7 @@ export default function Empresas() {
       }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.25)",
+          textTransform: "uppercase", color: "rgba(255,255,255,0.45)",
           textAlign: "center", marginBottom: 16,
         }}>
           El costo de no actuar
@@ -633,7 +633,7 @@ export default function Empresas() {
           Diagnosticar tarde es más caro que diagnosticar ahora.
         </h2>
         <p style={{
-          fontSize: 15, color: "rgba(245,245,240,0.4)",
+          fontSize: 15, color: "rgba(245,245,240,0.62)",
           textAlign: "center", maxWidth: 500,
           margin: "0 auto 56px", lineHeight: 1.7,
         }}>
@@ -689,7 +689,7 @@ export default function Empresas() {
                 }}>
                   {item.costo}
                 </div>
-                <div style={{ fontSize: 13, color: "rgba(245,245,240,0.4)", lineHeight: 1.65, marginBottom: 12 }}>
+                <div style={{ fontSize: 13, color: "rgba(245,245,240,0.62)", lineHeight: 1.65, marginBottom: 12 }}>
                   {item.desc}
                 </div>
                 <div style={{
@@ -713,13 +713,13 @@ export default function Empresas() {
           gap: 24, alignItems: "center",
         }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
               Sin diagnóstico
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#F72585", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
               USD 15.000+
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>
               costo de rotación o burnout
             </div>
           </div>
@@ -728,13 +728,13 @@ export default function Empresas() {
             background: "rgba(255,255,255,0.08)",
           }} />
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
               Con Mentorcito
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: "#06D6A0", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
               USD 295 – 1.950
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>
               diagnóstico + acompañamiento
             </div>
           </div>
@@ -763,7 +763,7 @@ export default function Empresas() {
             3 diagnósticos gratuitos para tu equipo
           </h2>
           <p style={{
-            fontSize: 16, color: "rgba(245,245,240,0.45)",
+            fontSize: 16, color: "rgba(245,245,240,0.65)",
             lineHeight: 1.7, margin: "0 0 36px",
           }}>
             Elegís 3 personas. En 3-5 días tenés resultados reales.
@@ -795,7 +795,7 @@ export default function Empresas() {
 
           <div style={{
             marginTop: 24, fontSize: 12,
-            color: "rgba(255,255,255,0.2)",
+            color: "rgba(255,255,255,0.40)",
             lineHeight: 1.6,
           }}>
             La condición: 30 minutos de feedback sobre el diagnóstico.<br/>
@@ -814,7 +814,7 @@ export default function Empresas() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>💠</span>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.50)" }}>
             Mentorcito · Mentores con Propósito · 2026
           </span>
         </div>
@@ -827,7 +827,7 @@ export default function Empresas() {
           ].map(function(link, i) {
             return (
               <a key={i} href={link[1]} target="_blank" rel="noopener noreferrer" style={{
-                fontSize: 12, color: "rgba(255,255,255,0.25)",
+                fontSize: 12, color: "rgba(255,255,255,0.45)",
                 textDecoration: "none",
               }}>
                 {link[0]}
