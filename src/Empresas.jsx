@@ -413,7 +413,7 @@ export default function Empresas() {
             fontWeight: 400, margin: "0 0 40px",
             color: "#F5F5F0", letterSpacing: "-0.3px",
           }}>
-            La primera plataforma en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
+            La única propuesta en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
