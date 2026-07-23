@@ -180,6 +180,32 @@ var MENTORS_DB = [
     foto: "https://ui-avatars.com/api/?name=Juan+Cejas&background=7b2ff7&color=fff&size=128&bold=true&rounded=true",
     url: "https://mentoresconproposito.vercel.app/mentor/JuanCejas",
   },
+  {
+    id: "XavierFlores",
+    nombre: "Xavier Flores",
+    titulo: "Founder & CEO de GomiGuide | Fractional CPO",
+    mentoria: "Product Breakout Mentorship: Master the Game",
+    tags: ["Liderazgo", "Strategy", "Fractional CPO"],
+    patas: ["producto", "negocio"],
+    nivel: "mid-senior",
+    perfil_ideal: [
+      "Product Manager que siente que llegó a un límite y necesita criterio estratégico para dar el próximo salto",
+      "Product Leader que quiere ganar influencia y decidir con claridad incluso sin autoridad formal",
+      "PM o líder de producto que quiere romper el siguiente techo de su carrera",
+    ],
+    problemas_que_resuelve: [
+      "no sé cuál es mi verdadero siguiente nivel",
+      "tengo el rol pero no la influencia que debería tener",
+      "me cuesta liderar con criterio en contextos de alta ambigüedad",
+      "quiero un roadmap claro para mi próximo salto de carrera",
+      "sé ejecutar pero no sé cómo jugar el juego estratégico de producto",
+    ],
+    sesiones: "7 sesiones (90 días)",
+    nSesiones: 7,
+    precio: 900,
+    foto: "https://ui-avatars.com/api/?name=Xavier+Flores&background=7b2ff7&color=fff&size=128&bold=true&rounded=true",
+    url: "https://mentoresconproposito.vercel.app/mentor/XavierFlores",
+  },
 ];
 
 // ─────────────────────────────────────────────
@@ -1607,10 +1633,91 @@ function DiagnosisPanel(props) {
     );
   }
 
+  // ── Barra de progreso global ──────────────────────────────
+  var STEPS_CONFIG = [
+    { key: "insight",  icono: "💡", label: "Diagnóstico" },
+    { key: "email",    icono: "📧", label: "Tus datos"   },
+    { key: "nudo",     icono: "🔮", label: "NUDO"        },
+    { key: "mentores", icono: "👥", label: "Mentores"    },
+  ];
+  // Si el score < 31 no hay paso NUDO — flujo de 3 pasos
+  var stepsVisibles = score >= 31
+    ? STEPS_CONFIG
+    : STEPS_CONFIG.filter(function(s) { return s.key !== "nudo"; });
+  var stepActualIdx = stepsVisibles.findIndex(function(s) { return s.key === step; });
+  if (stepActualIdx === -1 && step === "mentores") stepActualIdx = stepsVisibles.length - 1;
+
+  function ProgressBar() {
+    var total = stepsVisibles.length;
+    // Sub-label para NUDO con contador de preguntas
+    var nudoLabel = step === "nudo" && nudoPregActual >= 0 && !Object.keys(nudoRespuestas).length === 0
+      ? "NUDO " + Math.min(nudoPregActual + 1, 5) + "/5"
+      : null;
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 0, marginBottom: 14, padding: "10px 0",
+      }}>
+        {stepsVisibles.map(function(s, i) {
+          var isDone   = i < stepActualIdx;
+          var isActive = i === stepActualIdx;
+          var isLast   = i === total - 1;
+          // Color según estado
+          var dotColor = isDone ? "#06D6A0" : isActive ? "#9b5fff" : "rgba(255,255,255,0.12)";
+          var textColor = isDone ? "#06D6A0" : isActive ? "#c99eff" : "rgba(255,255,255,0.25)";
+          // Label: si es NUDO activo y hay preguntas, mostrar contador
+          var labelText = (isActive && s.key === "nudo" && nudoPregActual >= 0)
+            ? (Object.keys(nudoRespuestas).length < 5
+                ? "NUDO " + (nudoPregActual + 1) + "/5"
+                : "NUDO ✓")
+            : s.label;
+          return (
+            <div key={s.key} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+              {/* Dot + label */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{
+                  width: isActive ? 28 : 22,
+                  height: isActive ? 28 : 22,
+                  borderRadius: "50%",
+                  background: isActive ? "rgba(123,47,247,0.2)" : isDone ? "rgba(6,214,160,0.15)" : "rgba(255,255,255,0.05)",
+                  border: "2px solid " + dotColor,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: isActive ? 13 : 11,
+                  transition: "all 0.3s",
+                  flexShrink: 0,
+                }}>
+                  {isDone ? "✓" : s.icono}
+                </div>
+                <div style={{
+                  fontSize: 9, fontWeight: isActive ? 700 : 400,
+                  color: textColor, textAlign: "center",
+                  whiteSpace: "nowrap", letterSpacing: isActive ? 0.3 : 0,
+                  transition: "all 0.3s",
+                }}>
+                  {labelText}
+                </div>
+              </div>
+              {/* Conector */}
+              {!isLast && (
+                <div style={{
+                  width: 28, height: 2,
+                  background: isDone ? "#06D6A0" : "rgba(255,255,255,0.08)",
+                  margin: "0 4px", marginBottom: 16, flexShrink: 0,
+                  transition: "background 0.3s",
+                }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   // STEP 1 — Insight psicológico + score
   if (step === "insight") {
     return (
       <div style={{ marginTop: 16 }}>
+        <ProgressBar />
         <PantallaPostDiagnostico
           diagnosis={Object.assign({}, diagnosis, { estado: estado })}
           onContinuar={function() { setStep("email"); }}
@@ -1623,6 +1730,7 @@ function DiagnosisPanel(props) {
   if (step === "email") {
     return (
       <div style={{ marginTop: 16 }}>
+        <ProgressBar />
         <div style={{ background: T.sectionBg, border: "1px solid " + T.border, borderRadius: 16, padding: "22px 18px" }}>
           <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 6 }}>Antes de continuar</div>
           <div style={{ color: T.textWhite, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
@@ -1726,6 +1834,7 @@ function DiagnosisPanel(props) {
     }
     return (
       <div style={{ marginTop: 16 }}>
+        <ProgressBar />
         <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 16, padding: "20px 18px", marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(123,47,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🔮</div>
@@ -1837,6 +1946,7 @@ function DiagnosisPanel(props) {
   if (step === "mentores") {
     return (
       <div style={{ marginTop: 16 }}>
+        <ProgressBar />
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
             <RadarChart data={diagnosis} />
