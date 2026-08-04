@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
-var EMAIL   = "mentoresconproposito@gmail.com";
+var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var EMAIL   = "hola@mentoresconproposito.com";
 
 var PAQUETES = [
   {
     icono: "🌱",
     nombre: "Starter",
-    subtitulo: "Para startups que quieren entender el estado real de crecimiento de su equipo.",
+    subtitulo: "El primer diagnóstico",
     target: "Startups · 10-50 personas",
     precio: "USD 295",
     unit: "USD 59 por persona",
@@ -22,7 +22,7 @@ var PAQUETES = [
   {
     icono: "🚀",
     nombre: "Growth",
-    subtitulo: "Para equipos que necesitan reducir estancamiento y acelerar performance.",
+    subtitulo: "Diagnóstico + seguimiento",
     target: "Empresas medianas · 50-200 personas",
     precio: "USD 980",
     unit: "USD 49 por persona",
@@ -37,7 +37,7 @@ var PAQUETES = [
   {
     icono: "🏢",
     nombre: "Enterprise",
-    subtitulo: "Para organizaciones que necesitan mapear riesgo de rotación y desarrollar talento crítico.",
+    subtitulo: "Inteligencia de equipo",
     target: "Empresas 200+ personas",
     precio: "Desde USD 1.950",
     unit: "USD 39 por persona",
@@ -79,9 +79,9 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "100+", label: "diagnósticos en 4 semanas", color: "#4361EE" },
-  { numero: "97%", label: "encontraron un mentor relevante", color: "#06D6A0" },
-  { numero: "33%", label: "de PMs en Latam en Estancamiento", color: "#F72585" },
+  { numero: "+144", label: "diagnósticos realizados en Latam", color: "#4361EE" },
+  { numero: "54%", label: "en Transición a Liderazgo — necesitan criterio estratégico", color: "#06D6A0" },
+  { numero: "29%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
 ];
 
 var DIFERENCIAL = [
@@ -98,59 +98,6 @@ export default function Empresas() {
   useEffect(function() {
     var t = setTimeout(function() { setVisible(true); }, 80);
     return function() { clearTimeout(t); };
-  }, []);
-
-  // Meta tags dinámicos para /empresas
-  useEffect(function() {
-    var prevTitle       = document.title;
-    var prevDesc        = document.querySelector('meta[name="description"]');
-    var prevOgTitle     = document.querySelector('meta[property="og:title"]');
-    var prevOgDesc      = document.querySelector('meta[property="og:description"]');
-    var prevOgUrl       = document.querySelector('meta[property="og:url"]');
-
-    // Title
-    document.title = "Mentorcito para empresas — Diagnóstico de liderazgo en producto";
-
-    // Description
-    var desc = document.createElement("meta");
-    desc.name = "description";
-    desc.content = "Diagnosticá a tu equipo de producto en 5 minutos. Mapa de estados del loop profesional, tensiones y bloqueos estructurales. Dashboard en tiempo real. Piloto gratuito para 3 personas.";
-    if (prevDesc) prevDesc.remove();
-    document.head.appendChild(desc);
-
-    // OG Title
-    var ogTitle = document.createElement("meta");
-    ogTitle.setAttribute("property", "og:title");
-    ogTitle.content = "Mentorcito para empresas — Diagnóstico de liderazgo en producto";
-    if (prevOgTitle) prevOgTitle.remove();
-    document.head.appendChild(ogTitle);
-
-    // OG Description
-    var ogDesc = document.createElement("meta");
-    ogDesc.setAttribute("property", "og:description");
-    ogDesc.content = "¿Sabés en qué punto de carrera está cada persona de tu equipo de producto? Diagnóstico en 5 minutos. Dashboard del equipo. Piloto gratuito.";
-    if (prevOgDesc) prevOgDesc.remove();
-    document.head.appendChild(ogDesc);
-
-    // OG URL
-    var ogUrl = document.createElement("meta");
-    ogUrl.setAttribute("property", "og:url");
-    ogUrl.content = "https://mentorcito.vercel.app/empresas";
-    if (prevOgUrl) prevOgUrl.remove();
-    document.head.appendChild(ogUrl);
-
-    // Cleanup al desmontar
-    return function() {
-      document.title = prevTitle;
-      document.querySelector('meta[name="description"]')?.remove();
-      document.querySelector('meta[property="og:title"]')?.remove();
-      document.querySelector('meta[property="og:description"]')?.remove();
-      document.querySelector('meta[property="og:url"]')?.remove();
-      if (prevDesc)    document.head.appendChild(prevDesc);
-      if (prevOgTitle) document.head.appendChild(prevOgTitle);
-      if (prevOgDesc)  document.head.appendChild(prevOgDesc);
-      if (prevOgUrl)   document.head.appendChild(prevOgUrl);
-    };
   }, []);
 
   return (
@@ -192,7 +139,7 @@ export default function Empresas() {
         <a href="https://mentorcito.vercel.app" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 18 }}>💠</span>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#4361EE", letterSpacing: 0.5 }}>Mentorcito</span>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", fontWeight: 400 }}>para empresas</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>para empresas</span>
         </a>
         <a className="nav-btn" href={WA_LINK} target="_blank" rel="noopener noreferrer" style={{
           padding: "8px 16px", background: "#4361EE", borderRadius: 8,
@@ -235,11 +182,12 @@ export default function Empresas() {
 
         <p style={{
           fontSize: 17, lineHeight: 1.7,
-          color: "rgba(245,245,240,0.72)",
-          maxWidth: 520, margin: "0 auto 40px",
+          color: "rgba(245,245,240,0.5)",
+          maxWidth: 480, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
-          Diagnosticamos estancamiento profesional, riesgo de rotación y bloqueos invisibles antes de invertir en capacitación o mentorías.
+          El 83% de los profesionales de producto diagnosticados están bloqueados o en transición.
+          Sin ese mapa, cualquier programa de desarrollo llega tarde — o a la capa equivocada.
         </p>
 
         {/* Datos */}
@@ -258,7 +206,7 @@ export default function Empresas() {
                 }}>
                   {d.numero}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", maxWidth: 130 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", maxWidth: 130 }}>
                   {d.label}
                 </div>
               </div>
@@ -289,57 +237,80 @@ export default function Empresas() {
         </div>
       </section>
 
-      {/* Pain strip */}
+      {/* Los 3 gaps más frecuentes — datos reales */}
       <section style={{
-        background: "rgba(255,255,255,0.025)",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-        padding: "48px 24px",
+        padding: "72px 24px",
+        background: "rgba(67,97,238,0.04)",
+        borderTop: "1px solid rgba(67,97,238,0.1)",
+        borderBottom: "1px solid rgba(67,97,238,0.1)",
       }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: 3,
-            textTransform: "uppercase", color: "rgba(255,255,255,0.45)",
-            textAlign: "center", marginBottom: 36,
+            fontSize: 11, fontWeight: 600, letterSpacing: 3,
+            textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+            marginBottom: 12, textAlign: "center",
           }}>
-            Lo que Mentorcito diagnostica
+            Lo que detectamos en +144 diagnósticos
           </div>
+          <h2 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: "clamp(22px, 3vw, 32px)",
+            fontWeight: 400, textAlign: "center",
+            margin: "0 0 48px", color: "#F5F5F0",
+            letterSpacing: "-0.3px",
+          }}>
+            Los 3 gaps más frecuentes en equipos de producto en Latam
+          </h2>
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 2,
+            display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center",
           }}>
             {[
-              { icono: "🔁", titulo: "Estancamiento profesional", desc: "Quién domina su rol pero hace tiempo que no avanza — y está en riesgo de salir." },
-              { icono: "🔮", titulo: "Bloqueos invisibles", desc: "Patrones que frenan el crecimiento más allá de los skills técnicos o estratégicos." },
-              { icono: "⚡", titulo: "Tensiones del equipo", desc: "Las fricciones sistémicas que consumen energía del equipo sin resolverse." },
-              { icono: "📊", titulo: "Riesgo de rotación", desc: "Perfiles críticos en Estancamiento con alta probabilidad de salida en los próximos 6 meses." },
+              { n: "1", gap: "Criterio estratégico", desc: "Tomar decisiones en contextos de alta ambigüedad sin depender de validación externa.", color: "#4361EE", bg: "rgba(67,97,238,0.08)" },
+              { n: "2", gap: "Influencia sin autoridad formal", desc: "Liderar, alinear stakeholders y defender el criterio de producto sin tener el título para hacerlo.", color: "#7B2FF7", bg: "rgba(123,47,247,0.08)" },
+              { n: "3", gap: "Decisiones basadas en datos", desc: "Usar métricas para defender prioridades ante el CEO y el negocio — no solo para reportar.", color: "#06D6A0", bg: "rgba(6,214,160,0.08)" },
             ].map(function(item, i) {
               return (
                 <div key={i} style={{
-                  padding: "24px 20px",
-                  borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  flex: "1 1 200px", maxWidth: 220,
+                  background: item.bg,
+                  border: "1px solid " + item.color + "22",
+                  borderRadius: 14, padding: "24px 20px",
+                  textAlign: "center",
                 }}>
-                  <div style={{ fontSize: 22, marginBottom: 10 }}>{item.icono}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#F5F5F0", marginBottom: 6 }}>
-                    {item.titulo}
-                  </div>
-                  <div style={{ fontSize: 13, color: "rgba(245,245,240,0.60)", lineHeight: 1.6 }}>
-                    {item.desc}
-                  </div>
+                  <div style={{
+                    fontFamily: "'DM Serif Display', serif",
+                    fontSize: 40, color: item.color,
+                    lineHeight: 1, marginBottom: 12, fontWeight: 400,
+                  }}>{item.n}</div>
+                  <div style={{
+                    fontSize: 14, fontWeight: 600,
+                    color: "#F5F5F0", marginBottom: 8, lineHeight: 1.3,
+                  }}>{item.gap}</div>
+                  <div style={{
+                    fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6,
+                  }}>{item.desc}</div>
                 </div>
               );
             })}
           </div>
+          <p style={{
+            textAlign: "center", marginTop: 32,
+            fontSize: 13, color: "rgba(255,255,255,0.3)",
+            fontStyle: "italic",
+          }}>
+            El 65% de los programas de desarrollo fallan porque intervienen en la capa equivocada. Mentorcito diagnostica cuál es cuál — antes de recomendar nada.
+          </p>
         </div>
       </section>
+
+      {/* Cómo funciona */}
       <section id="como-funciona" style={{
         padding: "100px 24px",
         maxWidth: 680, margin: "0 auto",
       }}>
         <div style={{
           fontSize: 11, fontWeight: 600, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.50)",
+          textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
           marginBottom: 16, textAlign: "center",
         }}>
           El proceso
@@ -387,7 +358,7 @@ export default function Empresas() {
                   </div>
                   <p style={{
                     fontSize: 14, lineHeight: 1.7,
-                    color: "rgba(245,245,240,0.65)",
+                    color: "rgba(245,245,240,0.45)",
                     margin: 0,
                   }}>
                     {paso.desc}
@@ -413,7 +384,7 @@ export default function Empresas() {
             fontWeight: 400, margin: "0 0 40px",
             color: "#F5F5F0", letterSpacing: "-0.3px",
           }}>
-            La única propuesta en Latam que detecta bloqueos invisibles antes de recomendar desarrollo profesional.
+            La única propuesta en Latam con diagnóstico de bloqueo estructural integrado.
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -432,20 +403,20 @@ export default function Empresas() {
                     background: esNuestro ? "rgba(6,214,160,0.15)" : "rgba(255,255,255,0.05)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 13, marginRight: 14,
-                    color: esNuestro ? "#06D6A0" : "rgba(255,255,255,0.40)",
+                    color: esNuestro ? "#06D6A0" : "rgba(255,255,255,0.2)",
                   }}>
                     {row[2]}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontSize: 14, fontWeight: esNuestro ? 600 : 400,
-                      color: esNuestro ? "#F5F5F0" : "rgba(245,245,240,0.58)",
+                      color: esNuestro ? "#F5F5F0" : "rgba(245,245,240,0.35)",
                     }}>
                       {row[0]}
                     </div>
                     <div style={{
                       fontSize: 12,
-                      color: esNuestro ? "rgba(245,245,240,0.72)" : "rgba(245,245,240,0.2)",
+                      color: esNuestro ? "rgba(245,245,240,0.5)" : "rgba(245,245,240,0.2)",
                     }}>
                       {row[1]}
                     </div>
@@ -461,7 +432,7 @@ export default function Empresas() {
       <section id="paquetes" style={{ padding: "100px 24px", maxWidth: 900, margin: "0 auto" }}>
         <div style={{
           fontSize: 11, fontWeight: 600, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.50)",
+          textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
           marginBottom: 16, textAlign: "center",
         }}>
           Paquetes
@@ -530,7 +501,7 @@ export default function Empresas() {
                   {pk.precio}
                 </div>
                 <div style={{
-                  fontSize: 12, color: "rgba(255,255,255,0.50)",
+                  fontSize: 12, color: "rgba(255,255,255,0.3)",
                   marginBottom: 20,
                 }}>
                   {pk.unit}
@@ -563,7 +534,7 @@ export default function Empresas() {
                 </div>
 
                 <div style={{
-                  fontSize: 11, color: "rgba(255,255,255,0.45)",
+                  fontSize: 11, color: "rgba(255,255,255,0.25)",
                   marginBottom: 16,
                 }}>
                   Para: {pk.target}
@@ -575,7 +546,7 @@ export default function Empresas() {
                   background: pk.destacado ? "#4361EE" : "transparent",
                   border: pk.destacado ? "none" : "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 8,
-                  color: pk.destacado ? "white" : "rgba(245,245,240,0.72)",
+                  color: pk.destacado ? "white" : "rgba(245,245,240,0.5)",
                   fontSize: 13, fontWeight: 600,
                   textDecoration: "none",
                   transition: "opacity 0.15s",
@@ -604,138 +575,8 @@ export default function Empresas() {
             }}>
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ROI — el costo de no actuar */}
-      <section style={{
-        padding: "100px 24px",
-        maxWidth: 860, margin: "0 auto",
-      }}>
-        <div style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: 3,
-          textTransform: "uppercase", color: "rgba(255,255,255,0.45)",
-          textAlign: "center", marginBottom: 16,
-        }}>
-          El costo de no actuar
-        </div>
-        <h2 style={{
-          fontFamily: "'DM Serif Display', serif",
-          fontSize: "clamp(26px, 3.5vw, 38px)",
-          fontWeight: 400, textAlign: "center",
-          margin: "0 0 16px", color: "#F5F5F0",
-          letterSpacing: "-0.3px",
-        }}>
-          Diagnosticar tarde es más caro que diagnosticar ahora.
-        </h2>
-        <p style={{
-          fontSize: 15, color: "rgba(245,245,240,0.62)",
-          textAlign: "center", maxWidth: 500,
-          margin: "0 auto 56px", lineHeight: 1.7,
-        }}>
-          Tres escenarios que ya están ocurriendo en equipos de producto sin diagnóstico.
-        </p>
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 16, marginBottom: 40,
-        }}>
-          {[
-            {
-              icono: "🔁",
-              titulo: "Rotación de talento senior",
-              costo: "USD 15.000 – 25.000",
-              desc: "El costo de reemplazar un perfil PM o Head of Product Senior: tiempo de búsqueda, onboarding y pérdida de conocimiento organizacional.",
-              señal: "Señal previa: estancamiento sostenido sin intervención.",
-              color: "#F72585",
-            },
-            {
-              icono: "🔥",
-              titulo: "Burnout en el equipo",
-              costo: "3-6 meses de productividad",
-              desc: "Una Head operando como PM durante más de un año sin acompañamiento tiene alta probabilidad de agotamiento y salida. El burnout no aparece de golpe — se acumula.",
-              señal: "Señal previa: modo reactivo sostenido sin sistema.",
-              color: "#FB8500",
-            },
-            {
-              icono: "💸",
-              titulo: "Capacitación sin diagnóstico",
-              costo: "Inversión mal aplicada",
-              desc: "El 65% de los programas de desarrollo fallan no porque el contenido sea malo — sino porque intervienen en la capa equivocada. Sin diagnóstico previo, el dinero llega donde no está el problema.",
-              señal: "Señal previa: bloqueo invisible no detectado.",
-              color: "#7B2FF7",
-            },
-          ].map(function(item, i) {
-            return (
-              <div key={i} style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderTop: "3px solid " + item.color,
-                borderRadius: 12, padding: "24px 22px",
-              }}>
-                <div style={{ fontSize: 24, marginBottom: 12 }}>{item.icono}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#F5F5F0", marginBottom: 6 }}>
-                  {item.titulo}
-                </div>
-                <div style={{
-                  fontSize: 18, fontWeight: 700, color: item.color,
-                  fontFamily: "'DM Serif Display', serif",
-                  marginBottom: 12,
-                }}>
-                  {item.costo}
-                </div>
-                <div style={{ fontSize: 13, color: "rgba(245,245,240,0.62)", lineHeight: 1.65, marginBottom: 12 }}>
-                  {item.desc}
-                </div>
-                <div style={{
-                  fontSize: 11, fontWeight: 600, color: item.color,
-                  letterSpacing: 0.5, opacity: 0.7,
-                }}>
-                  {item.señal}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Comparativa */}
-        <div style={{
-          background: "rgba(67,97,238,0.06)",
-          border: "1px solid rgba(67,97,238,0.15)",
-          borderRadius: 14, padding: "28px 32px",
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          gap: 24, alignItems: "center",
-        }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
-              Sin diagnóstico
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#F72585", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
-              USD 15.000+
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>
-              costo de rotación o burnout
-            </div>
-          </div>
-          <div style={{
-            width: 1, height: 60,
-            background: "rgba(255,255,255,0.08)",
-          }} />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
-              Con Mentorcito
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#06D6A0", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
-              USD 295 – 1.950
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>
-              diagnóstico + acompañamiento
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
             </div>
           </div>
         </div>
@@ -763,7 +604,7 @@ export default function Empresas() {
             3 diagnósticos gratuitos para tu equipo
           </h2>
           <p style={{
-            fontSize: 16, color: "rgba(245,245,240,0.65)",
+            fontSize: 16, color: "rgba(245,245,240,0.45)",
             lineHeight: 1.7, margin: "0 0 36px",
           }}>
             Elegís 3 personas. En 3-5 días tenés resultados reales.
@@ -795,7 +636,7 @@ export default function Empresas() {
 
           <div style={{
             marginTop: 24, fontSize: 12,
-            color: "rgba(255,255,255,0.40)",
+            color: "rgba(255,255,255,0.2)",
             lineHeight: 1.6,
           }}>
             La condición: 30 minutos de feedback sobre el diagnóstico.<br/>
@@ -814,7 +655,7 @@ export default function Empresas() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 16 }}>💠</span>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.50)" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
             Mentorcito · Mentores con Propósito · 2026
           </span>
         </div>
@@ -827,7 +668,7 @@ export default function Empresas() {
           ].map(function(link, i) {
             return (
               <a key={i} href={link[1]} target="_blank" rel="noopener noreferrer" style={{
-                fontSize: 12, color: "rgba(255,255,255,0.45)",
+                fontSize: 12, color: "rgba(255,255,255,0.25)",
                 textDecoration: "none",
               }}>
                 {link[0]}
