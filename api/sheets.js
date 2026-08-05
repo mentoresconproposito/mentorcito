@@ -10,8 +10,10 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const action = req.query.action || "stats";
-      const url = `${SHEETS_URL}?action=${action}`;
+      // Reenviamos TODOS los query params (antes solo se reenviaba "action",
+      // lo cual rompía acciones que necesitan parámetros extra como "email")
+      const params = new URLSearchParams(req.query).toString();
+      const url = `${SHEETS_URL}?${params}`;
 
       // Google Apps Script hace redirects — seguirlos manualmente
       const response = await fetch(url, {
@@ -29,7 +31,7 @@ export default async function handler(req, res) {
       const trimmed = text.trim();
       if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
         console.error("Google returned non-JSON:", trimmed.slice(0, 200));
-        return res.status(502).json({ 
+        return res.status(502).json({
           error: "Google Apps Script returned non-JSON",
           preview: trimmed.slice(0, 100)
         });
