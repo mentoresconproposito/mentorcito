@@ -6,12 +6,14 @@ import Privacidad from './Privacidad'
 import EmpresaAgent from './EmpresaAgent'
 import EmpresaDashboard from './EmpresaDashboard'
 import Empresas from './Empresas'
+import MentorshipJourney from './MentorshipJourney'
 
 function App() {
   var path = window.location.pathname;
   if (path === '/dashboard')             return <Dashboard />;
   if (path === '/privacidad')            return <Privacidad />;
   if (path === '/empresas')              return <Empresas />;
+  if (path === '/creatumentoria')        return <MentorshipJourney />;
   if (path.startsWith('/empresa/'))      return <EmpresaDashboard />;
   // Modo empresa en el agente: ?empresa=slug&token=xxx
   var params = new URLSearchParams(window.location.search);
