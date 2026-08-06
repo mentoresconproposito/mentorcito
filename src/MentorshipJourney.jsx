@@ -210,6 +210,7 @@ export default function MentorshipJourney() {
   var [loading, setLoading] = useState(false);
   var [gapMatchData, setGapMatchData] = useState(null);
   var [gapMatchLoading, setGapMatchLoading] = useState(false);
+  var [justCompletedWeek, setJustCompletedWeek] = useState(null); // semana recién cerrada, muestra la pantalla de transición
   var bottomRef = useRef(null);
 
   useEffect(function () {
@@ -411,28 +412,31 @@ export default function MentorshipJourney() {
         var nextWeek = Math.min(week + 1, 4);
         var newKey = mentorshipKey || ("mentorship:" + Date.now());
 
+        // Guardamos el resultado del módulo y el historial, pero NO avanzamos
+        // de semana automáticamente — eso queda a cargo de la pantalla de
+        // transición (el mentee hace click en "Continuar"), así evitamos
+        // condiciones de carrera entre varios setState encadenados.
         setModuleOutputs(function (prev) {
           var updated = Object.assign({}, prev);
           updated[week] = moduleResult;
           return updated;
         });
-        if (!mentorshipKey) setMentorshipKey(newKey);
-        setSemanaActual(nextWeek);
-        setViewingWeek(nextWeek);
         setConversationHistories(function (prev) {
           var updated = Object.assign({}, prev);
           updated[week] = finalHistory;
-          if (nextWeek !== week && (!prev[nextWeek] || prev[nextWeek].length === 0)) {
-            updated[nextWeek] = [{ role: "assistant", content: WEEK_INTRO[nextWeek] }];
-          }
           return updated;
         });
+        if (!mentorshipKey) setMentorshipKey(newKey);
+        setJustCompletedWeek(week);
 
+        // Guardamos con semana_actual = week (todavía NO avanzamos): el
+        // avance real ocurre recién cuando el mentee confirma en la
+        // pantalla de transición (advanceToNextWeek).
         postToSheets({
           action: "save_module_progress",
           email: email,
           mentorship_key: newKey,
-          semana_actual: nextWeek,
+          semana_actual: week,
           module_number: week,
           module_output: moduleResult,
           conversation_history: finalHistory,
@@ -448,6 +452,38 @@ export default function MentorshipJourney() {
       });
     } finally {
       setLoading(false);
+    }
+  }
+
+  function advanceToNextWeek() {
+    var completedWeek = justCompletedWeek;
+    if (!completedWeek) return;
+    var nextWeek = Math.min(completedWeek + 1, 4);
+    var introMsg = { role: "assistant", content: WEEK_INTRO[nextWeek] };
+
+    setSemanaActual(nextWeek);
+    setViewingWeek(nextWeek);
+    setJustCompletedWeek(null);
+    setConversationHistories(function (prev) {
+      var updated = Object.assign({}, prev);
+      // Solo pisamos con el intro si esa semana todavía no tiene conversación propia
+      // (por ej. si el mentee ya la había empezado en otra sesión)
+      if (!prev[nextWeek] || prev[nextWeek].length === 0) {
+        updated[nextWeek] = [introMsg];
+      }
+      return updated;
+    });
+
+    if (nextWeek !== completedWeek) {
+      postToSheets({
+        action: "save_module_progress",
+        email: email,
+        mentorship_key: mentorshipKey,
+        semana_actual: nextWeek,
+        module_number: completedWeek,
+        module_output: moduleOutputs[completedWeek],
+        conversation_history: [introMsg],
+      });
     }
   }
 
@@ -481,8 +517,25 @@ export default function MentorshipJourney() {
         <div style={{ maxWidth: 380, width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 28 }}>
           <div style={{ fontSize: 22, marginBottom: 6 }}>💠</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.textWhite, marginBottom: 6 }}>Tu asistente de mentoría</div>
-          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 18, lineHeight: 1.5 }}>
-            Ingresá tu email para arrancar o retomar tu recorrido de 4 semanas.
+          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 14, lineHeight: 1.5 }}>
+            Este es tu espacio para trabajar, semana a semana, en crear tu propia mentoría — entre las sesiones en vivo con Gustavo.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 18 }}>
+            {[
+              "Semana 1 · Encontrar el problema real que resolvés",
+              "Semana 2 · Validarlo con evidencia de mercado",
+              "Semana 3 · Definir el MVP de tu mentoría",
+              "Semana 4 · Armar tu lanzamiento",
+            ].map(function (line, i) {
+              return (
+                <div key={i} style={{ fontSize: 11.5, color: T.textMuted, textAlign: "left", paddingLeft: 4 }}>
+                  {line}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 12, color: T.textSub, marginBottom: 18, lineHeight: 1.5 }}>
+            Ingresá tu email para arrancar o retomar donde quedaste.
           </div>
           <input
             type="email"
@@ -550,12 +603,45 @@ export default function MentorshipJourney() {
         })}
       </div>
 
+      {/* Barra de progreso: minimiza la ansiedad de "no sé dónde estoy" */}
       <div style={{ padding: "10px 16px", borderBottom: "1px solid " + T.border, background: "rgba(255,255,255,0.02)" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite }}>{WEEK_TITLES[viewingWeek]}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite }}>{WEEK_TITLES[viewingWeek]}</div>
+          <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 600 }}>Semana {semanaActual} de 4</div>
+        </div>
+        <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+          <div style={{
+            height: "100%",
+            width: (((semanaActual - 1) + (moduleOutputs[semanaActual] ? 1 : 0)) / 4 * 100) + "%",
+            background: "linear-gradient(90deg, #4361ee, #7b2ff7)",
+            borderRadius: 3,
+            transition: "width 0.4s ease",
+          }} />
+        </div>
       </div>
 
-      {/* Si está viendo una semana ya completada que no es la activa: resumen de solo lectura */}
-      {!isActiveWeek && currentOutput ? (
+      {/* Pantalla de transición: se muestra al completar un módulo, hasta que el mentee confirma avanzar */}
+      {justCompletedWeek && justCompletedWeek === viewingWeek ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ maxWidth: 380, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: T.textWhite, marginBottom: 8 }}>
+              ¡Felicitaciones, completaste la Semana {justCompletedWeek}!
+            </div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24, lineHeight: 1.6 }}>
+              {justCompletedWeek < 4
+                ? "Ya tenés lo necesario de \"" + WEEK_TITLES[justCompletedWeek] + "\". La próxima semana vamos a trabajar en: " + WEEK_TITLES[Math.min(justCompletedWeek + 1, 4)] + "."
+                : "Completaste las 4 semanas del programa. Tu propuesta de mentoría ya está armada de punta a punta."}
+            </div>
+            <button
+              onClick={advanceToNextWeek}
+              style={{ padding: "12px 22px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              {justCompletedWeek < 4 ? "Continuar con la Semana " + (justCompletedWeek + 1) : "Ver mi propuesta completa"}
+            </button>
+          </div>
+        </div>
+      ) : !isActiveWeek && currentOutput ? (
         <div style={{ flex: 1, padding: 20, overflowY: "auto" }}>
           <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>
             Resultado de esta semana
