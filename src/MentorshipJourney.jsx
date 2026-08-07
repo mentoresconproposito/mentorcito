@@ -250,6 +250,9 @@ export default function MentorshipJourney() {
           3: data.module3_output || null,
           4: data.module4_output || null,
         });
+        // Si ya se había calculado el gap-match en una sesión anterior, lo
+        // restauramos para no volver a llamar al clasificador de nuevo.
+        if (data.gap_match_raw) setGapMatchData(data.gap_match_raw);
         // El historial guardado corresponde al módulo en el que se quedó
         var hist = data.conversation_history || [];
         setConversationHistories(function (prev) {
@@ -321,6 +324,16 @@ export default function MentorshipJourney() {
       var clean = textBlock.text.replace(/```json|```/g, "").trim();
       var parsed = JSON.parse(clean);
       setGapMatchData(parsed);
+
+      // Persistimos el gap-match crudo: le sirve al mentor como evidencia
+      // de demanda de mercado para ese mentee, sin depender de mirar la
+      // pestaña Network en el momento en que se calculó.
+      postToSheets({
+        action: "save_module_progress",
+        email: email,
+        mentorship_key: mentorshipKey,
+        gap_match_raw: parsed,
+      });
     } catch (e) {
       console.error("Error en gap match:", e);
     } finally {
