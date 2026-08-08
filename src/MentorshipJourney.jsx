@@ -36,6 +36,10 @@ var WEEK_INTRO = {
   4: "Semana 4, la última: vamos a armar cómo lanzás esto. Empecemos por lo más simple: si tuvieras que resumir tu propuesta en una frase (\"ayudo a X a lograr Y a través de Z\"), ¿cómo la dirías hoy?",
 };
 
+// Tiempo mínimo entre semanas: el asistente es un complemento entre
+// sesiones en vivo, no algo para completar de corrido en una sentada.
+var MIN_DIAS_ENTRE_SEMANAS = 3;
+
 // ─────────────────────────────────────────────
 // SYSTEM PROMPTS DE LOS 4 MÓDULOS
 // (adaptados al patrón de tag embebido <MODULE_COMPLETE>,
@@ -78,6 +82,10 @@ var MODULE2_PROMPT_TEMPLATE =
   "- Marcá con cuidado cuando el usuario esté racionalizando una no-respuesta como validación (\"todos me dicen que sí\" sin detalle es una alerta, no una confirmación).\n" +
   "- Ayudalo a distinguir entre \"les interesa la idea\" y \"pagarían por resolver esto\".\n" +
   "- Integrá el gap_match_data en el momento natural de la conversación, no como un bloque de datos al principio desconectado del diálogo.\n\n" +
+  "Restricción importante sobre el tipo de producto:\n" +
+  "- El foco de este programa es exclusivamente MENTORÍAS B2C y B2B (1:1 o para equipos) — no cursos grabados, no consultorías tradicionales de proyecto, no productos de info genéricos.\n" +
+  "- Si en algún momento el usuario propone o menciona armar un curso, una consultoría, o un servicio que no sea una mentoría, redirigí con respeto hacia el formato de mentoría — por ejemplo: \"eso podría ser un complemento a futuro, pero para este programa nos enfocamos en definir tu mentoría\".\n" +
+  "- Un workshop SÍ es un formato válido dentro del paraguas de mentoría (por ejemplo, como sesión inicial grupal de un programa 1:1, o como oferta B2B para equipos) — no lo descartes si surge.\n\n" +
   "Cuando tengas evidencia cualitativa real (conversaciones, aunque sean informales) y hayas contextualizado la evidencia cuantitativa, cerrá tu respuesta con:\n" +
   "<MODULE_COMPLETE>\n" +
   "{\n" +
@@ -96,7 +104,7 @@ var MODULE3_PROMPT_TEMPLATE =
   "El usuario ya validó un problema real. Tu trabajo es ayudarlo a definir la primera versión de su mentoría como producto: qué incluye, qué formato tiene, y qué NO incluye todavía.\n\n" +
   "Reglas de conversación:\n" +
   "- Ayudalo a definir 3-4 pilares de contenido concretos (no más).\n" +
-  "- Preguntá sobre formato: individual, grupal, cantidad de sesiones, duración.\n" +
+  "- Preguntá sobre formato: individual, grupal, cantidad de sesiones, duración. El formato final siempre es una mentoría (B2C o B2B) — un workshop puede ser parte de ella (por ejemplo, como sesión inicial grupal), pero no reemplaza el formato de mentoría por un curso grabado o una consultoría de proyecto.\n" +
   "- Empujá contra el perfeccionismo: recordá que esto es un MVP. Si quiere incluir demasiado, preguntá \"¿esto es necesario para la primera cohorte, o podés agregarlo después?\"\n" +
   "- Chequeá coherencia con lo validado en la Semana 2: ¿el formato y contenido responden al problema real, o se desvió hacia lo que a él le gusta enseñar?\n\n" +
   "Cuando tengas claridad, cerrá tu respuesta con:\n" +
@@ -211,7 +219,14 @@ export default function MentorshipJourney() {
   var [gapMatchData, setGapMatchData] = useState(null);
   var [gapMatchLoading, setGapMatchLoading] = useState(false);
   var [justCompletedWeek, setJustCompletedWeek] = useState(null); // semana recién cerrada, muestra la pantalla de transición
+  var [semanaDesbloqueadaEn, setSemanaDesbloqueadaEn] = useState(null); // timestamp ISO de cuándo se habilitó la semana activa
+  var [requierePago, setRequierePago] = useState(""); // "", "pendiente" o "pagado" — lo edita Gustavo a mano en la Sheet
+  var [isMobile, setIsMobile] = useState(false);
   var bottomRef = useRef(null);
+
+  useEffect(function () {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   useEffect(function () {
     var stored = localStorage.getItem("mentorship_email");
@@ -253,6 +268,8 @@ export default function MentorshipJourney() {
         // Si ya se había calculado el gap-match en una sesión anterior, lo
         // restauramos para no volver a llamar al clasificador de nuevo.
         if (data.gap_match_raw) setGapMatchData(data.gap_match_raw);
+        if (data.semana_desbloqueada_en) setSemanaDesbloqueadaEn(data.semana_desbloqueada_en);
+        if (data.requiere_pago) setRequierePago(data.requiere_pago);
         // El historial guardado corresponde al módulo en el que se quedó
         var hist = data.conversation_history || [];
         setConversationHistories(function (prev) {
@@ -473,10 +490,12 @@ export default function MentorshipJourney() {
     if (!completedWeek) return;
     var nextWeek = Math.min(completedWeek + 1, 4);
     var introMsg = { role: "assistant", content: WEEK_INTRO[nextWeek] };
+    var unlockTimestamp = new Date().toISOString();
 
     setSemanaActual(nextWeek);
     setViewingWeek(nextWeek);
     setJustCompletedWeek(null);
+    setSemanaDesbloqueadaEn(unlockTimestamp);
     setConversationHistories(function (prev) {
       var updated = Object.assign({}, prev);
       // Solo pisamos con el intro si esa semana todavía no tiene conversación propia
@@ -496,8 +515,26 @@ export default function MentorshipJourney() {
         module_number: completedWeek,
         module_output: moduleOutputs[completedWeek],
         conversation_history: [introMsg],
+        semana_desbloqueada_en: unlockTimestamp,
       });
     }
+  }
+
+  // Cuántos días faltan para que se habilite la semana activa (0 si ya está disponible)
+  function diasRestantesParaDesbloqueo() {
+    if (semanaActual === 1 || !semanaDesbloqueadaEn) return 0;
+    if (requierePago === "pagado") return 0; // ya pagó, no espera el blocker de tiempo
+    var msTranscurridos = Date.now() - new Date(semanaDesbloqueadaEn).getTime();
+    var msRequeridos = MIN_DIAS_ENTRE_SEMANAS * 24 * 60 * 60 * 1000;
+    var msFaltantes = msRequeridos - msTranscurridos;
+    if (msFaltantes <= 0) return 0;
+    return Math.ceil(msFaltantes / (24 * 60 * 60 * 1000));
+  }
+
+  function fechaDesbloqueo() {
+    if (!semanaDesbloqueadaEn) return "";
+    var unlockDate = new Date(new Date(semanaDesbloqueadaEn).getTime() + MIN_DIAS_ENTRE_SEMANAS * 24 * 60 * 60 * 1000);
+    return unlockDate.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
   }
 
   function handleKey(e) {
@@ -547,6 +584,17 @@ export default function MentorshipJourney() {
               );
             })}
           </div>
+          <div style={{ fontSize: 12, color: T.textSub, marginBottom: 10, lineHeight: 1.5 }}>
+            Cada semana te lleva entre <strong style={{ color: T.text }}>20 y 30 minutos</strong> aproximadamente.
+          </div>
+          <div style={{ fontSize: 11.5, color: "#ffb454", background: "rgba(255,180,84,0.08)", border: "1px solid rgba(255,180,84,0.25)", borderRadius: 8, padding: "8px 10px", marginBottom: 10, lineHeight: 1.5 }}>
+            ⚠️ Tu respuesta se guarda recién cuando completás la semana entera — si salís a la mitad, esa semana se reinicia desde el principio la próxima vez que entres.
+          </div>
+          {isMobile && (
+            <div style={{ fontSize: 11.5, color: "#ffb454", background: "rgba(255,180,84,0.08)", border: "1px solid rgba(255,180,84,0.25)", borderRadius: 8, padding: "8px 10px", marginBottom: 14, lineHeight: 1.5 }}>
+              💻 Te recomendamos hacerlo desde una computadora — la experiencia está pensada para escribir con calma, no para el celular.
+            </div>
+          )}
           <div style={{ fontSize: 12, color: T.textSub, marginBottom: 18, lineHeight: 1.5 }}>
             Ingresá tu email para arrancar o retomar donde quedaste.
           </div>
@@ -571,6 +619,7 @@ export default function MentorshipJourney() {
   }
 
   var isActiveWeek = viewingWeek === semanaActual;
+  var diasFaltantes = isActiveWeek ? diasRestantesParaDesbloqueo() : 0;
   var currentMessages = conversationHistories[viewingWeek] || [];
   var currentOutput = moduleOutputs[viewingWeek];
 
@@ -652,6 +701,41 @@ export default function MentorshipJourney() {
             >
               {justCompletedWeek < 4 ? "Continuar con la Semana " + (justCompletedWeek + 1) : "Ver mi propuesta completa"}
             </button>
+          </div>
+        </div>
+      ) : isActiveWeek && requierePago === "pendiente" ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ maxWidth: 380, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: T.textWhite, marginBottom: 8 }}>
+              Ya probaste la Semana 1 gratis
+            </div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 22, lineHeight: 1.6 }}>
+              Para seguir con las Semanas 2, 3 y 4 — validación de mercado, definición de tu MVP y lanzamiento — hablemos y vemos los detalles del programa completo.
+            </div>
+            <a
+              href={"https://wa.me/5491170043893?text=" + encodeURIComponent("Hola Gustavo! Terminé la Semana 1 gratis del asistente de Creá tu Mentoría (" + email + ") y quiero seguir con las próximas semanas.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-block", padding: "12px 22px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 14, textDecoration: "none" }}
+            >
+              Hablar con Gustavo
+            </a>
+          </div>
+        </div>
+      ) : isActiveWeek && diasFaltantes > 0 ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ maxWidth: 380, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: T.textWhite, marginBottom: 8 }}>
+              La Semana {semanaActual} se habilita en {diasFaltantes} {diasFaltantes === 1 ? "día" : "días"}
+            </div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 10, lineHeight: 1.6 }}>
+              Este asistente acompaña el programa entre sesiones — dejamos unos días entre semana y semana a propósito, para que tengas tiempo de poner en práctica lo que trabajaste.
+            </div>
+            <div style={{ fontSize: 12, color: T.textMuted }}>
+              Disponible desde el {fechaDesbloqueo()}
+            </div>
           </div>
         </div>
       ) : !isActiveWeek && currentOutput ? (
