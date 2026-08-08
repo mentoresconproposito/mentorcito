@@ -300,6 +300,13 @@ export default function MentorshipJourney() {
     localStorage.setItem("mentorship_email", trimmed);
     setEmail(trimmed);
     setInitializing(true);
+
+    // Guardamos el email apenas entra, aunque no llegue a completar la
+    // Semana 1 — así queda registrado para poder hacer remarketing a
+    // quienes probaron pero no terminaron. Si ya existía la fila (alguien
+    // que vuelve), esto no pisa nada, solo actualiza last_updated.
+    postToSheets({ action: "save_module_progress", email: trimmed });
+
     loadProgress(trimmed);
   }
 
