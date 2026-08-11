@@ -40,6 +40,27 @@ var WEEK_INTRO = {
 // sesiones en vivo, no algo para completar de corrido en una sentada.
 var MIN_DIAS_ENTRE_SEMANAS = 3;
 
+// Etiquetas legibles para los campos técnicos de cada module_output,
+// usadas en la pantalla de "Resultado de esta semana".
+var FIELD_LABELS = {
+  problema_identificado: "Problema identificado",
+  publico_objetivo: "Público objetivo",
+  evidencia_o_intuicion: "Evidencia",
+  metodo_validacion: "Método de validación",
+  hallazgos_clave: "Hallazgos clave",
+  problema_confirmado_o_ajustado: "Problema, confirmado o ajustado",
+  evidencia_cuantitativa_resumen: "Evidencia cuantitativa",
+  nivel_saturacion_percibido: "Nivel de saturación del nicho",
+  pilares_contenido: "Pilares de contenido",
+  formato: "Formato",
+  duracion_sesiones: "Duración de las sesiones",
+  publico_ideal_refinado: "Público ideal, refinado",
+  propuesta_valor: "Propuesta de valor",
+  pricing_sugerido: "Pricing sugerido",
+  plan_primeros_mentees: "Plan para los primeros mentees",
+  landing_draft: "Borrador de landing",
+};
+
 // ─────────────────────────────────────────────
 // SYSTEM PROMPTS DE LOS 4 MÓDULOS
 // (adaptados al patrón de tag embebido <MODULE_COMPLETE>,
@@ -465,7 +486,12 @@ export default function MentorshipJourney() {
           return updated;
         });
         if (!mentorshipKey) setMentorshipKey(newKey);
-        setJustCompletedWeek(week);
+        // Pequeña pausa antes de mostrar la pantalla de felicitaciones,
+        // para que el mentee alcance a leer el mensaje de cierre del
+        // agente antes de que la pantalla cambie.
+        setTimeout(function () {
+          setJustCompletedWeek(week);
+        }, 2000);
 
         // Guardamos con semana_actual = week (todavía NO avanzamos): el
         // avance real ocurre recién cuando el mentee confirma en la
@@ -748,18 +774,42 @@ export default function MentorshipJourney() {
         </div>
       ) : !isActiveWeek && currentOutput ? (
         <div style={{ flex: 1, padding: 20, overflowY: "auto" }}>
-          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>
+          <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14, textTransform: "uppercase", letterSpacing: 1 }}>
             Resultado de esta semana
           </div>
-          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {Object.keys(currentOutput).map(function (key) {
               var val = currentOutput[key];
-              return (
-                <div key={key} style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>{key}</div>
-                  <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>
-                    {Array.isArray(val) ? val.join(" · ") : typeof val === "object" ? JSON.stringify(val) : String(val)}
+              var label = FIELD_LABELS[key] || key;
+
+              // Caso especial: landing_draft es un objeto anidado (titulo, subtitulo, bullets)
+              if (key === "landing_draft" && val && typeof val === "object" && !Array.isArray(val)) {
+                return (
+                  <div key={key} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 }}>{label}</div>
+                    {val.titulo && <div style={{ fontSize: 14, fontWeight: 700, color: T.textWhite, marginBottom: 4 }}>{val.titulo}</div>}
+                    {val.subtitulo && <div style={{ fontSize: 12.5, color: T.textSub, marginBottom: 10 }}>{val.subtitulo}</div>}
+                    {Array.isArray(val.bullets) && val.bullets.map(function (b, i) {
+                      return <div key={i} style={{ fontSize: 12.5, color: T.text, marginBottom: 4 }}>· {b}</div>;
+                    })}
                   </div>
+                );
+              }
+
+              return (
+                <div key={key} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 }}>{label}</div>
+                  {Array.isArray(val) ? (
+                    <div>
+                      {val.map(function (item, i) {
+                        return <div key={i} style={{ fontSize: 13, color: T.text, lineHeight: 1.6 }}>· {item}</div>;
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6 }}>
+                      {typeof val === "object" ? JSON.stringify(val) : String(val)}
+                    </div>
+                  )}
                 </div>
               );
             })}
