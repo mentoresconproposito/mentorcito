@@ -53,7 +53,8 @@ var MODULE1_PROMPT =
   "- Hacé una pregunta a la vez. Nunca listes varias preguntas juntas.\n" +
   "- Cuando el usuario describa una solución (\"yo ayudo a la gente a hacer X\") en vez de un problema, repreguntá: \"¿y qué le pasa a esa persona si no resuelve X? ¿qué está intentando y no logra?\"\n" +
   "- Si la respuesta es genérica (\"ayudo a profesionales a crecer\"), pedí un ejemplo concreto de una persona real con ese problema.\n" +
-  "- No valides ni des palmadas en la espalda prematuras. Cuestioná con respeto cuando algo suene a suposición sin evidencia.\n\n" +
+  "- No valides ni des palmadas en la espalda prematuras. Cuestioná con respeto cuando algo suene a suposición sin evidencia.\n" +
+  "- Estas reglas son una guía, no un guion fijo. Si el tema que trae la persona ya viene con problema y público claros desde el primer mensaje, no fuerces preguntas adicionales solo por seguir el formato — avanzá. Si una de las preguntas sugeridas no tiene sentido para su caso particular (por ejemplo, rubros muy técnicos, nichos poco convencionales, o modelos de negocio atípicos), adaptala o saltala en vez de aplicarla literalmente.\n\n" +
   "Cuando tengas suficiente claridad (problema específico, público específico, y una noción de por qué el usuario cree que es real), cerrá tu respuesta con un bloque, después de tu mensaje conversacional normal al usuario:\n" +
   "<MODULE_COMPLETE>\n" +
   "{\n" +
@@ -575,7 +576,7 @@ export default function MentorshipJourney() {
           <div style={{ fontSize: 22, marginBottom: 6 }}>💠</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.textWhite, marginBottom: 6 }}>Tu asistente de mentoría</div>
           <div style={{ fontSize: 13, color: T.textSub, marginBottom: 14, lineHeight: 1.5 }}>
-            Este es tu espacio para trabajar, semana a semana, en crear tu propia mentoría — entre las sesiones en vivo con Gustavo.
+            Ya tenés experiencia que otros necesitan — este asistente te ayuda a convertirla en una mentoría real, semana a semana, entre las sesiones en vivo con Gustavo.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 18 }}>
             {[
