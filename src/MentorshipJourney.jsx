@@ -817,6 +817,10 @@ export default function MentorshipJourney() {
         </div>
       ) : (
         <>
+          {/* Aviso persistente: se repite en cada semana activa, no solo en la pantalla de entrada */}
+          <div style={{ fontSize: 11, color: "#ffb454", background: "rgba(255,180,84,0.08)", borderBottom: "1px solid rgba(255,180,84,0.2)", padding: "8px 14px", lineHeight: 1.4, textAlign: "center" }}>
+            ⚠️ Tu respuesta se guarda recién cuando completás la semana entera — si salís a la mitad, esa semana se reinicia desde el principio la próxima vez que entres.
+          </div>
           {/* Chat activo */}
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 12, background: T.chat }}>
             {gapMatchLoading && viewingWeek === 2 && (
