@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
-var EMAIL   = "mentoresconproposito@gmail.com";
+var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var EMAIL   = "hola@mentoresconproposito.com";
 
 var PAQUETES = [
   {
@@ -79,9 +79,9 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "+144", label: "diagnósticos realizados en Latam", color: "#4361EE" },
-  { numero: "54%", label: "en Transición a Liderazgo — necesitan criterio estratégico", color: "#06D6A0" },
-  { numero: "29%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
+  { numero: "+155", label: "diagnósticos realizados en Latam", color: "#4361EE" },
+  { numero: "45%", label: "en Transición a Liderazgo — seniority sin herramientas para el salto", color: "#06D6A0" },
+  { numero: "22%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
 ];
 
 var DIFERENCIAL = [
@@ -186,7 +186,7 @@ export default function Empresas() {
           maxWidth: 480, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
-          El 83% de los profesionales de producto diagnosticados están bloqueados o en transición.
+          El 67% de los profesionales de producto diagnosticados están bloqueados o en transición.
           Sin ese mapa, cualquier programa de desarrollo llega tarde — o a la capa equivocada.
         </p>
 
@@ -250,7 +250,7 @@ export default function Empresas() {
             textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
             marginBottom: 12, textAlign: "center",
           }}>
-            Lo que detectamos en +144 diagnósticos
+            Lo que detectamos en +155 diagnósticos
           </div>
           <h2 style={{
             fontFamily: "'DM Serif Display', serif",
@@ -579,6 +579,114 @@ export default function Empresas() {
               Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ROI — riesgo de no invertir */}
+      <section style={{
+        padding: "80px 24px",
+        maxWidth: 900, margin: "0 auto",
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: 3,
+            textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+            marginBottom: 12,
+          }}>
+            El costo de no actuar
+          </div>
+          <h2 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 400, margin: "0 0 12px", color: "#F5F5F0",
+          }}>
+            ¿Cuánto cuesta perder un PM Senior?
+          </h2>
+          <p style={{
+            fontSize: 15, color: "rgba(245,245,240,0.4)",
+            lineHeight: 1.7, maxWidth: 520, margin: "0 auto",
+          }}>
+            Reemplazar un perfil de producto senior en Latam cuesta entre USD 15.000 y USD 25.000 entre búsqueda, onboarding y curva de aprendizaje. La intervención más barata posible es antes de que el problema se convierta en una baja.
+          </p>
+        </div>
+
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+          {[
+            {
+              label: "Sin diagnóstico",
+              riesgo: "Rotación silenciosa",
+              desc: "El 29% del equipo está en Estancamiento — cumple, no genera ruido, y en algún momento se va. Sin datos, no sabés quién ni cuándo.",
+              costo: "USD 15.000 – 25.000",
+              sub: "costo promedio de reemplazo",
+              color: "#F72585",
+              bg: "rgba(247,37,133,0.06)",
+              border: "rgba(247,37,133,0.2)",
+            },
+            {
+              label: "Con Mentorcito",
+              riesgo: "Intervención preventiva",
+              desc: "Identificás quién está en riesgo antes de que tome la decisión de irse. Una conversación de 30 minutos con los datos del equipo cambia la conversación.",
+              costo: "Desde USD 295",
+              sub: "diagnóstico del equipo completo",
+              color: "#06D6A0",
+              bg: "rgba(6,214,160,0.06)",
+              border: "rgba(6,214,160,0.2)",
+            },
+          ].map(function(item, i) {
+            return (
+              <div key={i} style={{
+                flex: "1 1 340px", maxWidth: 420,
+                background: item.bg,
+                border: "1px solid " + item.border,
+                borderRadius: 16, padding: "28px 24px",
+              }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: 2,
+                  textTransform: "uppercase", color: item.color,
+                  marginBottom: 10,
+                }}>
+                  {item.label}
+                </div>
+                <div style={{
+                  fontSize: 18, fontWeight: 700,
+                  color: "#F5F5F0", marginBottom: 12,
+                }}>
+                  {item.riesgo}
+                </div>
+                <p style={{
+                  fontSize: 13, color: "rgba(245,245,240,0.45)",
+                  lineHeight: 1.7, marginBottom: 20,
+                }}>
+                  {item.desc}
+                </p>
+                <div style={{
+                  borderTop: "1px solid " + item.border,
+                  paddingTop: 16,
+                }}>
+                  <div style={{
+                    fontSize: 28, fontWeight: 800,
+                    color: item.color, lineHeight: 1,
+                  }}>
+                    {item.costo}
+                  </div>
+                  <div style={{
+                    fontSize: 12, color: "rgba(255,255,255,0.3)",
+                    marginTop: 4,
+                  }}>
+                    {item.sub}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{
+          textAlign: "center", marginTop: 32,
+          fontSize: 13, color: "rgba(255,255,255,0.25)",
+          fontStyle: "italic",
+        }}>
+          El 45% de los profesionales diagnosticados está en Transición a Liderazgo sin las herramientas para dar el salto. Si no se interviene, buscan ese crecimiento afuera.
         </div>
       </section>
 
