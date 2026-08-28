@@ -431,8 +431,14 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "13. Si no hay match: usá la lógica A/B/C de arriba\n\n"
 + "LOOP PROFESIONAL — clasificá el estado del usuario en el campo 'estado':\n"
 + "- Reinvención: entra a producto, cambia de industria, quiere emprender, ser mentor, advisor, founder\n"
-+ "- Estancamiento: bloqueado, reactivo, sin sistema, mismo rol, sin crecimiento, frustr, caos\n"
++ "- Estancamiento: dominó su rol pero el contexto no le permite avanzar. No significa que no esté progresando — significa que el límite ya no es interno sino externo o estructural. Señales: mismo rol hace tiempo, contexto que no desafía, mercado que cambió, frustración con el sistema, no con uno mismo\n"
 + "- Liderazgo: quiere liderar equipo, manager, head, director, sin autoridad formal, escalar impacto\n\n"
++ "MUY IMPORTANTE — CÓMO PRESENTAR EL ESTADO:\n"
++ "Cuando mostrés el resumen del perfil en el paso de confirmación, explicá siempre qué significa el estado detectado. NO lo des como un resultado frío. Usá este formato:\n"
++ "- Estancamiento: 'El sistema detectó que estás en Estancamiento — esto no significa que no estés avanzando. Significa que ya dominás lo que hacés y que el límite para crecer está afuera de vos: el contexto, el mercado o el sistema. Es el estado más común — el 22% de los diagnósticos.'\n"
++ "- Liderazgo: 'El sistema detectó que estás en Transición a Liderazgo — tenés el seniority pero todavía no tenés todas las herramientas para el salto al siguiente nivel de impacto.'\n"
++ "- Reinvención: 'El sistema detectó que estás en Reinvención Profesional — el cambio ya empezó pero la nueva dirección todavía está tomando forma. Es el estado de más energía y más incertidumbre al mismo tiempo.'\n"
++ "Siempre terminá con: '¿Esto te representa? Si sentís que algo no encaja, contame y ajustamos antes de ver tus mentores.'\n\n"
 + "Cuando tengas suficiente info incluí al final:\n<DIAGNOSIS>\n"
 + "{\"nivel_actual\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"nivel_objetivo\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"gaps\":[\"gap1\"],\"estado\":\"Estancamiento\",\"mentores_recomendados\":[{\"id\":\"ID\",\"razon\":\"razon\",\"prioridad\":1}],\"mentor_buscado_id\":null,\"mentor_prototipo\":null,\"proximos_pasos\":[\"paso1\"]}\n"
 + "</DIAGNOSIS>\n"
@@ -1154,18 +1160,18 @@ var ESTADO_META_AGENT = {
   "Estancamiento": {
     icono: "🔁",
     taglines: [
-      "Tenés el conocimiento. Te falta el sistema para usarlo.",
-      "Sabés hacer tu trabajo. Pero ya no te está llevando a ningún lado nuevo.",
+      "No es que no estés avanzando. Es que el sistema no te está dejando.",
+      "Dominás tu rol. El límite ya no está en vos — está en el contexto.",
+      "Estancamiento no significa quietud. Significa que lo que hacés ya no te lleva a un lugar nuevo.",
       "El problema no es tu capacidad. Es que el contexto dejó de desafiarte.",
-      "Dominás el rol. Pero el rol ya no te hace crecer.",
     ],
     identidades: [
-      "PM con experiencia bloqueada",
       "Profesional que superó su rol actual",
       "Experto/a en zona de confort",
+      "PM con experiencia lista para el siguiente nivel",
     ],
     tensiones: [
-      "Sin un cambio estructural, el estancamiento tiende a profundizarse. El 68% de los PMs en este estado reportan estar en la misma situación 12 meses después.",
+      "Estancamiento no significa que no estés progresando — significa que ya dominás lo que hacés y que el límite para crecer está afuera de vos: el contexto, el mercado o el sistema.",
       "El estancamiento no duele al principio. Duele cuando te das cuenta de cuánto tiempo pasó sin que nada cambie.",
       "La comodidad operativa es la trampa más difícil de ver. Porque todo funciona, pero nada crece.",
     ],
