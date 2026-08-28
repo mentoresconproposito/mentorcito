@@ -3,6 +3,88 @@ import { useState, useEffect, useRef } from "react";
 // ─────────────────────────────────────────────
 // MENTORS DB
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// CATÁLOGO DE SKILLS POR ÁREA
+// ─────────────────────────────────────────────
+var SKILLS_CATALOG = {
+  tech: [
+    { id: "autonomia_tecnica",   label: "Autonomía técnica",      keywords: ["técnico","dev","ingeniería","arquitectura","estimaciones","viabilidad","stack","lenguaje técnico","credibilidad técnica","depender de tech","depender del equipo"] },
+    { id: "datos_sql",           label: "Datos y SQL",             keywords: ["sql","datos","métricas","analytics","amplitude","mixpanel","posthog","insights","análisis","dashboard","data","medir","no mido"] },
+    { id: "ia_producto",         label: "IA en producto",          keywords: ["ia","inteligencia artificial","llm","agentes","gpt","claude","prompts","rag","fine-tuning","ai product","ai pm"] },
+    { id: "arquitectura",        label: "Arquitectura básica",     keywords: ["arquitectura","apis","sistemas","infraestructura","backend","integración","escalabilidad técnica"] },
+    { id: "prototipado",         label: "Prototipado y autonomía", keywords: ["prototipo","vibecoding","no-code","figma","prototipar","mockup","construir sin dev"] },
+  ],
+  producto: [
+    { id: "discovery",           label: "Discovery y validación",  keywords: ["discovery","validación","entrevistas","usuario","investigación","ux research","pmf","product-market fit","síntesis","feedback","insights de usuario"] },
+    { id: "priorizacion",        label: "Priorización y roadmap",  keywords: ["priorización","roadmap","backlog","planning","sprints","feature","qué construir","qué priorizar","scope","trade-off"] },
+    { id: "metricas_producto",   label: "Métricas de producto",    keywords: ["retención","activación","conversión","churn","engagement","dau","mau","funnel","cohortes","métricas de producto","kpi"] },
+    { id: "estrategia_producto", label: "Estrategia de producto",  keywords: ["estrategia","visión","north star","big picture","portfolio de producto","criterio estratégico","decisiones en ambigüedad","pensamiento estratégico"] },
+    { id: "comunicacion_pm",     label: "Comunicación de producto",keywords: ["narrativa","storytelling","presentar","defender","comunicar","stakeholders","spec","PRD","comunicación ejecutiva"] },
+  ],
+  negocio: [
+    { id: "gtm",                 label: "GTM y primeros clientes", keywords: ["gtm","go-to-market","ventas","b2b","primeros clientes","adquisición","canales","propuesta de valor","icp","sales"] },
+    { id: "criterio_estrategico",label: "Criterio estratégico",    keywords: ["criterio","decisiones","ambigüedad","business sense","estrategia de negocio","modelo de negocio","escalabilidad","crecimiento"] },
+    { id: "influencia_liderazgo",label: "Influencia y liderazgo",  keywords: ["influencia","autoridad","manage up","liderazgo","stakeholders","alineamiento","sin autoridad formal","política","equipo"] },
+    { id: "modelo_negocio",      label: "Modelo de negocio",       keywords: ["pricing","revenue","monetización","unit economics","margen","facturación","modelo de ingreso","runway","burn"] },
+    { id: "marca_personal",      label: "Marca personal y carrera",keywords: ["marca personal","linkedin","portfolio","posicionamiento","entrevistas","job search","narrativa de carrera","visibilidad","transición"] },
+  ],
+};
+
+// Clasifica gaps de texto libre en skills tipificadas
+function clasificarGapsEnSkills(gaps) {
+  var resultado = { tech: [], producto: [], negocio: [] };
+  var gapsText = (Array.isArray(gaps) ? gaps.join(" ") : gaps || "").toLowerCase();
+  Object.keys(SKILLS_CATALOG).forEach(function(area) {
+    SKILLS_CATALOG[area].forEach(function(skill) {
+      var hit = skill.keywords.some(function(kw) { return gapsText.indexOf(kw.toLowerCase()) !== -1; });
+      if (hit) resultado[area].push(skill.id);
+    });
+  });
+  return resultado;
+}
+
+// Score de match mentor-usuario basado en skills + patas + problema
+function scoreMentorMatch(mentor, diagnosis) {
+  var score = 0;
+  var gaps = (diagnosis.gaps || []).join(" ").toLowerCase();
+  var skills = clasificarGapsEnSkills(diagnosis.gaps || []);
+  var nAct = diagnosis.nivel_actual  || {};
+  var nObj = diagnosis.nivel_objetivo || {};
+
+  // 1. Match por problema específico declarado (40 pts máx)
+  var problemas = mentor.problemas_que_resuelve || [];
+  var hitProblemas = problemas.filter(function(p) {
+    return p.split(" ").some(function(w) { return w.length > 4 && gaps.indexOf(w.toLowerCase()) !== -1; });
+  }).length;
+  score += Math.min(40, hitProblemas * 10);
+
+  // 2. Match por skills tipificadas vs patas del mentor (30 pts máx)
+  var patas = mentor.patas || [];
+  var skillsHit = 0;
+  patas.forEach(function(pata) {
+    var skillsDelArea = skills[pata] || [];
+    skillsHit += skillsDelArea.length;
+  });
+  score += Math.min(30, skillsHit * 8);
+
+  // 3. Match por gap numérico en patas (20 pts máx)
+  var gapPatas = 0;
+  patas.forEach(function(pata) {
+    var gap = (nObj[pata] || 0) - (nAct[pata] || 0);
+    if (gap > 0) gapPatas += gap;
+  });
+  score += Math.min(20, gapPatas * 2);
+
+  // 4. Match por nivel (10 pts)
+  var nivelUsuario = diagnosis.nivel || "mid";
+  var nivelMentor  = mentor.nivel   || "mid";
+  if (nivelMentor === nivelUsuario) score += 10;
+  else if (nivelMentor === "senior-ejecutivo" && nivelUsuario === "senior") score += 6;
+  else if (nivelMentor === "senior" && nivelUsuario === "mid") score += 4;
+
+  return score;
+}
+
 var MENTORS_DB = [
   {
     id: "GustavoLoustalet",
@@ -12,6 +94,7 @@ var MENTORS_DB = [
     tags: ["Mentoría", "Edtech", "Product Builder"],
     patas: ["producto", "negocio"],
     nivel: "mid-senior",
+    skills: { producto: ["estrategia_producto","comunicacion_pm"], negocio: ["marca_personal"] },
     perfil_ideal: ["profesional senior que quiere monetizar su conocimiento", "consultor o experto que quiere lanzar su primera mentoría", "PM o founder que quiere construir su marca personal como mentor"],
     problemas_que_resuelve: ["no sé cómo empaquetar mi conocimiento", "quiero ser mentor pero no sé por dónde empezar", "tengo experiencia pero no sé cómo estructurar mi propuesta de valor"],
     sesiones: "4 sesiones",
@@ -27,6 +110,7 @@ var MENTORS_DB = [
     mentoria: "Tenés un emprendimiento o empresa que no termina de arrancar?",
     tags: ["Negocio", "Strategy", "Metodología Scalabl"],
     patas: ["negocio"],
+    skills: { negocio: ["gtm","criterio_estrategico","modelo_negocio"] },
     nivel: "senior-founder",
     perfil_ideal: ["founder de startup estancada", "dueño de pyme que necesita estrategia", "emprendedor buscando escalar su modelo de negocio"],
     problemas_que_resuelve: ["mi emprendimiento no termina de arrancar", "no sé cómo validar mi modelo de negocio", "tengo clientes pero no crece", "necesito una estrategia clara para los próximos 6 meses"],
@@ -43,6 +127,7 @@ var MENTORS_DB = [
     mentoria: "The Product Sprint: Del caos a operar con un sistema de producto",
     tags: ["Management", "Strategy", "GenIA"],
     patas: ["producto", "tech"],
+    skills: { producto: ["priorizacion","estrategia_producto"], tech: ["ia_producto","prototipado"] },
     nivel: "mid-senior",
     perfil_ideal: ["PM con sobrecarga de prioridades", "PM senior que quiere sistematizar su trabajo", "PM que transiciona de técnico a producto"],
     problemas_que_resuelve: ["opero en modo reactivo todo el tiempo", "no tengo un sistema claro de producto", "quiero incorporar automatizaciones con IA a mi flujo", "me cuesta tomar decisiones de priorización"],
@@ -59,6 +144,7 @@ var MENTORS_DB = [
     mentoria: "Think, build and growth in product: Definí tu estrategia clara de producto",
     tags: ["Management", "Strategy", "Gamification"],
     patas: ["producto", "negocio"],
+    skills: { producto: ["metricas_producto","estrategia_producto"], negocio: ["criterio_estrategico","modelo_negocio"] },
     nivel: "mid-senior",
     perfil_ideal: ["PM o Product Lead que quiere crecer estratégicamente", "emprendedor que necesita estrategia de producto y crecimiento", "profesional que quiere dominar analítica de negocio"],
     problemas_que_resuelve: ["no tengo una visión clara de producto", "no sé cómo medir el impacto de mis decisiones", "quiero diseñar una estrategia de crecimiento basada en datos", "necesito un roadmap que equilibre valor y esfuerzo"],
@@ -75,6 +161,7 @@ var MENTORS_DB = [
     mentoria: "De 0 A 100: Acelera tu camino hacia Product Market Fit",
     tags: ["Growth", "Go to market", "Frameworks"],
     patas: ["producto", "negocio"],
+    skills: { producto: ["discovery","priorizacion"], negocio: ["gtm","modelo_negocio"] },
     nivel: "junior-mid",
     perfil_ideal: ["founder early stage buscando PMF", "PM lanzando un producto nuevo", "emprendedor que quiere validar antes de construir"],
     problemas_que_resuelve: ["no sé si tengo product market fit", "construí algo y no crece", "quiero validar mi idea sin gastar todo el presupuesto", "no entiendo bien a mi cliente objetivo"],
@@ -91,6 +178,7 @@ var MENTORS_DB = [
     mentoria: "El puente técnico para Product Managers",
     tags: ["Management", "Technical skill", "Product Management"],
     patas: ["tech", "producto"],
+    skills: { tech: ["autonomia_tecnica","arquitectura"], producto: ["comunicacion_pm"] },
     nivel: "junior-mid",
     perfil_ideal: ["PM sin background técnico", "PM de negocio o humanidades que lidera equipo de dev", "PM que cambia de industria y necesita contexto técnico"],
     problemas_que_resuelve: ["me pierdo en las conversaciones técnicas con el equipo", "no puedo evaluar si una estimación es razonable", "no entiendo por qué algo simple tarda semanas", "quiero liderar con más confianza en reuniones técnicas"],
@@ -107,6 +195,7 @@ var MENTORS_DB = [
     mentoria: "Pensar Producto como un Sistema Vivo",
     tags: ["Strategy", "Liderazgo", "Management"],
     patas: ["producto", "negocio"],
+    skills: { producto: ["estrategia_producto","comunicacion_pm"], negocio: ["influencia_liderazgo","criterio_estrategico"] },
     nivel: "senior-founder",
     perfil_ideal: ["PM senior o lead sintiéndose estancado operativamente", "profesional de producto que busca profundidad estratégica", "líder que quiere ejercer influencia sin autoridad formal"],
     problemas_que_resuelve: ["opero en automático sin pensar estratégicamente", "me cuesta decidir en contextos de alta ambigüedad", "quiero liderar sin depender de mi título o jerarquía", "necesito desarrollar criterio propio para tomar mejores decisiones"],
@@ -123,6 +212,7 @@ var MENTORS_DB = [
     mentoria: "Primeros pasos y transición a Producto",
     tags: ["Product Manager", "Data Analyst", "Analytics"],
     patas: ["producto", "tech"],
+    skills: { producto: ["priorizacion","discovery"], negocio: ["marca_personal"] },
     nivel: "junior",
     perfil_ideal: ["profesional en transición a producto", "developer o diseñador queriendo pasar a PM", "recién ingresado al mundo de producto"],
     problemas_que_resuelve: ["no sé cómo entrar al mundo del producto", "tengo perfil técnico pero quiero moverme a PM", "no sé cómo armar mi portfolio de producto", "quiero conseguir mi primer trabajo como PM"],
@@ -139,6 +229,7 @@ var MENTORS_DB = [
     mentoria: "Product Data-Driven: del análisis a producto en 6 sesiones",
     tags: ["Data", "Analytics", "Tech"],
     patas: ["tech", "producto"],
+    skills: { tech: ["datos_sql"], producto: ["metricas_producto","priorizacion"] },
     nivel: "mid",
     perfil_ideal: ["PM o PO SSR-SR que quiere tomar decisiones basadas en datos", "PM que depende del equipo de data para todo", "product analyst que quiere ir más allá del dashboard"],
     problemas_que_resuelve: ["las discusiones de producto son batallas de opiniones no de datos", "dependo 100% del equipo de data", "no sé escribir SQL ni interpretar métricas avanzadas", "me cuesta defender mis decisiones con datos ante stakeholders"],
@@ -155,6 +246,7 @@ var MENTORS_DB = [
     mentoria: "De PM a Product Builder",
     tags: ["Builder", "Data", "Marketplace"],
     patas: ["tech", "producto"],
+    skills: { tech: ["autonomia_tecnica","ia_producto","prototipado"], producto: ["estrategia_producto"] },
     nivel: "mid-senior",
     perfil_ideal: ["PM o PO con al menos 1 año de experiencia", "PM que depende de tech o diseño para avanzar", "PM que quiere crear sus propios productos con autonomía técnica"],
     problemas_que_resuelve: ["no puedo avanzar solo sin depender de tech o diseño", "no sé prototipar mis propias ideas", "no entiendo las decisiones técnicas en las reuniones con ingeniería", "quiero sacar mis propias métricas sin pedirle tiempo al equipo de datos"],
@@ -171,6 +263,7 @@ var MENTORS_DB = [
     mentoria: "De diseñador que ejecuta a diseñador que lidera producto",
     tags: ["UX Design", "UX/UI", "Diseño de Producto"],
     patas: ["producto", "tech"],
+    skills: { tech: ["prototipado"], producto: ["discovery","comunicacion_pm"] },
     nivel: "mid-senior",
     perfil_ideal: ["diseñador UX/UI que quiere pasar de ejecutar a liderar producto", "diseñador que siente que sus ideas no se implementan", "diseñador que quiere conectar su trabajo con métricas de negocio", "profesional de diseño que quiere influir en decisiones de producto"],
     problemas_que_resuelve: ["me ven como el que dibuja pantallas y no como alguien estratégico", "no sé cómo conectar mi trabajo de diseño con métricas de negocio", "mis ideas no llegan a implementarse porque no sé defenderlas", "no sé trabajar con stakeholders sin perder mi criterio", "quiero incorporar IA a mi proceso de diseño"],
@@ -187,6 +280,7 @@ var MENTORS_DB = [
     mentoria: "Product Breakout Mentorship: Master the Game",
     tags: ["Liderazgo", "Strategy", "Fractional CPO"],
     patas: ["producto", "negocio"],
+    skills: { producto: ["estrategia_producto","comunicacion_pm"], negocio: ["influencia_liderazgo","criterio_estrategico","marca_personal"] },
     nivel: "mid-senior",
     perfil_ideal: [
       "Product Manager que siente que llegó a un límite y necesita criterio estratégico para dar el próximo salto",
@@ -213,6 +307,7 @@ var MENTORS_DB = [
     mentoria: "De líder de producto a ejecutivo: decidir desde el criterio propio",
     tags: ["Liderazgo", "Fintech", "Product Coaching", "Ejecutivo", "Decisiones de carrera"],
     patas: ["producto", "negocio"],
+    skills: { producto: ["estrategia_producto"], negocio: ["influencia_liderazgo","criterio_estrategico","marca_personal","modelo_negocio"] },
     nivel: "senior-ejecutivo",
     perfil_ideal: [
       "Founders y co-founders de fintechs o startups digitales",
@@ -2419,6 +2514,9 @@ export default function MentorAgent(props) {
               tensiones: tensionesStr,
               score_nudo: calcularScore(diag),
               nudo_nivel: calcularScore(diag) >= 46 ? "prioritario" : calcularScore(diag) >= 31 ? "exploratorio" : "ninguno",
+              skills_tech: clasificarGapsEnSkills(diag.gaps || []).tech.join("|"),
+              skills_producto: clasificarGapsEnSkills(diag.gaps || []).producto.join("|"),
+              skills_negocio: clasificarGapsEnSkills(diag.gaps || []).negocio.join("|"),
             });
           }
         } catch (e) {}
