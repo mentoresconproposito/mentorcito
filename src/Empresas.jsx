@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
-var WA_LINK = "https://wa.me/5491100000000?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
-var EMAIL   = "hola@mentoresconproposito.com";
+var WA_LINK = "https://wa.me/5491170043893?text=Quiero%20saber%20más%20sobre%20Mentorcito%20para%20equipos";
+var EMAIL   = "mentoresconproposito@gmail.com";
 
 var PAQUETES = [
   {
@@ -80,8 +80,8 @@ var PASOS = [
 
 var DATOS = [
   { numero: "+155", label: "diagnósticos realizados en Latam", color: "#4361EE" },
-  { numero: "45%", label: "en Transición a Liderazgo — seniority sin herramientas para el salto", color: "#06D6A0" },
-  { numero: "22%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
+  { numero: "56%", label: "en Transición a Liderazgo — seniority sin herramientas para el salto", color: "#06D6A0" },
+  { numero: "31%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
 ];
 
 var DIFERENCIAL = [
@@ -186,7 +186,7 @@ export default function Empresas() {
           maxWidth: 480, margin: "0 auto 40px",
           fontWeight: 400,
         }}>
-          El 67% de los profesionales de producto diagnosticados están bloqueados o en transición.
+          El 87% de los profesionales de producto diagnosticados están bloqueados o en transición.
           Sin ese mapa, cualquier programa de desarrollo llega tarde — o a la capa equivocada.
         </p>
 
@@ -576,7 +576,7 @@ export default function Empresas() {
               Add-on NUDO Mindset disponible en todos los paquetes
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 490
+              Sesión exploratoria (score 31-45): USD 180 por persona · Programa intensivo 4 sesiones (score ≥ 46): USD 590
             </div>
           </div>
         </div>
@@ -615,7 +615,7 @@ export default function Empresas() {
             {
               label: "Sin diagnóstico",
               riesgo: "Rotación silenciosa",
-              desc: "El 29% del equipo está en Estancamiento — cumple, no genera ruido, y en algún momento se va. Sin datos, no sabés quién ni cuándo.",
+              desc: "El 31% del equipo está en Estancamiento — cumple, no genera ruido, y en algún momento se va. Sin datos, no sabés quién ni cuándo.",
               costo: "USD 15.000 – 25.000",
               sub: "costo promedio de reemplazo",
               color: "#F72585",
@@ -686,7 +686,7 @@ export default function Empresas() {
           fontSize: 13, color: "rgba(255,255,255,0.25)",
           fontStyle: "italic",
         }}>
-          El 45% de los profesionales diagnosticados está en Transición a Liderazgo sin las herramientas para dar el salto. Si no se interviene, buscan ese crecimiento afuera.
+          El 56% de los profesionales diagnosticados está en Transición a Liderazgo sin las herramientas para dar el salto. Si no se interviene, buscan ese crecimiento afuera.
         </div>
       </section>
 
