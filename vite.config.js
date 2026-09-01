@@ -14,8 +14,10 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(__dirname, 'index.html'),
           creatumentoria: resolve(__dirname, 'creatumentoria.html'),
+          gestionarmentoria: resolve(__dirname, 'gestionarmentoria.html'),
         },
       },
     },
   }
 })
+
