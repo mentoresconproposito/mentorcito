@@ -3,9 +3,10 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/dashboard",       "destination": "/index.html" },
-    { "source": "/empresas",        "destination": "/index.html" },
-    { "source": "/creatumentoria",  "destination": "/creatumentoria.html" },
-    { "source": "/(.*)",            "destination": "/index.html" }
+    { "source": "/dashboard",          "destination": "/index.html" },
+    { "source": "/empresas",           "destination": "/index.html" },
+    { "source": "/creatumentoria",     "destination": "/creatumentoria.html" },
+    { "source": "/gestionarmentoria",  "destination": "/gestionarmentoria.html" },
+    { "source": "/(.*)",               "destination": "/index.html" }
   ]
 }
