@@ -122,9 +122,9 @@ var MENTORS_DB = [
   },
   {
     id: "FranciscoSantoloIA",
-    nombre: "Francisco Santolo — EstrategIA",
+    nombre: "Francisco Santolo — Del estancamiento a la estrategia de negocio liderada por la IA",
     titulo: "Mentoría Estratégica en IA para Empresas | Harvard, MIT, Stanford Alumni",
-    mentoria: "EstrategIA: IA aplicada a decisiones reales de negocio — estrategia primero, tecnología como palanca",
+    mentoria: "Del estancamiento a la estrategia de negocio liderada por la IA — estrategia primero, tecnología como palanca",
     tags: ["IA", "Estrategia", "Negocio", "Empresas", "Scalabl"],
     patas: ["negocio", "tech"],
     skills: { negocio: ["criterio_estrategico","modelo_negocio"], tech: ["ia_producto"] },
