@@ -147,14 +147,20 @@ export default function MenteeProgress() {
             {(function () {
               var totalPrograma = (logs.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
               if (!totalPrograma) return null;
+              var completo = logs.length >= totalPrograma;
               return (
                 <div style={{ marginBottom: 16 }}>
+                  {completo && (
+                    <div style={{ background: "rgba(123,222,150,0.08)", border: "1px solid rgba(123,222,150,0.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 10, fontSize: 13, color: "#7bde96", fontWeight: 600 }}>
+                      🎉 ¡Completaste las {totalPrograma} sesiones de tu programa!
+                    </div>
+                  )}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textSub, marginBottom: 6 }}>
                     <span>Tu progreso</span>
                     <span>Sesión {logs.length} de {totalPrograma}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: Math.min(100, (logs.length / totalPrograma) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
+                    <div style={{ height: "100%", width: Math.min(100, (logs.length / totalPrograma) * 100) + "%", background: completo ? "#7bde96" : "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
                   </div>
                 </div>
               );
