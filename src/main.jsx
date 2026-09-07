@@ -8,6 +8,7 @@ import EmpresaDashboard from './EmpresaDashboard'
 import Empresas from './Empresas'
 import MentorshipJourney from './MentorshipJourney'
 import MentorshipManagement from './MentorshipManagement'
+import MenteeProgress from './MenteeProgress'
 
 function App() {
   var path = window.location.pathname;
@@ -16,6 +17,7 @@ function App() {
   if (path === '/empresas')              return <Empresas />;
   if (path === '/creatumentoria')        return <MentorshipJourney />;
   if (path === '/gestionarmentoria')     return <MentorshipManagement />;
+  if (path === '/miprogreso')            return <MenteeProgress />;
   if (path.startsWith('/empresa/'))      return <EmpresaDashboard />;
   // Modo empresa en el agente: ?empresa=slug&token=xxx
   var params = new URLSearchParams(window.location.search);
