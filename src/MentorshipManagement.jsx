@@ -12,6 +12,19 @@ var T = {
   textWhite:    "white",
 };
 
+// Normaliza espacios (trim + colapsa espacios dobles) sin tocar mayúsculas —
+// se usa para lo que se guarda, así "Gabriela " y "Gabriela" quedan iguales.
+function normalizarNombre(nombre) {
+  return (nombre || "").trim().replace(/\s+/g, " ");
+}
+
+// Clave de comparación (además ignora mayúsculas) — se usa SOLO para agrupar
+// y filtrar, nunca para lo que se muestra en pantalla. Así "Gabriela" y
+// "gabriela" se tratan como la misma persona sin cambiar cómo se escribió.
+function claveComparacion(nombre) {
+  return normalizarNombre(nombre).toLowerCase();
+}
+
 var PREP_SYSTEM_PROMPT =
   "Sos un asistente que ayuda a un mentor a prepararse para su próxima sesión con un mentee específico, dentro de Mentorcito.\n\n" +
   "Te paso el historial completo de sesiones anteriores con este mentee (fecha, temas vistos, qué se llevó, próximos pasos). Tu trabajo es generar un resumen breve y accionable para que el mentor llegue a la sesión con contexto fresco, sin tener que releer todo.\n\n" +
@@ -88,6 +101,10 @@ export default function MentorshipManagement() {
   async function handleSaveSession() {
     if (!formMenteeName.trim() || !formTemasVistos.trim()) return;
     setSaving(true);
+    // Si el nombre ya existe (aunque esté tipeado distinto), guardamos con el
+    // nombre canónico ya usado, para no crear una variante nueva del mismo mentee.
+    var claveNueva = claveComparacion(formMenteeName);
+    var nombreFinal = nombreCanonicoPorClave[claveNueva] || normalizarNombre(formMenteeName);
     try {
       await fetch("/api/sheets", {
         method: "POST",
@@ -95,7 +112,7 @@ export default function MentorshipManagement() {
         body: JSON.stringify({
           action: "save_session_log",
           mentor_email: email,
-          mentee_name: formMenteeName.trim(),
+          mentee_name: nombreFinal,
           mentee_email: formMenteeEmail.trim(),
           total_sesiones_programa: formTotalSesiones ? Number(formTotalSesiones) : "",
           fecha: formFecha,
@@ -105,7 +122,7 @@ export default function MentorshipManagement() {
         }),
       });
       await loadSessionLogs(email);
-      setSelectedMentee(formMenteeName.trim());
+      setSelectedMentee(nombreFinal);
       setShowNewForm(false);
       setFormMenteeName("");
       setFormMenteeEmail("");
@@ -216,8 +233,18 @@ export default function MentorshipManagement() {
     );
   }
 
-  var mentees = Array.from(new Set(sessionLogs.map(function (l) { return l.mentee_name; }))).sort();
-  var logsDelSeleccionado = selectedMentee ? sessionLogs.filter(function (l) { return l.mentee_name === selectedMentee; }) : [];
+  // Agrupamos por clave normalizada, para que variantes de tipeo del mismo
+  // nombre (espacios de más, mayúscula/minúscula) cuenten como la misma persona.
+  // Se muestra el nombre tal como se escribió la PRIMERA vez.
+  var nombreCanonicoPorClave = {};
+  sessionLogs.forEach(function (l) {
+    var clave = claveComparacion(l.mentee_name);
+    if (!nombreCanonicoPorClave[clave]) {
+      nombreCanonicoPorClave[clave] = normalizarNombre(l.mentee_name);
+    }
+  });
+  var mentees = Object.keys(nombreCanonicoPorClave).map(function (k) { return nombreCanonicoPorClave[k]; }).sort();
+  var logsDelSeleccionado = selectedMentee ? sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(selectedMentee); }) : [];
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -254,7 +281,7 @@ export default function MentorshipManagement() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {mentees.map(function (m) {
-                  var logsDeM = sessionLogs.filter(function (l) { return l.mentee_name === m; });
+                  var logsDeM = sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(m); });
                   var totalProgramaM = (logsDeM.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
                   return (
                     <div
@@ -298,7 +325,7 @@ export default function MentorshipManagement() {
                 setFormMenteeName(val);
                 // Si el nombre coincide con un mentee ya existente, prellenamos
                 // el total de sesiones con el último valor que se le cargó.
-                var logsDeEseNombre = sessionLogs.filter(function (l) { return l.mentee_name === val; });
+                var logsDeEseNombre = sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(val); });
                 if (logsDeEseNombre.length > 0) {
                   var conTotal = logsDeEseNombre.find(function (l) { return l.total_sesiones_programa; });
                   if (conTotal) setFormTotalSesiones(String(conTotal.total_sesiones_programa));
