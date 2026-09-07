@@ -154,6 +154,15 @@ export default function MentorshipManagement() {
     checkAccessAndLoad(trimmed);
   }
 
+  function abrirNuevaSesionParaMentee(grupo) {
+    var logConEmail = grupo.logs.find(function (l) { return l.mentee_email; });
+    var logConTotal = grupo.logs.find(function (l) { return l.total_sesiones_programa; });
+    setFormMenteeName(grupo.displayName.replace(" (sin email — revisar)", ""));
+    setFormMenteeEmail(logConEmail ? logConEmail.mentee_email : "");
+    setFormTotalSesiones(logConTotal ? String(logConTotal.total_sesiones_programa) : "");
+    setShowNewForm(true);
+  }
+
   async function handleSaveSession() {
     if (!formMenteeName.trim() || !formTemasVistos.trim()) return;
     setSaving(true);
@@ -503,6 +512,12 @@ export default function MentorshipManagement() {
                 </div>
               );
             })()}
+            <button
+              onClick={function () { abrirNuevaSesionParaMentee(grupoSeleccionado); }}
+              style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 10 }}
+            >
+              + Nueva sesión con {grupoSeleccionado.displayName}
+            </button>
             <button
               onClick={function () { handlePrepararSesion(selectedMentee, grupoSeleccionado.displayName); }}
               disabled={prepLoading === selectedMentee}
