@@ -15,9 +15,9 @@ export default defineConfig(({ mode }) => {
           main: resolve(__dirname, 'index.html'),
           creatumentoria: resolve(__dirname, 'creatumentoria.html'),
           gestionarmentoria: resolve(__dirname, 'gestionarmentoria.html'),
+          miprogreso: resolve(__dirname, 'miprogreso.html'),
         },
       },
     },
   }
 })
-
