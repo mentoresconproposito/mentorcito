@@ -496,7 +496,7 @@ export default function MentorshipManagement() {
         )}
 
         {/* Historial de un mentee */}
-        {selectedMentee && grupoSeleccionado && (
+        {selectedMentee && grupoSeleccionado && !showNewForm && (
           <div>
             {(function () {
               var totalPrograma = (logsDelSeleccionado.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
