@@ -25,6 +25,59 @@ function claveComparacion(nombre) {
   return normalizarNombre(nombre).toLowerCase();
 }
 
+// Agrupa las sesiones en "mentees" usando el EMAIL como identidad real
+// cuando existe (es el único dato que garantiza que sean la misma persona),
+// y el nombre normalizado solo como respaldo cuando no hay email cargado.
+//
+// Caso ambiguo: si el mismo nombre aparece con más de un email distinto,
+// asumimos que son personas distintas que casualmente comparten nombre —
+// no las mezclamos a ciegas, las separamos por email.
+function construirGruposDeMentees(logs) {
+  var porNombre = {};
+  logs.forEach(function (l) {
+    var claveNombre = claveComparacion(l.mentee_name);
+    if (!porNombre[claveNombre]) {
+      porNombre[claveNombre] = { nombreCanonico: normalizarNombre(l.mentee_name), emails: {}, logs: [] };
+    }
+    porNombre[claveNombre].logs.push(l);
+    var emailNorm = (l.mentee_email || "").trim().toLowerCase();
+    if (emailNorm) porNombre[claveNombre].emails[emailNorm] = true;
+  });
+
+  var grupos = {};
+  Object.keys(porNombre).forEach(function (claveNombre) {
+    var info = porNombre[claveNombre];
+    var emailsDistintos = Object.keys(info.emails);
+
+    if (emailsDistintos.length <= 1) {
+      // Sin ambigüedad: un solo email (o ninguno) para este nombre.
+      // Usamos el email como clave si existe, el nombre si no.
+      var key = emailsDistintos[0] || claveNombre;
+      if (!grupos[key]) grupos[key] = { displayName: info.nombreCanonico, logs: [] };
+      grupos[key].logs = grupos[key].logs.concat(info.logs);
+    } else {
+      // Ambiguo: mismo nombre, más de un email → probablemente son
+      // personas distintas. Separamos por email; lo que no tiene email
+      // queda en un grupo aparte, sin adivinar a quién pertenece.
+      info.logs.forEach(function (l) {
+        var emailNorm = (l.mentee_email || "").trim().toLowerCase();
+        var key = emailNorm || (claveNombre + "::sin_email");
+        if (!grupos[key]) {
+          grupos[key] = { displayName: info.nombreCanonico + (emailNorm ? "" : " (sin email — revisar)"), logs: [] };
+        }
+        grupos[key].logs.push(l);
+      });
+    }
+  });
+
+  // Orden descendente por fecha dentro de cada grupo
+  Object.keys(grupos).forEach(function (key) {
+    grupos[key].logs.sort(function (a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+  });
+
+  return grupos;
+}
+
 var PREP_SYSTEM_PROMPT =
   "Sos un asistente que ayuda a un mentor a prepararse para su próxima sesión con un mentee específico, dentro de Mentorcito.\n\n" +
   "Te paso el historial completo de sesiones anteriores con este mentee (fecha, temas vistos, qué se llevó, próximos pasos). Tu trabajo es generar un resumen breve y accionable para que el mentor llegue a la sesión con contexto fresco, sin tener que releer todo.\n\n" +
@@ -83,9 +136,12 @@ export default function MentorshipManagement() {
     try {
       var res = await fetch("/api/sheets?action=get_session_logs&mentor_email=" + encodeURIComponent(mail));
       var data = await res.json();
-      setSessionLogs(data.logs || []);
+      var logs = data.logs || [];
+      setSessionLogs(logs);
+      return logs;
     } catch (e) {
       console.error("Error cargando sesiones:", e);
+      return [];
     }
   }
 
@@ -101,10 +157,12 @@ export default function MentorshipManagement() {
   async function handleSaveSession() {
     if (!formMenteeName.trim() || !formTemasVistos.trim()) return;
     setSaving(true);
-    // Si el nombre ya existe (aunque esté tipeado distinto), guardamos con el
-    // nombre canónico ya usado, para no crear una variante nueva del mismo mentee.
-    var claveNueva = claveComparacion(formMenteeName);
-    var nombreFinal = nombreCanonicoPorClave[claveNueva] || normalizarNombre(formMenteeName);
+    // Nombre canónico ya usado para ese nombre (por tipeo), si existe.
+    var claveNombre = claveComparacion(formMenteeName);
+    var nombreExistente = sessionLogs.find(function (l) { return claveComparacion(l.mentee_name) === claveNombre; });
+    var nombreFinal = nombreExistente ? normalizarNombre(nombreExistente.mentee_name) : normalizarNombre(formMenteeName);
+    var emailFinal = formMenteeEmail.trim().toLowerCase();
+
     try {
       await fetch("/api/sheets", {
         method: "POST",
@@ -113,7 +171,7 @@ export default function MentorshipManagement() {
           action: "save_session_log",
           mentor_email: email,
           mentee_name: nombreFinal,
-          mentee_email: formMenteeEmail.trim(),
+          mentee_email: emailFinal,
           total_sesiones_programa: formTotalSesiones ? Number(formTotalSesiones) : "",
           fecha: formFecha,
           temas_vistos: formTemasVistos.trim(),
@@ -121,8 +179,17 @@ export default function MentorshipManagement() {
           proximos_pasos: formProximosPasos.trim(),
         }),
       });
-      await loadSessionLogs(email);
-      setSelectedMentee(nombreFinal);
+      var logsActualizados = await loadSessionLogs(email);
+      // Buscamos la clave REAL que le va a tocar a este mentee según el
+      // agrupador (puede ser un email ya conocido de antes, aunque esta
+      // sesión puntual se haya cargado sin email).
+      var gruposActualizados = construirGruposDeMentees(logsActualizados);
+      var claveFinal = emailFinal || claveNombre;
+      Object.keys(gruposActualizados).forEach(function (k) {
+        var perteneceAEsteNombre = gruposActualizados[k].logs.some(function (l) { return claveComparacion(l.mentee_name) === claveNombre; });
+        if (perteneceAEsteNombre && (!emailFinal || k === emailFinal)) claveFinal = k;
+      });
+      setSelectedMentee(claveFinal);
       setShowNewForm(false);
       setFormMenteeName("");
       setFormMenteeEmail("");
@@ -138,10 +205,11 @@ export default function MentorshipManagement() {
     }
   }
 
-  async function handlePrepararSesion(menteeName) {
-    setPrepLoading(menteeName);
+  async function handlePrepararSesion(menteeKey, menteeDisplayName) {
+    setPrepLoading(menteeKey);
     try {
-      var logsDeEsteMentee = sessionLogs.filter(function (l) { return l.mentee_name === menteeName; });
+      var grupos = construirGruposDeMentees(sessionLogs);
+      var logsDeEsteMentee = (grupos[menteeKey] || { logs: [] }).logs;
       var historial = logsDeEsteMentee.map(function (l) {
         return "Fecha: " + l.fecha + "\nTemas vistos: " + l.temas_vistos + "\nQué se llevó: " + l.que_se_llevo + (l.proximos_pasos ? "\nPróximos pasos: " + l.proximos_pasos : "");
       }).join("\n---\n");
@@ -161,7 +229,7 @@ export default function MentorshipManagement() {
       var textBlock = (data.content || []).find(function (b) { return b.type === "text"; });
       setPrepResults(function (prev) {
         var updated = Object.assign({}, prev);
-        updated[menteeName] = textBlock ? textBlock.text : "No se pudo generar el resumen.";
+        updated[menteeKey] = textBlock ? textBlock.text : "No se pudo generar el resumen.";
         return updated;
       });
     } catch (e) {
@@ -233,18 +301,10 @@ export default function MentorshipManagement() {
     );
   }
 
-  // Agrupamos por clave normalizada, para que variantes de tipeo del mismo
-  // nombre (espacios de más, mayúscula/minúscula) cuenten como la misma persona.
-  // Se muestra el nombre tal como se escribió la PRIMERA vez.
-  var nombreCanonicoPorClave = {};
-  sessionLogs.forEach(function (l) {
-    var clave = claveComparacion(l.mentee_name);
-    if (!nombreCanonicoPorClave[clave]) {
-      nombreCanonicoPorClave[clave] = normalizarNombre(l.mentee_name);
-    }
-  });
-  var mentees = Object.keys(nombreCanonicoPorClave).map(function (k) { return nombreCanonicoPorClave[k]; }).sort();
-  var logsDelSeleccionado = selectedMentee ? sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(selectedMentee); }) : [];
+  var grupos = construirGruposDeMentees(sessionLogs);
+  var menteeKeys = Object.keys(grupos).sort(function (a, b) { return grupos[a].displayName.localeCompare(grupos[b].displayName); });
+  var grupoSeleccionado = selectedMentee ? grupos[selectedMentee] : null;
+  var logsDelSeleccionado = grupoSeleccionado ? grupoSeleccionado.logs : [];
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -256,7 +316,7 @@ export default function MentorshipManagement() {
         <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
           {selectedMentee ? "← " : ""}
           <span style={{ cursor: selectedMentee ? "pointer" : "default" }} onClick={function () { setSelectedMentee(null); }}>
-            {selectedMentee ? selectedMentee : "Tus mentees"}
+            {grupoSeleccionado ? grupoSeleccionado.displayName : "Tus mentees"}
           </span>
         </div>
         {!selectedMentee && (
@@ -274,35 +334,39 @@ export default function MentorshipManagement() {
         {/* Lista de mentees */}
         {!selectedMentee && !showNewForm && (
           <div>
-            {mentees.length === 0 ? (
+            {menteeKeys.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px", color: T.textMuted, fontSize: 13 }}>
                 Todavía no cargaste ninguna sesión. Empezá con "+ Nueva sesión" arriba.
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {mentees.map(function (m) {
-                  var logsDeM = sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(m); });
+                {menteeKeys.map(function (key) {
+                  var grupo = grupos[key];
+                  var logsDeM = grupo.logs;
                   var totalProgramaM = (logsDeM.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
+                  var completo = totalProgramaM && logsDeM.length >= totalProgramaM;
                   return (
                     <div
-                      key={m}
-                      onClick={function () { setSelectedMentee(m); }}
-                      style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}
+                      key={key}
+                      onClick={function () { setSelectedMentee(key); }}
+                      style={{ background: T.card, border: "1px solid " + (completo ? "rgba(123,222,150,0.3)" : T.border), borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: T.textWhite }}>{m}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-                            {totalProgramaM
-                              ? "Sesión " + logsDeM.length + " de " + totalProgramaM
-                              : logsDeM.length + " sesión" + (logsDeM.length !== 1 ? "es" : "") + " registrada" + (logsDeM.length !== 1 ? "s" : "")}
+                          <div style={{ fontSize: 14, fontWeight: 600, color: T.textWhite }}>{grupo.displayName}</div>
+                          <div style={{ fontSize: 12, color: completo ? "#7bde96" : T.textMuted, marginTop: 2 }}>
+                            {completo
+                              ? "🎉 Programa completo (" + totalProgramaM + "/" + totalProgramaM + ")"
+                              : totalProgramaM
+                                ? "Sesión " + logsDeM.length + " de " + totalProgramaM
+                                : logsDeM.length + " sesión" + (logsDeM.length !== 1 ? "es" : "") + " registrada" + (logsDeM.length !== 1 ? "s" : "")}
                           </div>
                         </div>
                         <span style={{ color: T.textMuted }}>→</span>
                       </div>
                       {totalProgramaM && (
                         <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginTop: 10 }}>
-                          <div style={{ height: "100%", width: Math.min(100, (logsDeM.length / totalProgramaM) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 2 }} />
+                          <div style={{ height: "100%", width: Math.min(100, (logsDeM.length / totalProgramaM) * 100) + "%", background: completo ? "#7bde96" : "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 2 }} />
                         </div>
                       )}
                     </div>
@@ -323,19 +387,24 @@ export default function MentorshipManagement() {
               onChange={function (e) {
                 var val = e.target.value;
                 setFormMenteeName(val);
-                // Si el nombre coincide con un mentee ya existente, prellenamos
-                // el total de sesiones con el último valor que se le cargó.
+                // Si el nombre coincide con uno ya existente, prellenamos
+                // el total de sesiones y (si no es ambiguo) el email.
                 var logsDeEseNombre = sessionLogs.filter(function (l) { return claveComparacion(l.mentee_name) === claveComparacion(val); });
                 if (logsDeEseNombre.length > 0) {
                   var conTotal = logsDeEseNombre.find(function (l) { return l.total_sesiones_programa; });
                   if (conTotal) setFormTotalSesiones(String(conTotal.total_sesiones_programa));
+
+                  var emailsDeEseNombre = Array.from(new Set(logsDeEseNombre.map(function (l) { return (l.mentee_email || "").trim().toLowerCase(); }).filter(Boolean)));
+                  if (emailsDeEseNombre.length === 1 && !formMenteeEmail) {
+                    setFormMenteeEmail(emailsDeEseNombre[0]);
+                  }
                 }
               }}
               placeholder="Nombre del mentee (nuevo o existente)"
               style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
             />
             <datalist id="mentee-options">
-              {mentees.map(function (m) { return <option key={m} value={m} />; })}
+              {Array.from(new Set(menteeKeys.map(function (k) { return grupos[k].displayName; }))).map(function (n) { return <option key={n} value={n} />; })}
             </datalist>
 
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Email del mentee (opcional)</div>
@@ -411,25 +480,31 @@ export default function MentorshipManagement() {
         )}
 
         {/* Historial de un mentee */}
-        {selectedMentee && (
+        {selectedMentee && grupoSeleccionado && (
           <div>
             {(function () {
               var totalPrograma = (logsDelSeleccionado.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
               if (!totalPrograma) return null;
+              var completo = logsDelSeleccionado.length >= totalPrograma;
               return (
                 <div style={{ marginBottom: 16 }}>
+                  {completo && (
+                    <div style={{ background: "rgba(123,222,150,0.08)", border: "1px solid rgba(123,222,150,0.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 10, fontSize: 13, color: "#7bde96", fontWeight: 600 }}>
+                      🎉 Completó las {totalPrograma} sesiones de su programa
+                    </div>
+                  )}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textSub, marginBottom: 6 }}>
                     <span>Progreso del programa</span>
                     <span>Sesión {logsDelSeleccionado.length} de {totalPrograma}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: Math.min(100, (logsDelSeleccionado.length / totalPrograma) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
+                    <div style={{ height: "100%", width: Math.min(100, (logsDelSeleccionado.length / totalPrograma) * 100) + "%", background: completo ? "#7bde96" : "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
                   </div>
                 </div>
               );
             })()}
             <button
-              onClick={function () { handlePrepararSesion(selectedMentee); }}
+              onClick={function () { handlePrepararSesion(selectedMentee, grupoSeleccionado.displayName); }}
               disabled={prepLoading === selectedMentee}
               style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid rgba(123,47,247,0.4)", background: "rgba(123,47,247,0.1)", color: "#c9b8ff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 16 }}
             >
