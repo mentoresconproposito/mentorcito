@@ -30,6 +30,8 @@ export default function MentorshipManagement() {
   var [selectedMentee, setSelectedMentee] = useState(null);
   var [showNewForm, setShowNewForm] = useState(false);
   var [formMenteeName, setFormMenteeName] = useState("");
+  var [formMenteeEmail, setFormMenteeEmail] = useState("");
+  var [formTotalSesiones, setFormTotalSesiones] = useState("");
   var [formFecha, setFormFecha] = useState(new Date().toISOString().slice(0, 10));
   var [formTemasVistos, setFormTemasVistos] = useState("");
   var [formQueSeLlevo, setFormQueSeLlevo] = useState("");
@@ -94,6 +96,8 @@ export default function MentorshipManagement() {
           action: "save_session_log",
           mentor_email: email,
           mentee_name: formMenteeName.trim(),
+          mentee_email: formMenteeEmail.trim(),
+          total_sesiones_programa: formTotalSesiones ? Number(formTotalSesiones) : "",
           fecha: formFecha,
           temas_vistos: formTemasVistos.trim(),
           que_se_llevo: formQueSeLlevo.trim(),
@@ -104,6 +108,8 @@ export default function MentorshipManagement() {
       setSelectedMentee(formMenteeName.trim());
       setShowNewForm(false);
       setFormMenteeName("");
+      setFormMenteeEmail("");
+      setFormTotalSesiones("");
       setFormTemasVistos("");
       setFormQueSeLlevo("");
       setFormProximosPasos("");
@@ -228,7 +234,7 @@ export default function MentorshipManagement() {
         </div>
         {!selectedMentee && (
           <button
-            onClick={function () { setShowNewForm(true); setFormMenteeName(""); }}
+            onClick={function () { setShowNewForm(true); setFormMenteeName(""); setFormMenteeEmail(""); setFormTotalSesiones(""); }}
             style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, cursor: "pointer" }}
           >
             + Nueva sesión
@@ -249,17 +255,29 @@ export default function MentorshipManagement() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {mentees.map(function (m) {
                   var logsDeM = sessionLogs.filter(function (l) { return l.mentee_name === m; });
+                  var totalProgramaM = (logsDeM.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
                   return (
                     <div
                       key={m}
                       onClick={function () { setSelectedMentee(m); }}
-                      style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                      style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}
                     >
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: T.textWhite }}>{m}</div>
-                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{logsDeM.length} sesión{logsDeM.length !== 1 ? "es" : ""} registrada{logsDeM.length !== 1 ? "s" : ""}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: T.textWhite }}>{m}</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+                            {totalProgramaM
+                              ? "Sesión " + logsDeM.length + " de " + totalProgramaM
+                              : logsDeM.length + " sesión" + (logsDeM.length !== 1 ? "es" : "") + " registrada" + (logsDeM.length !== 1 ? "s" : "")}
+                          </div>
+                        </div>
+                        <span style={{ color: T.textMuted }}>→</span>
                       </div>
-                      <span style={{ color: T.textMuted }}>→</span>
+                      {totalProgramaM && (
+                        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginTop: 10 }}>
+                          <div style={{ height: "100%", width: Math.min(100, (logsDeM.length / totalProgramaM) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 2 }} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -275,13 +293,42 @@ export default function MentorshipManagement() {
             <input
               list="mentee-options"
               value={formMenteeName}
-              onChange={function (e) { setFormMenteeName(e.target.value); }}
+              onChange={function (e) {
+                var val = e.target.value;
+                setFormMenteeName(val);
+                // Si el nombre coincide con un mentee ya existente, prellenamos
+                // el total de sesiones con el último valor que se le cargó.
+                var logsDeEseNombre = sessionLogs.filter(function (l) { return l.mentee_name === val; });
+                if (logsDeEseNombre.length > 0) {
+                  var conTotal = logsDeEseNombre.find(function (l) { return l.total_sesiones_programa; });
+                  if (conTotal) setFormTotalSesiones(String(conTotal.total_sesiones_programa));
+                }
+              }}
               placeholder="Nombre del mentee (nuevo o existente)"
               style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
             />
             <datalist id="mentee-options">
               {mentees.map(function (m) { return <option key={m} value={m} />; })}
             </datalist>
+
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Email del mentee (opcional)</div>
+            <input
+              type="email"
+              value={formMenteeEmail}
+              onChange={function (e) { setFormMenteeEmail(e.target.value); }}
+              placeholder="Para que pueda ver su propio progreso en /miprogreso"
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
+            />
+
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Total de sesiones de este programa (opcional)</div>
+            <input
+              type="number"
+              min="1"
+              value={formTotalSesiones}
+              onChange={function (e) { setFormTotalSesiones(e.target.value); }}
+              placeholder="Ej: 4 — se recuerda para las próximas sesiones con este mentee"
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
+            />
 
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Fecha</div>
             <input
@@ -339,6 +386,21 @@ export default function MentorshipManagement() {
         {/* Historial de un mentee */}
         {selectedMentee && (
           <div>
+            {(function () {
+              var totalPrograma = (logsDelSeleccionado.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
+              if (!totalPrograma) return null;
+              return (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textSub, marginBottom: 6 }}>
+                    <span>Progreso del programa</span>
+                    <span>Sesión {logsDelSeleccionado.length} de {totalPrograma}</span>
+                  </div>
+                  <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: Math.min(100, (logsDelSeleccionado.length / totalPrograma) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
+                  </div>
+                </div>
+              );
+            })()}
             <button
               onClick={function () { handlePrepararSesion(selectedMentee); }}
               disabled={prepLoading === selectedMentee}
