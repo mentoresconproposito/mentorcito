@@ -138,7 +138,13 @@ export default function MenteeProgress() {
         <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
           {nombreMentee ? "Hola, " + nombreMentee + " 👋" : "Mi progreso"}
         </div>
-        {nombreMentee && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Este es el registro de tu mentoría</div>}
+        {nombreMentee && (
+          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
+            {mentoresDistintos.length === 1 && logs[0] && logs[0].mentor_nombre
+              ? "Tu mentoría con " + logs[0].mentor_nombre
+              : "Este es el registro de tu mentoría"}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
@@ -191,7 +197,7 @@ export default function MenteeProgress() {
                 return (
                   <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
                     <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>
-                      {log.fecha}{mentoresDistintos.length > 1 ? " · " + log.mentor_email : ""}
+                      {log.fecha}{mentoresDistintos.length > 1 ? " · " + (log.mentor_nombre || log.mentor_email) : ""}
                     </div>
                     <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
                     {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Me llevé: </strong>{log.que_se_llevo}</div>}
