@@ -126,6 +126,7 @@ export default function MenteeProgress() {
   }
 
   var mentoresDistintos = Array.from(new Set(logs.map(function (l) { return l.mentor_email; })));
+  var nombreMentee = logs.length > 0 ? (logs[0].mentee_name || "").trim() : "";
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -134,7 +135,10 @@ export default function MenteeProgress() {
       </style>
 
       <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>Mi progreso</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
+          {nombreMentee ? "Hola, " + nombreMentee + " 👋" : "Mi progreso"}
+        </div>
+        {nombreMentee && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Este es el registro de tu mentoría</div>}
       </div>
 
       <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
