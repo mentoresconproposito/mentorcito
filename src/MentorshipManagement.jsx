@@ -328,9 +328,16 @@ export default function MentorshipManagement() {
             {grupoSeleccionado ? grupoSeleccionado.displayName : "Tus mentees"}
           </span>
         </div>
-        {!selectedMentee && (
+        {!showNewForm && (
           <button
-            onClick={function () { setShowNewForm(true); setFormMenteeName(""); setFormMenteeEmail(""); setFormTotalSesiones(""); }}
+            onClick={function () {
+              if (grupoSeleccionado) {
+                abrirNuevaSesionParaMentee(grupoSeleccionado);
+              } else {
+                setFormMenteeName(""); setFormMenteeEmail(""); setFormTotalSesiones("");
+                setShowNewForm(true);
+              }
+            }}
             style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, cursor: "pointer" }}
           >
             + Nueva sesión
@@ -512,12 +519,6 @@ export default function MentorshipManagement() {
                 </div>
               );
             })()}
-            <button
-              onClick={function () { abrirNuevaSesionParaMentee(grupoSeleccionado); }}
-              style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 10 }}
-            >
-              + Nueva sesión con {grupoSeleccionado.displayName}
-            </button>
             <button
               onClick={function () { handlePrepararSesion(selectedMentee, grupoSeleccionado.displayName); }}
               disabled={prepLoading === selectedMentee}
