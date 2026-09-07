@@ -92,6 +92,9 @@ export default function MentorshipManagement() {
   var [email, setEmail] = useState(null);
   var [emailInput, setEmailInput] = useState("");
   var [hasAccess, setHasAccess] = useState(false);
+  var [mentorNombre, setMentorNombre] = useState("");
+  var [necesitaNombre, setNecesitaNombre] = useState(false);
+  var [nombreInput, setNombreInput] = useState("");
   var [sessionLogs, setSessionLogs] = useState([]);
   var [selectedMentee, setSelectedMentee] = useState(null);
   var [showNewForm, setShowNewForm] = useState(false);
@@ -123,6 +126,11 @@ export default function MentorshipManagement() {
       var access = !!(data && data.found && (data.module4_output || data.acceso_gestion === "si"));
       setHasAccess(access);
       if (access) {
+        if (data.nombre) {
+          setMentorNombre(data.nombre);
+        } else {
+          setNecesitaNombre(true);
+        }
         await loadSessionLogs(mail);
       }
     } catch (e) {
@@ -154,6 +162,22 @@ export default function MentorshipManagement() {
     checkAccessAndLoad(trimmed);
   }
 
+  async function handleGuardarNombre() {
+    var trimmed = nombreInput.trim();
+    if (!trimmed) return;
+    setMentorNombre(trimmed);
+    setNecesitaNombre(false);
+    try {
+      await fetch("/api/sheets", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "save_module_progress", email: email, nombre: trimmed }),
+      });
+    } catch (e) {
+      console.error("Error guardando nombre:", e);
+    }
+  }
+
   function abrirNuevaSesionParaMentee(grupo) {
     var logConEmail = grupo.logs.find(function (l) { return l.mentee_email; });
     var logConTotal = grupo.logs.find(function (l) { return l.total_sesiones_programa; });
@@ -181,6 +205,7 @@ export default function MentorshipManagement() {
           mentor_email: email,
           mentee_name: nombreFinal,
           mentee_email: emailFinal,
+          mentor_nombre: mentorNombre,
           total_sesiones_programa: formTotalSesiones ? Number(formTotalSesiones) : "",
           fecha: formFecha,
           temas_vistos: formTemasVistos.trim(),
@@ -287,7 +312,37 @@ export default function MentorshipManagement() {
     );
   }
 
-  // ── Render: sin acceso ──
+  // ── Render: falta el nombre (una sola vez, después de confirmar acceso) ──
+  if (necesitaNombre) {
+    return (
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ maxWidth: 380, width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 28 }}>
+          <div style={{ fontSize: 22, marginBottom: 6 }}>👋</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.textWhite, marginBottom: 6 }}>¿Cómo te llamás?</div>
+          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 18, lineHeight: 1.5 }}>
+            Así tus mentees te ven por tu nombre (no tu email) cuando revisan su progreso en /miprogreso. Se pregunta una sola vez.
+          </div>
+          <input
+            type="text"
+            value={nombreInput}
+            onChange={function (e) { setNombreInput(e.target.value); }}
+            onKeyDown={function (e) { if (e.key === "Enter") handleGuardarNombre(); }}
+            placeholder="Tu nombre"
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 14, marginBottom: 12, boxSizing: "border-box" }}
+          />
+          <button
+            onClick={handleGuardarNombre}
+            disabled={!nombreInput.trim()}
+            style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: nombreInput.trim() ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", color: nombreInput.trim() ? "white" : T.textDisabled, fontWeight: 600, fontSize: 14, cursor: nombreInput.trim() ? "pointer" : "not-allowed" }}
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+
   if (!hasAccess) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
