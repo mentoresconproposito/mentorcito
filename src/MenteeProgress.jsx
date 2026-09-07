@@ -12,120 +12,58 @@ var T = {
   textWhite:    "white",
 };
 
-var PREP_SYSTEM_PROMPT =
-  "Sos un asistente que ayuda a un mentor a prepararse para su próxima sesión con un mentee específico, dentro de Mentorcito.\n\n" +
-  "Te paso el historial completo de sesiones anteriores con este mentee (fecha, temas vistos, qué se llevó, próximos pasos). Tu trabajo es generar un resumen breve y accionable para que el mentor llegue a la sesión con contexto fresco, sin tener que releer todo.\n\n" +
+var PREP_MENTEE_SYSTEM_PROMPT =
+  "Sos un asistente que le muestra a un mentee un resumen de su propio progreso en su mentoría, dentro de Mentorcito.\n\n" +
+  "Te paso el historial completo de sus sesiones (fecha, temas vistos, qué se llevó, próximos pasos). Tu trabajo es armar un resumen breve, en segunda persona, hablándole directamente al mentee, que lo ayude a ver su propio avance.\n\n" +
   "Estructura de tu respuesta (texto plano, sin JSON, sin markdown pesado):\n" +
-  "- Un párrafo corto de qué se viene trabajando en general con este mentee.\n" +
-  "- Qué quedó pendiente o a mitad de camino de la última sesión.\n" +
-  "- 1-2 sugerencias concretas de por dónde podría arrancar esta sesión.\n\n" +
-  "Sé breve — esto se lee en 30 segundos antes de entrar a la sesión, no es un informe.";
+  "- Un párrafo corto sobre el camino recorrido hasta ahora (qué fueron trabajando en conjunto).\n" +
+  "- Qué tiene pendiente o a mitad de camino de la última sesión.\n" +
+  "- Un cierre breve y alentador.\n\n" +
+  "Tono cercano, en segunda persona (\"venís trabajando en...\", \"te quedó pendiente...\"). Sé breve — esto se lee en menos de un minuto.";
 
-export default function MentorshipManagement() {
+export default function MenteeProgress() {
   var [initializing, setInitializing] = useState(true);
   var [email, setEmail] = useState(null);
   var [emailInput, setEmailInput] = useState("");
-  var [hasAccess, setHasAccess] = useState(false);
-  var [sessionLogs, setSessionLogs] = useState([]);
-  var [selectedMentee, setSelectedMentee] = useState(null);
-  var [showNewForm, setShowNewForm] = useState(false);
-  var [formMenteeName, setFormMenteeName] = useState("");
-  var [formMenteeEmail, setFormMenteeEmail] = useState("");
-  var [formTotalSesiones, setFormTotalSesiones] = useState("");
-  var [formFecha, setFormFecha] = useState(new Date().toISOString().slice(0, 10));
-  var [formTemasVistos, setFormTemasVistos] = useState("");
-  var [formQueSeLlevo, setFormQueSeLlevo] = useState("");
-  var [formProximosPasos, setFormProximosPasos] = useState("");
-  var [saving, setSaving] = useState(false);
-  var [prepResults, setPrepResults] = useState({}); // { [menteeName]: texto }
-  var [prepLoading, setPrepLoading] = useState(null); // nombre del mentee que está cargando
+  var [logs, setLogs] = useState([]);
+  var [prepResult, setPrepResult] = useState(null);
+  var [prepLoading, setPrepLoading] = useState(false);
 
   useEffect(function () {
-    var stored = localStorage.getItem("mentorship_email");
+    var stored = localStorage.getItem("mentee_progress_email");
     if (stored) {
       setEmail(stored);
-      checkAccessAndLoad(stored);
+      loadProgress(stored);
     } else {
       setInitializing(false);
     }
   }, []);
 
-  async function checkAccessAndLoad(mail) {
+  async function loadProgress(mail) {
     try {
-      var res = await fetch("/api/sheets?action=get_module_progress&email=" + encodeURIComponent(mail));
+      var res = await fetch("/api/sheets?action=get_mentee_progress&mentee_email=" + encodeURIComponent(mail));
       var data = await res.json();
-      var access = !!(data && data.found && (data.module4_output || data.acceso_gestion === "si"));
-      setHasAccess(access);
-      if (access) {
-        await loadSessionLogs(mail);
-      }
+      setLogs(data.logs || []);
     } catch (e) {
-      console.error("Error chequeando acceso:", e);
+      console.error("Error cargando progreso:", e);
     } finally {
       setInitializing(false);
-    }
-  }
-
-  async function loadSessionLogs(mail) {
-    try {
-      var res = await fetch("/api/sheets?action=get_session_logs&mentor_email=" + encodeURIComponent(mail));
-      var data = await res.json();
-      setSessionLogs(data.logs || []);
-    } catch (e) {
-      console.error("Error cargando sesiones:", e);
     }
   }
 
   function handleStartEmail() {
     var trimmed = emailInput.trim().toLowerCase();
     if (!trimmed || trimmed.indexOf("@") === -1) return;
-    localStorage.setItem("mentorship_email", trimmed);
+    localStorage.setItem("mentee_progress_email", trimmed);
     setEmail(trimmed);
     setInitializing(true);
-    checkAccessAndLoad(trimmed);
+    loadProgress(trimmed);
   }
 
-  async function handleSaveSession() {
-    if (!formMenteeName.trim() || !formTemasVistos.trim()) return;
-    setSaving(true);
+  async function handlePrepararResumen() {
+    setPrepLoading(true);
     try {
-      await fetch("/api/sheets", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({
-          action: "save_session_log",
-          mentor_email: email,
-          mentee_name: formMenteeName.trim(),
-          mentee_email: formMenteeEmail.trim(),
-          total_sesiones_programa: formTotalSesiones ? Number(formTotalSesiones) : "",
-          fecha: formFecha,
-          temas_vistos: formTemasVistos.trim(),
-          que_se_llevo: formQueSeLlevo.trim(),
-          proximos_pasos: formProximosPasos.trim(),
-        }),
-      });
-      await loadSessionLogs(email);
-      setSelectedMentee(formMenteeName.trim());
-      setShowNewForm(false);
-      setFormMenteeName("");
-      setFormMenteeEmail("");
-      setFormTotalSesiones("");
-      setFormTemasVistos("");
-      setFormQueSeLlevo("");
-      setFormProximosPasos("");
-      setFormFecha(new Date().toISOString().slice(0, 10));
-    } catch (e) {
-      console.error("Error guardando sesión:", e);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handlePrepararSesion(menteeName) {
-    setPrepLoading(menteeName);
-    try {
-      var logsDeEsteMentee = sessionLogs.filter(function (l) { return l.mentee_name === menteeName; });
-      var historial = logsDeEsteMentee.map(function (l) {
+      var historial = logs.map(function (l) {
         return "Fecha: " + l.fecha + "\nTemas vistos: " + l.temas_vistos + "\nQué se llevó: " + l.que_se_llevo + (l.proximos_pasos ? "\nPróximos pasos: " + l.proximos_pasos : "");
       }).join("\n---\n");
 
@@ -136,25 +74,20 @@ export default function MentorshipManagement() {
           model: "claude-haiku-4-5-20251001",
           max_tokens: 500,
           stream: false,
-          system: PREP_SYSTEM_PROMPT,
-          messages: [{ role: "user", content: "Historial de sesiones con este mentee:\n\n" + historial }],
+          system: PREP_MENTEE_SYSTEM_PROMPT,
+          messages: [{ role: "user", content: "Historial de mis sesiones:\n\n" + historial }],
         }),
       });
       var data = await res.json();
       var textBlock = (data.content || []).find(function (b) { return b.type === "text"; });
-      setPrepResults(function (prev) {
-        var updated = Object.assign({}, prev);
-        updated[menteeName] = textBlock ? textBlock.text : "No se pudo generar el resumen.";
-        return updated;
-      });
+      setPrepResult(textBlock ? textBlock.text : "No se pudo generar el resumen.");
     } catch (e) {
-      console.error("Error preparando sesión:", e);
+      console.error("Error generando resumen:", e);
     } finally {
-      setPrepLoading(null);
+      setPrepLoading(false);
     }
   }
 
-  // ── Render: cargando ──
   if (initializing) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", color: T.textSub, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -163,15 +96,14 @@ export default function MentorshipManagement() {
     );
   }
 
-  // ── Render: captura de email ──
   if (!email) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         <div style={{ maxWidth: 380, width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 28 }}>
-          <div style={{ fontSize: 22, marginBottom: 6 }}>🗂️</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.textWhite, marginBottom: 6 }}>Gestioná tu Mentoría</div>
+          <div style={{ fontSize: 22, marginBottom: 6 }}>📈</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.textWhite, marginBottom: 6 }}>Mi progreso</div>
           <div style={{ fontSize: 13, color: T.textSub, marginBottom: 18, lineHeight: 1.5 }}>
-            Centralizá el seguimiento de tus sesiones — qué vieron, qué se llevó cada mentee, y preparate para la próxima con un resumen automático.
+            Ingresá el email que le diste a tu mentor para ver el registro de tus sesiones.
           </div>
           <input
             type="email"
@@ -186,38 +118,14 @@ export default function MentorshipManagement() {
             disabled={!emailInput.trim()}
             style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: emailInput.trim() ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", color: emailInput.trim() ? "white" : T.textDisabled, fontWeight: 600, fontSize: 14, cursor: emailInput.trim() ? "pointer" : "not-allowed" }}
           >
-            Continuar
+            Ver mi progreso
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Render: sin acceso ──
-  if (!hasAccess) {
-    return (
-      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        <div style={{ maxWidth: 380, width: "100%", textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
-          <div style={{ fontSize: 19, fontWeight: 700, color: T.textWhite, marginBottom: 8 }}>Necesitás acceso para esta sección</div>
-          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 22, lineHeight: 1.6 }}>
-            Esta herramienta es para mentores que completaron "Creá tu Mentoría", o que ya forman parte de la red de Mentorcito. Escribile a Gustavo para que te habilite el acceso.
-          </div>
-          <a
-            href={"https://wa.me/5491170043893?text=" + encodeURIComponent("Hola Gustavo! Quiero acceso a Gestioná tu Mentoría (" + email + ")")}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: "inline-block", padding: "12px 22px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 14, textDecoration: "none" }}
-          >
-            Escribir a Gustavo
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  var mentees = Array.from(new Set(sessionLogs.map(function (l) { return l.mentee_name; }))).sort();
-  var logsDelSeleccionado = selectedMentee ? sessionLogs.filter(function (l) { return l.mentee_name === selectedMentee; }) : [];
+  var mentoresDistintos = Array.from(new Set(logs.map(function (l) { return l.mentor_email; })));
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -225,210 +133,64 @@ export default function MentorshipManagement() {
         {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; }"}
       </style>
 
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
-          {selectedMentee ? "← " : ""}
-          <span style={{ cursor: selectedMentee ? "pointer" : "default" }} onClick={function () { setSelectedMentee(null); }}>
-            {selectedMentee ? selectedMentee : "Tus mentees"}
-          </span>
-        </div>
-        {!selectedMentee && (
-          <button
-            onClick={function () { setShowNewForm(true); setFormMenteeName(""); setFormMenteeEmail(""); setFormTotalSesiones(""); }}
-            style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, cursor: "pointer" }}
-          >
-            + Nueva sesión
-          </button>
-        )}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>Mi progreso</div>
       </div>
 
       <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
-
-        {/* Lista de mentees */}
-        {!selectedMentee && !showNewForm && (
-          <div>
-            {mentees.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px 20px", color: T.textMuted, fontSize: 13 }}>
-                Todavía no cargaste ninguna sesión. Empezá con "+ Nueva sesión" arriba.
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {mentees.map(function (m) {
-                  var logsDeM = sessionLogs.filter(function (l) { return l.mentee_name === m; });
-                  var totalProgramaM = (logsDeM.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
-                  return (
-                    <div
-                      key={m}
-                      onClick={function () { setSelectedMentee(m); }}
-                      style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px", cursor: "pointer" }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: T.textWhite }}>{m}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>
-                            {totalProgramaM
-                              ? "Sesión " + logsDeM.length + " de " + totalProgramaM
-                              : logsDeM.length + " sesión" + (logsDeM.length !== 1 ? "es" : "") + " registrada" + (logsDeM.length !== 1 ? "s" : "")}
-                          </div>
-                        </div>
-                        <span style={{ color: T.textMuted }}>→</span>
-                      </div>
-                      {totalProgramaM && (
-                        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginTop: 10 }}>
-                          <div style={{ height: "100%", width: Math.min(100, (logsDeM.length / totalProgramaM) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 2 }} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        {logs.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px 20px", color: T.textMuted, fontSize: 13, lineHeight: 1.6 }}>
+            Todavía no tenés sesiones registradas. Pedile a tu mentor que empiece a cargarlas después de cada encuentro.
           </div>
-        )}
-
-        {/* Formulario nueva sesión */}
-        {showNewForm && (
-          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Mentee</div>
-            <input
-              list="mentee-options"
-              value={formMenteeName}
-              onChange={function (e) {
-                var val = e.target.value;
-                setFormMenteeName(val);
-                // Si el nombre coincide con un mentee ya existente, prellenamos
-                // el total de sesiones con el último valor que se le cargó.
-                var logsDeEseNombre = sessionLogs.filter(function (l) { return l.mentee_name === val; });
-                if (logsDeEseNombre.length > 0) {
-                  var conTotal = logsDeEseNombre.find(function (l) { return l.total_sesiones_programa; });
-                  if (conTotal) setFormTotalSesiones(String(conTotal.total_sesiones_programa));
-                }
-              }}
-              placeholder="Nombre del mentee (nuevo o existente)"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
-            />
-            <datalist id="mentee-options">
-              {mentees.map(function (m) { return <option key={m} value={m} />; })}
-            </datalist>
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Email del mentee (opcional)</div>
-            <input
-              type="email"
-              value={formMenteeEmail}
-              onChange={function (e) { setFormMenteeEmail(e.target.value); }}
-              placeholder="Para que pueda ver su propio progreso en /miprogreso"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
-            />
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Total de sesiones de este programa (opcional)</div>
-            <input
-              type="number"
-              min="1"
-              value={formTotalSesiones}
-              onChange={function (e) { setFormTotalSesiones(e.target.value); }}
-              placeholder="Ej: 4 — se recuerda para las próximas sesiones con este mentee"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
-            />
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Fecha</div>
-            <input
-              type="date"
-              value={formFecha}
-              onChange={function (e) { setFormFecha(e.target.value); }}
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
-            />
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Temas vistos</div>
-            <textarea
-              value={formTemasVistos}
-              onChange={function (e) { setFormTemasVistos(e.target.value); }}
-              rows={3}
-              placeholder="¿Qué trabajaron en esta sesión?"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box", resize: "vertical" }}
-            />
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Qué se llevó el mentee</div>
-            <textarea
-              value={formQueSeLlevo}
-              onChange={function (e) { setFormQueSeLlevo(e.target.value); }}
-              rows={2}
-              placeholder="Principal takeaway o tarea"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 14, boxSizing: "border-box", resize: "vertical" }}
-            />
-
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Próximos pasos (opcional)</div>
-            <textarea
-              value={formProximosPasos}
-              onChange={function (e) { setFormProximosPasos(e.target.value); }}
-              rows={2}
-              placeholder="Qué queda pendiente para la próxima"
-              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 13, marginBottom: 18, boxSizing: "border-box", resize: "vertical" }}
-            />
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={handleSaveSession}
-                disabled={saving || !formMenteeName.trim() || !formTemasVistos.trim()}
-                style={{ flex: 1, padding: "11px", borderRadius: 10, border: "none", background: (!saving && formMenteeName.trim() && formTemasVistos.trim()) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", color: (!saving && formMenteeName.trim() && formTemasVistos.trim()) ? "white" : T.textDisabled, fontWeight: 600, fontSize: 14, cursor: "pointer" }}
-              >
-                {saving ? "Guardando..." : "Guardar sesión"}
-              </button>
-              <button
-                onClick={function () { setShowNewForm(false); }}
-                style={{ padding: "11px 16px", borderRadius: 10, border: "1px solid " + T.border, background: "transparent", color: T.textSub, fontSize: 14, cursor: "pointer" }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Historial de un mentee */}
-        {selectedMentee && (
-          <div>
+        ) : (
+          <>
             {(function () {
-              var totalPrograma = (logsDelSeleccionado.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
+              var totalPrograma = (logs.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
               if (!totalPrograma) return null;
               return (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textSub, marginBottom: 6 }}>
-                    <span>Progreso del programa</span>
-                    <span>Sesión {logsDelSeleccionado.length} de {totalPrograma}</span>
+                    <span>Tu progreso</span>
+                    <span>Sesión {logs.length} de {totalPrograma}</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: Math.min(100, (logsDelSeleccionado.length / totalPrograma) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
+                    <div style={{ height: "100%", width: Math.min(100, (logs.length / totalPrograma) * 100) + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
                   </div>
                 </div>
               );
             })()}
             <button
-              onClick={function () { handlePrepararSesion(selectedMentee); }}
-              disabled={prepLoading === selectedMentee}
+              onClick={handlePrepararResumen}
+              disabled={prepLoading}
               style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid rgba(123,47,247,0.4)", background: "rgba(123,47,247,0.1)", color: "#c9b8ff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 16 }}
             >
-              {prepLoading === selectedMentee ? "Preparando..." : "✨ Preparar próxima sesión"}
+              {prepLoading ? "Generando..." : "✨ Ver cómo viene mi progreso"}
             </button>
 
-            {prepResults[selectedMentee] && (
+            {prepResult && (
               <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 12, padding: 16, marginBottom: 20, fontSize: 13, color: T.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                {prepResults[selectedMentee]}
+                {prepResult}
               </div>
             )}
 
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Historial de sesiones</div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>
+              Historial de sesiones {mentoresDistintos.length > 1 ? "(con más de un mentor)" : ""}
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {logsDelSeleccionado.map(function (log) {
+              {logs.map(function (log, i) {
                 return (
-                  <div key={log.log_id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>{log.fecha}</div>
+                  <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>
+                      {log.fecha}{mentoresDistintos.length > 1 ? " · " + log.mentor_email : ""}
+                    </div>
                     <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
-                    {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Se llevó: </strong>{log.que_se_llevo}</div>}
+                    {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Me llevé: </strong>{log.que_se_llevo}</div>}
                     {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
                   </div>
                 );
               })}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
