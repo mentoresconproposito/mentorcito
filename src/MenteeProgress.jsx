@@ -194,8 +194,36 @@ export default function MenteeProgress() {
                   {totalPrograma && (
                     <div style={{ marginBottom: 14 }}>
                       {completo && (
-                        <div style={{ background: "rgba(123,222,150,0.08)", border: "1px solid rgba(123,222,150,0.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 10, fontSize: 13, color: "#7bde96", fontWeight: 600 }}>
-                          🎉 ¡Completaste las {totalPrograma} sesiones de este programa!
+                        <div style={{ background: "rgba(123,222,150,0.08)", border: "1px solid rgba(123,222,150,0.3)", borderRadius: 10, padding: "14px", marginBottom: 10 }}>
+                          <div style={{ fontSize: 13, color: "#7bde96", fontWeight: 600, marginBottom: 12 }}>
+                            🎉 ¡Completaste las {totalPrograma} sesiones de este programa!
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <a
+                              href={"https://wa.me/5491170043893?text=" + encodeURIComponent("Hola Gustavo! Terminé mis " + totalPrograma + " sesiones con " + grupo.nombre + " (" + email + ") y quiero seguir con más sesiones con él/ella.")}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textAlign: "center", padding: "10px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, textDecoration: "none" }}
+                            >
+                              Quiero más sesiones con {grupo.nombre}
+                            </a>
+                            <a
+                              href={"https://wa.me/5491170043893?text=" + encodeURIComponent("Hola Gustavo! Terminé mis sesiones con " + grupo.nombre + " (" + email + ") y me gustaría conocer otro mentor.")}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textAlign: "center", padding: "10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: T.text, fontWeight: 600, fontSize: 12.5, textDecoration: "none" }}
+                            >
+                              Quiero conocer otro mentor
+                            </a>
+                            <a
+                              href={"https://wa.me/5491170043893?text=" + encodeURIComponent("Hola Gustavo! Terminé mis sesiones con " + grupo.nombre + " (" + email + ") y quiero hablar con vos.")}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textAlign: "center", padding: "10px", borderRadius: 8, border: "none", background: "transparent", color: T.textSub, fontWeight: 600, fontSize: 12, textDecoration: "underline" }}
+                            >
+                              Prefiero hablar con Gustavo
+                            </a>
+                          </div>
                         </div>
                       )}
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textSub, marginBottom: 6 }}>
