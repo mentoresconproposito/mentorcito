@@ -380,7 +380,7 @@ export default function MentorshipManagement() {
         <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
           {selectedMentee ? "← " : ""}
           <span style={{ cursor: selectedMentee ? "pointer" : "default" }} onClick={function () { setSelectedMentee(null); }}>
-            {grupoSeleccionado ? grupoSeleccionado.displayName : "Tus mentees"}
+            {grupoSeleccionado ? grupoSeleccionado.displayName : (mentorNombre ? "Hola " + mentorNombre + ", estos son tus mentees" : "Tus mentees")}
           </span>
         </div>
         {!showNewForm && (
