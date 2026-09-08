@@ -590,10 +590,11 @@ export default function MentorshipManagement() {
 
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Historial de sesiones</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {logsDelSeleccionado.map(function (log) {
+              {logsDelSeleccionado.map(function (log, i) {
+                var numeroSesion = logsDelSeleccionado.length - i;
                 return (
                   <div key={log.log_id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>{log.fecha}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>Sesión {numeroSesion} · {log.fecha}</div>
                     <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
                     {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Se llevó: </strong>{log.que_se_llevo}</div>}
                     {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
