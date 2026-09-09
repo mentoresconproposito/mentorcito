@@ -376,11 +376,11 @@ export default function MentorshipManagement() {
         {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; }"}
       </style>
 
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite }}>
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite, flex: 1 }}>
           {selectedMentee ? "← " : ""}
           <span style={{ cursor: selectedMentee ? "pointer" : "default" }} onClick={function () { setSelectedMentee(null); }}>
-            {grupoSeleccionado ? grupoSeleccionado.displayName : (mentorNombre ? "Hola " + mentorNombre + ", estos son tus mentees" : "Tus mentees")}
+            {grupoSeleccionado ? grupoSeleccionado.displayName : (mentorNombre ? "Hola " + mentorNombre + ". Acá podés ver tus mentees y preparar tus sesiones." : "Tus mentees")}
           </span>
         </div>
         {!showNewForm && (
@@ -393,7 +393,7 @@ export default function MentorshipManagement() {
                 setShowNewForm(true);
               }
             }}
-            style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, cursor: "pointer" }}
+            style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", color: "white", fontWeight: 600, fontSize: 12.5, cursor: "pointer", flexShrink: 0 }}
           >
             + Nueva sesión
           </button>
