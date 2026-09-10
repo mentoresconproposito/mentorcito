@@ -597,7 +597,12 @@ export default function MentorshipManagement() {
                     <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>Sesión {numeroSesion} · {log.fecha}</div>
                     <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
                     {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Se llevó: </strong>{log.que_se_llevo}</div>}
-                    {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
+                    {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text, marginBottom: log.feedback_mentee ? 8 : 0 }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
+                    {log.feedback_mentee && (
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid " + T.border, fontSize: 12.5, color: "#c9b8ff" }}>
+                        💬 <strong>Feedback del mentee: </strong>{log.feedback_mentee}
+                      </div>
+                    )}
                   </div>
                 );
               })}
