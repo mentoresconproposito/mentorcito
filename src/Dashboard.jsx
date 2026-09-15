@@ -280,6 +280,63 @@ export default function Dashboard() {
   var [tab, setTab] = useState("overview");
   var [lastRefresh, setLastRefresh] = useState(null);
 
+  // ── Login gate ────────────────────────────────────────────────────────────────
+  var DASHBOARD_PASSWORD = "mentores2026";
+  var [autenticado, setAutenticado] = useState(function() {
+    try { return sessionStorage.getItem("dash_auth") === "ok"; } catch(e) { return false; }
+  });
+  var [inputPass, setInputPass] = useState("");
+  var [passError, setPassError] = useState(false);
+
+  function handleLogin(e) {
+    e.preventDefault();
+    if (inputPass === DASHBOARD_PASSWORD) {
+      try { sessionStorage.setItem("dash_auth", "ok"); } catch(e) {}
+      setAutenticado(true);
+      setPassError(false);
+    } else {
+      setPassError(true);
+      setInputPass("");
+    }
+  }
+
+  if (!autenticado) {
+    return (
+      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "40px 36px", width: 340, textAlign: "center" }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: PRIMARY, marginBottom: 8 }}>💠</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.88)", marginBottom: 4 }}>Mentorcito Dashboard</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Acceso restringido</div>
+          <form onSubmit={handleLogin}>
+            <input
+              type="password"
+              value={inputPass}
+              onChange={function(e){ setInputPass(e.target.value); setPassError(false); }}
+              placeholder="Contraseña"
+              autoFocus
+              style={{
+                width: "100%", padding: "10px 14px", borderRadius: 8,
+                background: "rgba(255,255,255,0.06)", border: passError ? "1px solid #f72585" : "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.88)", fontSize: 14, outline: "none",
+                marginBottom: 8, boxSizing: "border-box",
+              }}
+            />
+            {passError && (
+              <div style={{ color: "#f72585", fontSize: 12, marginBottom: 8 }}>Contraseña incorrecta</div>
+            )}
+            <button type="submit" style={{
+              width: "100%", padding: "10px 0", borderRadius: 8, border: "none",
+              background: PRIMARY, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 4,
+            }}>
+              Entrar
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ── Fin login gate ────────────────────────────────────────────────────────────
+
   async function fetchStats() {
     setLoading(true);
     async function doFetch() {
