@@ -534,12 +534,12 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "- Si necesitás saber varias cosas, priorizá la más importante para ese momento de la conversación.\n"
 + "- Esta regla aplica en todo momento: apertura, exploración y cierre.\n\n"
 + "LÍMITE DURO DE PREGUNTAS — MUY IMPORTANTE:\n"
-+ "- Hacé EXACTAMENTE 5 preguntas: 3 abiertas + 2 de clasificación rápida (patas y nivel).\n"
-+ "- Las preguntas 4 y 5 son siempre las de clasificación — no las reemplaces por preguntas abiertas.\n"
-+ "- Con esas 5 respuestas tenés todo para diagnosticar: tensiones, estado del loop, gaps en las 3 patas y nivel.\n"
++ "- Hacé EXACTAMENTE 8 preguntas: 3 abiertas + 5 de clasificación rápida (patas, nivel, user insights, data fluency, AI fluency).\n"
++ "- Las preguntas 4, 5, 6, 7 y 8 son siempre las de clasificación — no las reemplaces por preguntas abiertas.\n"
++ "- Con esas 8 respuestas tenés todo para diagnosticar: tensiones, estado del loop, gaps en las 3 patas, nivel y product sense completo (8 dimensiones).\n"
 + "- Si el usuario da respuestas muy cortas en las abiertas, igualmente avanzás — no hagas preguntas de seguimiento.\n"
 + "- Es mejor un diagnóstico con información parcial que una conversación interminable.\n"
-+ "- Señal de avance en la pregunta 4: decí algo como 'Ya tengo bastante para armar tu diagnóstico — dos preguntas más y te cuento dónde estás parado/a.' Eso reduce la ansiedad de quién está respondiendo.\n\n"
++ "- Señal de avance en la pregunta 4: decí algo como 'Ya tengo bastante para armar tu diagnóstico — solo 3 preguntas más y te cuento dónde estás parado/a.' Eso reduce la ansiedad de quién está respondiendo.\n\n"
 + "EXTENSIÓN DE RESPUESTAS:\n"
 + "- En la fase conversacional (preguntas y respuestas) tus mensajes deben ser cortos: máximo 3-4 líneas.\n"
 + "- No acumules información ni hagas resúmenes intermedios largos.\n"
@@ -564,13 +564,17 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "4. Pregunta 3 (abierta): cuál sería su siguiente paso ideal en carrera — de ahí inferís nivel objetivo y estado del loop\n"
 + "5. Pregunta 4 (clasificación rápida): '¿En cuál de estas áreas sentís que tenés más para crecer? A) Tecnología y datos B) Producto — estrategia, métricas, discovery C) Negocio — GTM, liderazgo, influencia' — esto da las 3 patas con precisión\n"
 + "6. Pregunta 5 (clasificación rápida): '¿Cómo describirías tu nivel de experiencia? A) Junior — menos de 2 años en el rol B) Mid — 2 a 5 años C) Senior — más de 5 años o liderando equipos' — esto da el nivel para el matching\n"
-+ "7. En la pregunta 4 avisá que ya estás cerca: 'Ya tengo bastante para armar tu diagnóstico — dos preguntas más y te cuento dónde estás parado/a.'\n"
-+ "8. Mostrá un resumen breve del perfil detectado\n"
-+ "9. PASO DE CONFIRMACIÓN: preguntá '¿Esto te representa? Podemos ajustar algo antes de ver tus mentores.' con dos opciones claras: confirmar o ajustar\n"
-+ "10. Si confirma: emitís el diagnóstico y recomendás mentores\n"
-+ "11. Si quiere ajustar: preguntá qué cambiaría, refiná el perfil y emitís el diagnóstico igual\n"
-+ "12. Si hay buen match: recomendá 2-3 mentores y explicá qué señales coincidieron\n"
-+ "13. Si no hay match: usá la lógica A/B/C de arriba\n\n"
++ "7. Pregunta 6 (clasificación rápida — user insights): '¿Con qué frecuencia hablás directamente con usuarios o clientes? A) Regularmente — es parte de mi proceso B) Cuando puedo — no siempre es posible C) Casi nunca — el feedback llega filtrado' — calibra user_insights en product_sense\n"
++ "8. Pregunta 7 (clasificación rápida — data fluency): '¿Qué peso tiene la evidencia cuantitativa en tus decisiones de producto? A) Es central — trabajo con datos y métricas habitualmente B) La considero — pero no siempre tengo acceso fácil C) Casi no tengo acceso a datos estructurados' — calibra data_fluency en product_sense\n"
++ "9. Pregunta 8 (clasificación rápida — AI fluency): '¿Cómo usás IA en tu trabajo hoy? A) La integré en mi proceso — uso IA para discovery, síntesis, specs o prototipado B) Experimento — la uso en algunas tareas pero no de forma sistemática C) Todavía no la incorporé a mi flujo de trabajo' — calibra ai_fluency en product_sense\n"
++ "10. En la pregunta 4 avisá que ya estás cerca: 'Ya tengo bastante para armar tu diagnóstico — solo 4 preguntas más y te cuento dónde estás parado/a.'\n"
++ "11. Mostrá un resumen breve del perfil detectado\n"
++ "12. PASO DE CONFIRMACIÓN: preguntá '¿Esto te representa? Podemos ajustar algo antes de ver tus mentores.' con dos opciones claras: confirmar o ajustar\n"
++ "13. Si confirma o ajusta: pedí el email ANTES de mostrar los mentores. Decí exactamente: '¡Perfecto! Antes de mostrarte tus mentores, ¿me dejás tu email? Así podemos enviarte el resumen de tu diagnóstico y conectarte con el mentor que elijas.' Esperá la respuesta.\n"
++ "14. Una vez que tenés el email: emitís el diagnóstico y recomendás mentores\n"
++ "15. Si hay buen match: recomendá 2-3 mentores y explicá qué señales coincidieron\n"
++ "16. Si no hay match: usá la lógica A/B/C de arriba\n"
++ "17. CIERRE POST-MATCH — MUY IMPORTANTE: Después de mostrar los mentores, cerrá SIEMPRE con este mensaje exacto: 'El equipo de Mentores con Propósito te va a contactar a [email] para coordinar la primera sesión con el mentor que elijas. ¿Hay algo más que quieras saber antes de cerrar el diagnóstico?' NO inventes mecanismos de contacto alternativos. NO digas que el mentor se va a contactar por este canal. NO digas que vas a recibir un mensaje en esta plataforma. El único contacto real es por email.\n\n"
 + "LOOP PROFESIONAL — clasificá el estado del usuario en el campo 'estado':\n"
 + "- Reinvención: entra a producto, cambia de industria, quiere emprender, ser mentor, advisor, founder\n"
 + "- Estancamiento: dominó su rol pero el contexto no le permite avanzar. No significa que no esté progresando — significa que el límite ya no es interno sino externo o estructural. Señales: mismo rol hace tiempo, contexto que no desafía, mercado que cambió, frustración con el sistema, no con uno mismo\n"
@@ -582,7 +586,22 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "- Reinvención: 'El sistema detectó que estás en Reinvención Profesional — el cambio ya empezó pero la nueva dirección todavía está tomando forma. Es el estado de más energía y más incertidumbre al mismo tiempo.'\n"
 + "Siempre terminá con: '¿Esto te representa? Si sentís que algo no encaja, contame y ajustamos antes de ver tus mentores.'\n\n"
 + "Cuando tengas suficiente info incluí al final:\n<DIAGNOSIS>\n"
-+ "{\"nivel_actual\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"nivel_objetivo\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"gaps\":[\"gap1\"],\"estado\":\"Estancamiento\",\"mentores_recomendados\":[{\"id\":\"ID\",\"razon\":\"razon\",\"prioridad\":1}],\"mentor_buscado_id\":null,\"mentor_prototipo\":null,\"proximos_pasos\":[\"paso1\"]}\n"
++ "{\"nivel_actual\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"nivel_objetivo\":{\"tech\":0,\"producto\":0,\"negocio\":0},\"gaps\":[\"gap1\"],\"estado\":\"Estancamiento\",\"mentores_recomendados\":[{\"id\":\"ID\",\"razon\":\"razon\",\"prioridad\":1}],\"mentor_buscado_id\":null,\"mentor_prototipo\":null,\"proximos_pasos\":[\"paso1\"],\"product_sense\":{\"user_insights\":5,\"business_acumen\":5,\"product_quality\":5,\"product_strategy\":5,\"execution\":5,\"influence\":5,\"data_fluency\":5,\"ai_fluency\":5}}\n"
++ "PRODUCT SENSE — instrucciones de scoring (framework Shreyas Doshi):\n"
++ "Inferí un score del 1 al 10 para cada dimensión basándote en las señales del lenguaje del usuario:\n"
++ "- user_insights: qué tan profundo conoce al usuario — entrevistas, síntesis, empatía. Alto si menciona discovery, entrevistas, insights. Bajo si construye por intuición o bajada de línea.\n"
++ "- business_acumen: qué tan bien conecta producto con negocio — revenue, métricas de negocio, criterio estratégico. Alto si habla el lenguaje del negocio. Bajo si solo piensa en features.\n"
++ "- product_quality: criterio sobre qué hace bueno un producto — pulido, coherencia, experiencia. Inferí del contexto y el tipo de empresa.\n"
++ "- product_strategy: visión y dirección de largo plazo — roadmap, priorización estratégica, north star. Alto si tiene visión clara. Bajo si opera en modo reactivo.\n"
++ "- execution: capacidad de llevar ideas a la realidad — entrega, coordinación, velocidad. Alto si menciona entrega consistente. Bajo si hay caos o bloqueos de ejecución.\n"
++ "- influence: hacer que las cosas pasen sin autoridad formal — manage up, stakeholders, alineamiento. Alto si tiene buenas relaciones con el equipo. Bajo si menciona que sus ideas no se implementan o que el CEO invalida su criterio.\n"
++ "- data_fluency: tomar decisiones con datos — métricas, SQL, analítica, evidencia cuantitativa. Alto si menciona datos en sus decisiones. Bajo si decide por intuición o no tiene acceso a datos.\n"
++ "- ai_fluency: integración de IA en el trabajo de producto — uso de LLMs para discovery, síntesis, specs, prototipado, análisis. Alto si usa IA como parte del proceso. Bajo si no la incorporó o solo la usa ocasionalmente.\n"
++ "IMPORTANTE — Preguntas 6, 7 y 8 calibran directamente tres dimensiones:\n"
++ "- Pregunta 6 (user insights): A=8, B=5, C=2. Ajustá ±1 según señales adicionales de las respuestas abiertas.\n"
++ "- Pregunta 7 (data fluency): A=8, B=5, C=2. Ajustá ±1 según señales adicionales de las respuestas abiertas.\n"
++ "- Pregunta 8 (AI fluency): A=9, B=6, C=2. Ajustá ±1 según señales adicionales de las respuestas abiertas.\n"
++ "Calibrá el score según el nivel declarado: un junior con score 7 en influence es distinto a un senior con 7. El benchmark esperado para un senior es 7-8 en la mayoría de dimensiones.\n\n"
 + "</DIAGNOSIS>\n"
 + "Cuando no hay match, mentor_prototipo debe ser:\n"
 + "{\"titulo_ideal\":\"...\",\"patas_clave\":[\"...\"],\"experiencia_minima\":\"...\",\"problemas_que_debe_resolver\":[\"...\"],\"donde_buscarlo\":[\"...\"],\"preguntas_para_validarlo\":[\"...\"]}";
@@ -702,6 +721,222 @@ function RadarChart(props) {
         );
       })}
     </svg>
+  );
+}
+
+// ─────────────────────────────────────────────
+// PRODUCT SENSE RADAR (Shreyas Doshi framework)
+// ─────────────────────────────────────────────
+function ProductSenseRadar(props) {
+  var ps = props.productSense || {};
+  var nivel = props.nivel || "mid";
+  var svgRef = useRef(null);
+  var [copied, setCopied] = useState(false);
+  var [downloading, setDownloading] = useState(false);
+
+  var DIMS = [
+    { key: "user_insights",    label: "User\nInsights" },
+    { key: "business_acumen",  label: "Business\nAcumen" },
+    { key: "product_quality",  label: "Product\nQuality" },
+    { key: "product_strategy", label: "Product\nStrategy" },
+    { key: "execution",        label: "Execution" },
+    { key: "influence",        label: "Influence" },
+    { key: "data_fluency",     label: "Data\nFluency" },
+    { key: "ai_fluency",       label: "AI\nFluency" },
+  ];
+
+  var BENCHMARKS = {
+    junior: { user_insights:5, business_acumen:4, product_quality:5, product_strategy:4, execution:5, influence:4, data_fluency:4, ai_fluency:5 },
+    mid:    { user_insights:6, business_acumen:6, product_quality:6, product_strategy:6, execution:7, influence:6, data_fluency:6, ai_fluency:7 },
+    senior: { user_insights:7, business_acumen:7, product_quality:7, product_strategy:8, execution:7, influence:8, data_fluency:7, ai_fluency:8 },
+  };
+
+  var benchmark = BENCHMARKS[nivel] || BENCHMARKS["mid"];
+  var n = DIMS.length;
+  var W = 260; var cx = W / 2; var cy = W / 2; var R = 90;
+
+  function pt(idx, val) {
+    var angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    var r = (val / 10) * R;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+
+  function polyFor(obj) {
+    return DIMS.map(function(d, i) {
+      var p = pt(i, obj[d.key] || 0);
+      return p.x + "," + p.y;
+    }).join(" ");
+  }
+
+  function labelPt(idx) {
+    var angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    return { x: cx + (R + 32) * Math.cos(angle), y: cy + (R + 32) * Math.sin(angle) };
+  }
+
+  var gapColor = function(key) {
+    var score = ps[key] || 0;
+    var exp   = benchmark[key] || 6;
+    var gap   = exp - score;
+    if (gap > 2) return "#f72585";
+    if (gap > 0) return "#fb8500";
+    return "#06d6a0";
+  };
+
+  function downloadRadarPNG() {
+    var svgEl = svgRef.current;
+    if (!svgEl) return;
+    setDownloading(true);
+    try {
+      // Clone SVG with explicit background for PNG
+      var clone = svgEl.cloneNode(true);
+      // Add background rect
+      var bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      bg.setAttribute("width", W); bg.setAttribute("height", W);
+      bg.setAttribute("fill", "#0d1117");
+      clone.insertBefore(bg, clone.firstChild);
+      // Serialize
+      var serializer = new XMLSerializer();
+      var svgStr = serializer.serializeToString(clone);
+      var svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+      var url = URL.createObjectURL(svgBlob);
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement("canvas");
+        var scale = 2; // 2x for retina
+        canvas.width = W * scale; canvas.height = W * scale;
+        var ctx = canvas.getContext("2d");
+        ctx.scale(scale, scale);
+        ctx.fillStyle = "#0d1117";
+        ctx.fillRect(0, 0, W, W);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function(blob) {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "mi-product-sense-radar.png";
+          a.click();
+          setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+          setDownloading(false);
+        }, "image/png");
+      };
+      img.onerror = function() { setDownloading(false); };
+      img.src = url;
+    } catch(e) { setDownloading(false); }
+  }
+
+  function buildShareUrl() {
+    var base = window.location.origin;
+    var params = new URLSearchParams();
+    DIMS.forEach(function(d) { params.set(d.key, ps[d.key] || 0); });
+    params.set("nivel", nivel);
+    return base + "/?compartir=1&" + params.toString();
+  }
+
+  function copyShareLink() {
+    var url = buildShareUrl();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        setCopied(true);
+        setTimeout(function() { setCopied(false); }, 2500);
+      });
+    }
+  }
+
+  if (!ps || Object.keys(ps).length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+        Product Sense · Shreyas Doshi
+      </div>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+        {/* Radar */}
+        <svg ref={svgRef} width={W} height={W} viewBox={"0 0 " + W + " " + W} style={{ overflow: "visible", flexShrink: 0 }}>
+          {[2,4,6,8,10].map(function(g) {
+            var pts = DIMS.map(function(d,i){ var p=pt(i,g); return p.x+","+p.y; }).join(" ");
+            return <polygon key={g} points={pts} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />;
+          })}
+          {DIMS.map(function(d,i) {
+            var p = pt(i,10);
+            return <line key={d.key} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
+          })}
+          <polygon points={polyFor(benchmark)} fill="rgba(247,37,133,0.06)" stroke="rgba(247,37,133,0.4)" strokeWidth="1.5" strokeDasharray="4,3" />
+          <polygon points={polyFor(ps)} fill="rgba(67,97,238,0.18)" stroke="#4361ee" strokeWidth="2" />
+          {DIMS.map(function(d,i) {
+            var curr = pt(i, ps[d.key] || 0);
+            var targ = pt(i, benchmark[d.key] || 6);
+            return (
+              <g key={d.key}>
+                <circle cx={targ.x} cy={targ.y} r="3" fill="rgba(247,37,133,0.5)" />
+                <circle cx={curr.x} cy={curr.y} r="5" fill="#4361ee" />
+                <circle cx={curr.x} cy={curr.y} r="2.5" fill="white" />
+              </g>
+            );
+          })}
+          {DIMS.map(function(d,i) {
+            var lp = labelPt(i);
+            var lines = d.label.split("\n");
+            return (
+              <g key={d.key}>
+                {lines.map(function(line, li) {
+                  return (
+                    <text key={li} x={lp.x} y={lp.y + (li * 13) - ((lines.length - 1) * 6)}
+                      textAnchor="middle" fill="rgba(255,255,255,0.65)"
+                      fontSize="10" fontWeight="600" fontFamily="sans-serif">
+                      {line}
+                    </text>
+                  );
+                })}
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Tarjetas de scores */}
+        <div style={{ flex: 1, minWidth: 160, display: "flex", flexDirection: "column", gap: 6 }}>
+          {DIMS.map(function(d) {
+            var score = ps[d.key] || 0;
+            var exp   = benchmark[d.key] || 6;
+            var gap   = exp - score;
+            var color = gapColor(d.key);
+            var pct   = Math.round(score / 10 * 100);
+            return (
+              <div key={d.key} style={{ background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "6px 10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{d.label.replace("\n"," ")}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: color }}>{score}/10</span>
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: 3, width: pct + "%", background: color, borderRadius: 2 }} />
+                </div>
+                {gap > 0 && (
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>gap {gap} vs nivel esperado</div>
+                )}
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 4, fontStyle: "italic" }}>
+            Línea punteada = benchmark para tu nivel
+          </div>
+        </div>
+      </div>
+      {/* Acciones: descargar + compartir */}
+      <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+        <button
+          onClick={downloadRadarPNG}
+          disabled={downloading}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(67,97,238,0.15)", border: "1px solid rgba(67,97,238,0.4)", borderRadius: 8, padding: "8px 14px", color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: downloading ? "wait" : "pointer", transition: "all 0.2s" }}>
+          <span>{downloading ? "⏳" : "⬇️"}</span>
+          {downloading ? "Generando..." : "Descargar mi radar"}
+        </button>
+        <button
+          onClick={copyShareLink}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: copied ? "rgba(6,214,160,0.15)" : "rgba(247,37,133,0.12)", border: "1px solid " + (copied ? "rgba(6,214,160,0.4)" : "rgba(247,37,133,0.35)"), borderRadius: 8, padding: "8px 14px", color: copied ? "#06d6a0" : "#f9a8d4", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+          <span>{copied ? "✅" : "🔗"}</span>
+          {copied ? "¡Link copiado!" : "Compartir mi resultado"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -2185,6 +2420,15 @@ function DiagnosisPanel(props) {
           })}
         </div>
 
+        {diagnosis.product_sense && Object.keys(diagnosis.product_sense).length > 0 && (
+          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
+            <ProductSenseRadar
+              productSense={diagnosis.product_sense}
+              nivel={diagnosis.nivel || "mid"}
+            />
+          </div>
+        )}
+
         <div style={{ background: C.gapLight, border: "1px solid " + C.gapBorder, borderRadius: 12, padding: 16, marginBottom: 12 }}>
           <div style={{ color: C.gap, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Gaps identificados</div>
           {(diagnosis.gaps || []).map(function(gap, i) {
@@ -2360,6 +2604,285 @@ function EstadoLanding(props) {
 
 
 
+// ─────────────────────────────────────────────
+// HOME LANDING (pantalla de entrada, fondo claro)
+// ─────────────────────────────────────────────
+function HomeLanding(props) {
+  var onStart = props.onStart;
+
+  // Radar preview estático con valores de ejemplo
+  var PREVIEW_PS = {
+    user_insights: 7, business_acumen: 5, product_quality: 8,
+    product_strategy: 6, execution: 7, influence: 4, data_fluency: 5,
+    ai_fluency: 6,
+  };
+  var DIMS_HOME = [
+    { key: "user_insights",    label: "User Insights" },
+    { key: "business_acumen",  label: "Business Acumen" },
+    { key: "product_quality",  label: "Product Quality" },
+    { key: "product_strategy", label: "Product Strategy" },
+    { key: "execution",        label: "Execution" },
+    { key: "influence",        label: "Influence" },
+    { key: "data_fluency",     label: "Data Fluency" },
+    { key: "ai_fluency",       label: "AI Fluency" },
+  ];
+  var n = DIMS_HOME.length;
+  var W = 320; var cx = W / 2; var cy = W / 2; var R = 110;
+
+  function pt(idx, val) {
+    var angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    var r = (val / 10) * R;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+  function labelPt(idx) {
+    var angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    return { x: cx + (R + 38) * Math.cos(angle), y: cy + (R + 38) * Math.sin(angle) };
+  }
+  function polyFor(obj) {
+    return DIMS_HOME.map(function(d, i) {
+      var p = pt(i, obj[d.key] || 0);
+      return p.x + "," + p.y;
+    }).join(" ");
+  }
+
+  // Grid rings
+  var rings = [2, 4, 6, 8, 10];
+
+  // Benchmark mid
+  var bench = { user_insights:6, business_acumen:6, product_quality:6, product_strategy:6, execution:7, influence:6, data_fluency:6, ai_fluency:7 };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#f5f4f0",
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      display: "flex",
+      flexDirection: "column",
+    }}>
+      {/* Nav */}
+      <div style={{ padding: "18px 32px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: -0.3 }}>Mentorcito</div>
+        <div style={{ marginLeft: 8, fontSize: 11, color: "rgba(0,0,0,0.35)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>by Mentores con Propósito</div>
+      </div>
+
+      {/* Hero */}
+      <div style={{
+        flex: 1,
+        maxWidth: 1100,
+        width: "100%",
+        margin: "0 auto",
+        padding: "60px 32px 40px",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 64,
+        flexWrap: "wrap",
+      }}>
+        {/* Left: copy */}
+        <div style={{ flex: "1 1 340px", minWidth: 280 }}>
+          {/* Badge */}
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "#111",
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            padding: "6px 14px",
+            borderRadius: 999,
+            marginBottom: 28,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", display: "inline-block" }}></span>
+            Diagnóstico gratuito · 8 preguntas
+          </div>
+
+          {/* Headline */}
+          <h1 style={{
+            fontSize: "clamp(32px, 5vw, 52px)",
+            fontWeight: 800,
+            color: "#111",
+            lineHeight: 1.1,
+            letterSpacing: -1.5,
+            marginBottom: 20,
+          }}>
+            Tu mapa de<br /><em style={{ fontStyle: "italic", color: "#4361ee" }}>Product Sense</em>,<br />en 8 preguntas
+          </h1>
+
+          {/* Subtítulo */}
+          <p style={{
+            fontSize: 17,
+            color: "#444",
+            lineHeight: 1.65,
+            marginBottom: 32,
+            maxWidth: 420,
+          }}>
+            Soy Mentorcito — entrenado con el conocimiento de los mejores mentores, coaches y psicólogos de la red. Contame tus desafíos profesionales y te devuelvo un mapa honesto: dónde estás parado hoy, qué fortalezas tenés, y hacia dónde tiene sentido crecer.
+          </p>
+
+          {/* Stats */}
+          <div style={{
+            display: "flex",
+            gap: 24,
+            marginBottom: 36,
+            flexWrap: "wrap",
+          }}>
+            {[
+              { n: "8", label: "preguntas" },
+              { n: "8", label: "dimensiones" },
+              { n: "3", label: "estados del loop" },
+            ].map(function(s) {
+              return (
+                <div key={s.label} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: "#111" }}>{s.n}</span>
+                  <span style={{ fontSize: 13, color: "rgba(0,0,0,0.45)", fontWeight: 500 }}>{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={onStart}
+            style={{
+              background: "#111",
+              color: "#fff",
+              border: "none",
+              borderRadius: 999,
+              padding: "16px 36px",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: "pointer",
+              letterSpacing: -0.2,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              transition: "transform 0.1s, background 0.2s",
+            }}
+            onMouseEnter={function(e) { e.currentTarget.style.background = "#222"; }}
+            onMouseLeave={function(e) { e.currentTarget.style.background = "#111"; }}
+          >
+            Empezar mi diagnóstico
+            <span style={{ fontSize: 18 }}>→</span>
+          </button>
+          <div style={{ marginTop: 12, fontSize: 12, color: "rgba(0,0,0,0.35)", fontWeight: 500 }}>
+            Gratis · Para PMs en Latinoamérica
+          </div>
+        </div>
+
+        {/* Right: radar preview */}
+        <div style={{ flex: "1 1 320px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <svg width={W} height={W} viewBox={"0 0 " + W + " " + W} style={{ overflow: "visible" }}>
+            {/* Grid rings */}
+            {rings.map(function(v) {
+              var rr = (v / 10) * R;
+              var pts = DIMS_HOME.map(function(_, i) {
+                var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+                return (cx + rr * Math.cos(angle)) + "," + (cy + rr * Math.sin(angle));
+              }).join(" ");
+              return <polygon key={v} points={pts} fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />;
+            })}
+            {/* Axes */}
+            {DIMS_HOME.map(function(_, i) {
+              var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+              return <line key={i}
+                x1={cx} y1={cy}
+                x2={cx + R * Math.cos(angle)}
+                y2={cy + R * Math.sin(angle)}
+                stroke="rgba(0,0,0,0.1)" strokeWidth="1" />;
+            })}
+            {/* Benchmark polygon */}
+            <polygon points={polyFor(bench)} fill="rgba(67,97,238,0.08)" stroke="rgba(67,97,238,0.25)" strokeWidth="1.5" strokeDasharray="4 3" />
+            {/* Preview polygon */}
+            <polygon points={polyFor(PREVIEW_PS)} fill="rgba(67,97,238,0.15)" stroke="#4361ee" strokeWidth="2" />
+            {/* Dots */}
+            {DIMS_HOME.map(function(d, i) {
+              var p = pt(i, PREVIEW_PS[d.key] || 0);
+              return <circle key={d.key} cx={p.x} cy={p.y} r="5" fill="#4361ee" stroke="#f5f4f0" strokeWidth="2" />;
+            })}
+            {/* Labels */}
+            {DIMS_HOME.map(function(d, i) {
+              var lp = labelPt(i);
+              return (
+                <text key={d.key} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle"
+                  fill="rgba(0,0,0,0.55)" fontSize="11" fontWeight="600" fontFamily="'Plus Jakarta Sans',system-ui,sans-serif">
+                  {d.label}
+                </text>
+              );
+            })}
+          </svg>
+
+          {/* Legend */}
+          <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 11, color: "rgba(0,0,0,0.45)", fontWeight: 500 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 16, height: 2, background: "#4361ee", borderRadius: 1 }}></div>
+              Tu perfil
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 16, height: 2, background: "rgba(67,97,238,0.4)", borderRadius: 1, borderTop: "2px dashed rgba(67,97,238,0.4)" }}></div>
+              Benchmark nivel
+            </div>
+          </div>
+          <div style={{ marginTop: 12, fontSize: 11, color: "rgba(0,0,0,0.3)", textAlign: "center" }}>
+            Framework Shreyas Doshi · Product Sense
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: "center", padding: "20px 32px", fontSize: 11, color: "rgba(0,0,0,0.25)", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        Mentores con Propósito · Para PMs en Latinoamérica
+      </div>
+
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SHARED RADAR VIEW (landing de resultado compartido)
+// ─────────────────────────────────────────────
+function SharedRadarView() {
+  var params = new URLSearchParams(window.location.search);
+  var DIMS_KEYS = ["user_insights","business_acumen","product_quality","product_strategy","execution","influence","data_fluency","ai_fluency"];
+  var ps = {};
+  DIMS_KEYS.forEach(function(k) {
+    var v = parseInt(params.get(k), 10);
+    ps[k] = isNaN(v) ? 0 : Math.max(0, Math.min(10, v));
+  });
+  var nivel = params.get("nivel") || "mid";
+
+  function goToDiag() {
+    window.location.href = window.location.origin;
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0d1117", color: "#f0f0f0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 16px", fontFamily: "sans-serif" }}>
+      <div style={{ maxWidth: 560, width: "100%" }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Mentorcito · Product Sense Radar</div>
+          <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Este es mi mapa de Product Sense</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Framework Shreyas Doshi · Nivel <span style={{ color: "#a5b4fc", fontWeight: 700 }}>{nivel}</span></div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px" }}>
+          <ProductSenseRadar productSense={ps} nivel={nivel} />
+        </div>
+        <div style={{ marginTop: 28, textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>¿Querés ver el tuyo?</div>
+          <button
+            onClick={goToDiag}
+            style={{ background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, padding: "14px 32px", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5 }}>
+            Hacer mi diagnóstico →
+          </button>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>Gratis · 5 minutos · Para PMs en Latinoamérica</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MentorAgent(props) {
   var empresaConfig = props.empresaConfig || null;
 
@@ -2367,10 +2890,11 @@ export default function MentorAgent(props) {
     role: "assistant",
     content: empresaConfig
       ? "Hola, soy **Mentorcito** 💠\n\n**" + empresaConfig.nombre + "** está invirtiendo en entender en qué momento de carrera está su equipo de producto.\n\nEn los próximos 5 minutos vamos a explorar juntos en qué punto del loop profesional estás hoy — y qué necesitás para avanzar.\n\nNo es un test, ni una evaluación de desempeño. Es confidencial. Y te sirve a vos.\n\n**¿Cómo te llamás?**"
-      : "Hola, soy **Mentorcito** 💠\n\nEn los próximos minutos voy a hacerte algunas preguntas para entender en qué punto de tu carrera estás hoy. Al final vas a recibir:\n\n→ Un mapa de tus fortalezas y gaps en las 3 áreas clave de producto: **tecnología**, **producto** y **negocio**\n→ Tu estado actual del loop profesional (**Reinvención**, **Estancamiento** o **Liderazgo**)\n→ Los mentores que mejor matchean con tu momento y tus objetivos\n\n**¿Cómo te llamás?**",
+      : "Hola, soy **Mentorcito** 💠\n\nEn los próximos minutos voy a hacerte algunas preguntas para entender en qué punto de tu carrera estás hoy. Al final vas a recibir:\n\n→ Un mapa de tus fortalezas y gaps en las 3 áreas clave de producto: **tecnología**, **producto** y **negocio**\n→ Tu **Product Sense Radar** — 8 dimensiones del framework Shreyas Doshi, incluyendo AI Fluency\n→ Tu estado actual del loop profesional (**Reinvención**, **Estancamiento** o **Liderazgo**)\n→ Los mentores que mejor matchean con tu momento y tus objetivos\n\n**¿Cómo te llamás?**",
   };
-  // Detectar ?estado= en la URL para landing compartida
+  // Detectar modos especiales de URL (se calcula antes de hooks para usarlos como flags)
   var urlParams = new URLSearchParams(window.location.search);
+  var isCompartir = urlParams.get("compartir") === "1";
   var estadoParam = urlParams.get("estado");
   var estadoNormalizado = null;
   if (estadoParam) {
@@ -2380,6 +2904,8 @@ export default function MentorAgent(props) {
     else if (p.indexOf("reinven") !== -1) estadoNormalizado = "Reinvención";
   }
 
+  // Declarar TODOS los hooks antes de cualquier early return (regla de React)
+  var [showHome, setShowHome] = useState(!empresaConfig && !isCompartir && !estadoNormalizado);
   var [showLanding, setShowLanding] = useState(!!estadoNormalizado);
   var [messages, setMessages] = useState([INITIAL_MSG]);
   var [input, setInput] = useState("");
@@ -2391,6 +2917,12 @@ export default function MentorAgent(props) {
   var bottomRef = useRef(null);
 
   // Theme tokens
+
+  // Early returns DESPUÉS de todos los hooks
+  if (isCompartir) return <SharedRadarView />;
+
+  // Home landing (pantalla de entrada)
+  if (showHome) return <HomeLanding onStart={function() { setShowHome(false); }} />;
 
   // Mostrar landing si viene con ?estado=
   if (showLanding && estadoNormalizado) {
