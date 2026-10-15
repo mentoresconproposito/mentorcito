@@ -2916,7 +2916,22 @@ export default function MentorAgent(props) {
   var [liveStats, setLiveStats] = useState(null);
   var bottomRef = useRef(null);
 
-  // Theme tokens
+  // Auto-scroll al último mensaje — declarado ANTES de los early returns (regla de hooks)
+  useEffect(function() {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
+
+  // Fetch stats en tiempo real para el header — declarado ANTES de los early returns
+  useEffect(function() {
+    fetch("/api/sheets?action=stats")
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d && d.total) setLiveStats(d);
+      })
+      .catch(function() {});
+  }, []);
 
   // Early returns DESPUÉS de todos los hooks
   if (isCompartir) return <SharedRadarView />;
@@ -2930,23 +2945,6 @@ export default function MentorAgent(props) {
   }
 
   // Calcular tema actual en cada render y sincronizar global T
-
-  // Auto-scroll al último mensaje
-  useEffect(function() {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, loading]);
-
-  // Fetch stats en tiempo real para el header
-  useEffect(function() {
-    fetch("/api/sheets?action=stats")
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d && d.total) setLiveStats(d);
-      })
-      .catch(function() {});
-  }, []);
 
   // URL del Google Apps Script — reemplazá con la tuya
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzzBE8YngAYyH1PsLYKScZ0_V5Xkl7BdK-uHIr-oUFxB5QoerbZeMyEFc4tdjBIdIJcpQ/exec";
