@@ -730,6 +730,7 @@ function RadarChart(props) {
 function ProductSenseRadar(props) {
   var ps = props.productSense || {};
   var nivel = props.nivel || "mid";
+  var gaps = props.gaps || [];
   var svgRef = useRef(null);
   var [copied, setCopied] = useState(false);
   var [downloading, setDownloading] = useState(false);
@@ -783,45 +784,222 @@ function ProductSenseRadar(props) {
   };
 
   function downloadRadarPNG() {
-    var svgEl = svgRef.current;
-    if (!svgEl) return;
     setDownloading(true);
     try {
-      // Clone SVG with explicit background for PNG
-      var clone = svgEl.cloneNode(true);
-      // Add background rect
-      var bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      bg.setAttribute("width", W); bg.setAttribute("height", W);
-      bg.setAttribute("fill", "#0d1117");
-      clone.insertBefore(bg, clone.firstChild);
-      // Serialize
-      var serializer = new XMLSerializer();
-      var svgStr = serializer.serializeToString(clone);
-      var svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-      var url = URL.createObjectURL(svgBlob);
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement("canvas");
-        var scale = 2; // 2x for retina
-        canvas.width = W * scale; canvas.height = W * scale;
-        var ctx = canvas.getContext("2d");
-        ctx.scale(scale, scale);
-        ctx.fillStyle = "#0d1117";
-        ctx.fillRect(0, 0, W, W);
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        canvas.toBlob(function(blob) {
-          var a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "mi-product-sense-radar.png";
-          a.click();
-          setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
-          setDownloading(false);
-        }, "image/png");
-      };
-      img.onerror = function() { setDownloading(false); };
-      img.src = url;
-    } catch(e) { setDownloading(false); }
+      var SCALE = 2;
+      var PAD = 40;
+      var RADAR_W = 300;
+      var RADAR_CX = RADAR_W / 2;
+      var RADAR_CY = RADAR_W / 2;
+      var RADAR_R = 100;
+      var CARD_W = 600;
+
+      // ── measure gaps block height ──
+      var gapsToShow = gaps.slice(0, 5);
+      var hasGaps = gapsToShow.length > 0;
+      var GAP_BLOCK_H = hasGaps ? (36 + gapsToShow.length * 34 + 24) : 0;
+
+      // total canvas height
+      var TOTAL_H = PAD + 52 + 12 + RADAR_W + 24 + GAP_BLOCK_H + PAD;
+
+      var canvas = document.createElement("canvas");
+      canvas.width  = CARD_W * SCALE;
+      canvas.height = TOTAL_H * SCALE;
+      var ctx = canvas.getContext("2d");
+      ctx.scale(SCALE, SCALE);
+
+      // ── background ──
+      ctx.fillStyle = "#0d1117";
+      ctx.fillRect(0, 0, CARD_W, TOTAL_H);
+
+      var y = PAD;
+
+      // ── header ──
+      ctx.fillStyle = "rgba(255,255,255,0.28)";
+      ctx.font = "600 10px system-ui, sans-serif";
+      ctx.letterSpacing = "2px";
+      ctx.textAlign = "center";
+      ctx.fillText("MENTORCITO · PRODUCT SENSE RADAR", CARD_W / 2, y);
+      y += 18;
+      ctx.fillStyle = "#f0f0f0";
+      ctx.font = "700 22px system-ui, sans-serif";
+      ctx.letterSpacing = "0px";
+      ctx.fillText("Mi mapa de Product Sense", CARD_W / 2, y);
+      y += 16;
+      var nivelLabel = nivel.charAt(0).toUpperCase() + nivel.slice(1);
+      ctx.fillStyle = "rgba(165,180,252,0.9)";
+      ctx.font = "500 12px system-ui, sans-serif";
+      ctx.fillText("Framework Shreyas Doshi · Nivel " + nivelLabel, CARD_W / 2, y);
+      y += 24;
+
+      // ── draw radar on canvas ──
+      var radarOffX = (CARD_W - RADAR_W) / 2;
+
+      function radarPt(idx, val) {
+        var angle = (Math.PI * 2 * idx / 8) - Math.PI / 2;
+        var r = (val / 10) * RADAR_R;
+        return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
+      }
+
+      // grid rings
+      [2,4,6,8,10].forEach(function(v) {
+        ctx.beginPath();
+        DIMS.forEach(function(d, i) {
+          var p = radarPt(i, v);
+          if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // axis lines
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, 10);
+        ctx.beginPath();
+        ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // benchmark polygon
+      ctx.beginPath();
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, benchmark[d.key] || 6);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(247,37,133,0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // user polygon fill
+      ctx.beginPath();
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, ps[d.key] || 0);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(67,97,238,0.22)";
+      ctx.fill();
+      ctx.strokeStyle = "#4361ee";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // dots
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, ps[d.key] || 0);
+        var isAI = d.key === "ai_fluency";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isAI ? 6 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = isAI ? "#34d399" : "#4361ee";
+        ctx.fill();
+        ctx.strokeStyle = "#0d1117";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // labels
+      DIMS.forEach(function(d, i) {
+        var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
+        var labelR = RADAR_R + 28;
+        var lx = radarOffX + RADAR_CX + labelR * Math.cos(angle);
+        var ly = y + RADAR_CY + labelR * Math.sin(angle);
+        var lines = d.label.split("\n");
+        var isAI = d.key === "ai_fluency";
+        ctx.font = (isAI ? "700" : "600") + " 9px system-ui, sans-serif";
+        ctx.fillStyle = isAI ? "#34d399" : "rgba(255,255,255,0.7)";
+        ctx.textAlign = "center";
+        var lineH = 12;
+        lines.forEach(function(line, li) {
+          var yOff = (li - (lines.length - 1) / 2) * lineH;
+          ctx.fillText(line, lx, ly + yOff + 3);
+        });
+      });
+
+      y += RADAR_W + 24;
+
+      // ── gaps block ──
+      if (hasGaps) {
+        // header
+        ctx.fillStyle = "rgba(247,37,133,0.12)";
+        roundRect(ctx, PAD, y, CARD_W - PAD * 2, GAP_BLOCK_H, 12);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(247,37,133,0.3)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, PAD, y, CARD_W - PAD * 2, GAP_BLOCK_H, 12);
+        ctx.stroke();
+
+        ctx.fillStyle = "#f72585";
+        ctx.font = "700 10px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.letterSpacing = "1.5px";
+        ctx.fillText("GAPS DETECTADOS", PAD + 16, y + 22);
+        ctx.letterSpacing = "0px";
+
+        gapsToShow.forEach(function(gap, gi) {
+          var gy = y + 36 + gi * 34;
+          // bullet dot
+          ctx.beginPath();
+          ctx.arc(PAD + 24, gy + 7, 3, 0, Math.PI * 2);
+          ctx.fillStyle = "#f72585";
+          ctx.fill();
+          // text — wrap if needed
+          ctx.fillStyle = "rgba(255,255,255,0.7)";
+          ctx.font = "400 12px system-ui, sans-serif";
+          ctx.textAlign = "left";
+          var maxW = CARD_W - PAD * 2 - 48;
+          var text = gap;
+          if (ctx.measureText(text).width > maxW) {
+            // simple single-line truncation with ellipsis
+            while (ctx.measureText(text + "…").width > maxW && text.length > 0) {
+              text = text.slice(0, -1);
+            }
+            text = text + "…";
+          }
+          ctx.fillText(text, PAD + 36, gy + 12);
+        });
+
+        y += GAP_BLOCK_H;
+      }
+
+      // ── footer ──
+      y += 16;
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.font = "500 10px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("mentorcito.vercel.app", CARD_W / 2, y);
+
+      // ── export ──
+      canvas.toBlob(function(blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "mi-product-sense-radar.png";
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+        setDownloading(false);
+      }, "image/png");
+    } catch(e) { console.error(e); setDownloading(false); }
+  }
+
+  // helper: rounded rect path
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   }
 
   function buildShareUrl() {
@@ -2425,6 +2603,7 @@ function DiagnosisPanel(props) {
             <ProductSenseRadar
               productSense={diagnosis.product_sense}
               nivel={diagnosis.nivel || "mid"}
+              gaps={diagnosis.gaps || []}
             />
           </div>
         )}
@@ -2654,15 +2833,15 @@ function HomeLanding(props) {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#f5f4f0",
+      background: "#0d1117",
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       display: "flex",
       flexDirection: "column",
     }}>
       {/* Nav */}
-      <div style={{ padding: "18px 32px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: -0.3 }}>Mentorcito</div>
-        <div style={{ marginLeft: 8, fontSize: 11, color: "rgba(0,0,0,0.35)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>by Mentores con Propósito</div>
+      <div style={{ padding: "18px 32px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#f0f0f0", letterSpacing: -0.3 }}>Mentorcito</div>
+        <div style={{ marginLeft: 8, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>by Mentores con Propósito</div>
       </div>
 
       {/* Hero */}
@@ -2685,8 +2864,8 @@ function HomeLanding(props) {
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
-            background: "#111",
-            color: "#fff",
+            background: "rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.8)",
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 1.5,
@@ -2694,6 +2873,7 @@ function HomeLanding(props) {
             padding: "6px 14px",
             borderRadius: 999,
             marginBottom: 28,
+            border: "1px solid rgba(255,255,255,0.12)",
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#06d6a0", display: "inline-block" }}></span>
             Diagnóstico gratuito · 8 preguntas
@@ -2703,18 +2883,18 @@ function HomeLanding(props) {
           <h1 style={{
             fontSize: "clamp(32px, 5vw, 52px)",
             fontWeight: 800,
-            color: "#111",
+            color: "#f0f0f0",
             lineHeight: 1.1,
             letterSpacing: -1.5,
             marginBottom: 20,
           }}>
-            Tu mapa de<br /><em style={{ fontStyle: "italic", color: "#4361ee" }}>Product Sense</em>,<br />en 8 preguntas
+            Tu mapa de<br /><em style={{ fontStyle: "italic", color: "#a5b4fc" }}>Product Sense</em>,<br />en 8 preguntas
           </h1>
 
           {/* Subtítulo */}
           <p style={{
             fontSize: 17,
-            color: "#444",
+            color: "rgba(255,255,255,0.55)",
             lineHeight: 1.65,
             marginBottom: 32,
             maxWidth: 420,
@@ -2736,8 +2916,8 @@ function HomeLanding(props) {
             ].map(function(s) {
               return (
                 <div key={s.label} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: "#111" }}>{s.n}</span>
-                  <span style={{ fontSize: 13, color: "rgba(0,0,0,0.45)", fontWeight: 500 }}>{s.label}</span>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: "#f0f0f0" }}>{s.n}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{s.label}</span>
                 </div>
               );
             })}
@@ -2747,7 +2927,7 @@ function HomeLanding(props) {
           <button
             onClick={onStart}
             style={{
-              background: "#111",
+              background: "linear-gradient(135deg, #4361ee, #7b2ff7)",
               color: "#fff",
               border: "none",
               borderRadius: 999,
@@ -2759,16 +2939,33 @@ function HomeLanding(props) {
               display: "inline-flex",
               alignItems: "center",
               gap: 10,
-              transition: "transform 0.1s, background 0.2s",
+              transition: "opacity 0.15s",
             }}
-            onMouseEnter={function(e) { e.currentTarget.style.background = "#222"; }}
-            onMouseLeave={function(e) { e.currentTarget.style.background = "#111"; }}
+            onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.88"; }}
+            onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
           >
             Empezar mi diagnóstico
             <span style={{ fontSize: 18 }}>→</span>
           </button>
-          <div style={{ marginTop: 12, fontSize: 12, color: "rgba(0,0,0,0.35)", fontWeight: 500 }}>
+          <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
             Gratis · Para PMs en Latinoamérica
+          </div>
+
+          {/* Urgency block */}
+          <div style={{
+            marginTop: 32,
+            background: "rgba(247,37,133,0.07)",
+            border: "1px solid rgba(247,37,133,0.2)",
+            borderRadius: 12,
+            padding: "16px 20px",
+            maxWidth: 420,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#f9a8d4", marginBottom: 6 }}>
+              ¿Cuál es el costo de no hacer nada?
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+              El <strong style={{ color: "#f0f0f0" }}>29% de los profesionales</strong> se estancan por años sin entender por qué, llevándolos al burnout.
+            </div>
           </div>
         </div>
 
@@ -2782,7 +2979,7 @@ function HomeLanding(props) {
                 var angle = (Math.PI * 2 * i / n) - Math.PI / 2;
                 return (cx + rr * Math.cos(angle)) + "," + (cy + rr * Math.sin(angle));
               }).join(" ");
-              return <polygon key={v} points={pts} fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />;
+              return <polygon key={v} points={pts} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
             })}
             {/* Axes */}
             {DIMS_HOME.map(function(_, i) {
@@ -2791,23 +2988,23 @@ function HomeLanding(props) {
                 x1={cx} y1={cy}
                 x2={cx + R * Math.cos(angle)}
                 y2={cy + R * Math.sin(angle)}
-                stroke="rgba(0,0,0,0.1)" strokeWidth="1" />;
+                stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
             })}
             {/* Benchmark polygon */}
-            <polygon points={polyFor(bench)} fill="rgba(67,97,238,0.08)" stroke="rgba(67,97,238,0.25)" strokeWidth="1.5" strokeDasharray="4 3" />
+            <polygon points={polyFor(bench)} fill="rgba(67,97,238,0.08)" stroke="rgba(165,180,252,0.35)" strokeWidth="1.5" strokeDasharray="4 3" />
             {/* Preview polygon */}
-            <polygon points={polyFor(PREVIEW_PS)} fill="rgba(67,97,238,0.15)" stroke="#4361ee" strokeWidth="2" />
+            <polygon points={polyFor(PREVIEW_PS)} fill="rgba(67,97,238,0.2)" stroke="#4f8ef7" strokeWidth="2" />
             {/* Dots */}
             {DIMS_HOME.map(function(d, i) {
               var p = pt(i, PREVIEW_PS[d.key] || 0);
-              return <circle key={d.key} cx={p.x} cy={p.y} r="5" fill="#4361ee" stroke="#f5f4f0" strokeWidth="2" />;
+              return <circle key={d.key} cx={p.x} cy={p.y} r="5" fill="#4f8ef7" stroke="#0d1117" strokeWidth="2" />;
             })}
             {/* Labels */}
             {DIMS_HOME.map(function(d, i) {
               var lp = labelPt(i);
               return (
                 <text key={d.key} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle"
-                  fill="rgba(0,0,0,0.55)" fontSize="11" fontWeight="600" fontFamily="'Plus Jakarta Sans',system-ui,sans-serif">
+                  fill="rgba(255,255,255,0.45)" fontSize="11" fontWeight="600" fontFamily="'Plus Jakarta Sans',system-ui,sans-serif">
                   {d.label}
                 </text>
               );
@@ -2815,24 +3012,24 @@ function HomeLanding(props) {
           </svg>
 
           {/* Legend */}
-          <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 11, color: "rgba(0,0,0,0.45)", fontWeight: 500 }}>
+          <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 16, height: 2, background: "#4361ee", borderRadius: 1 }}></div>
+              <div style={{ width: 16, height: 2, background: "#4f8ef7", borderRadius: 1 }}></div>
               Tu perfil
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 16, height: 2, background: "rgba(67,97,238,0.4)", borderRadius: 1, borderTop: "2px dashed rgba(67,97,238,0.4)" }}></div>
+              <div style={{ width: 16, height: 2, background: "rgba(165,180,252,0.4)", borderRadius: 1, borderTop: "2px dashed rgba(165,180,252,0.4)" }}></div>
               Benchmark nivel
             </div>
           </div>
-          <div style={{ marginTop: 12, fontSize: 11, color: "rgba(0,0,0,0.3)", textAlign: "center" }}>
+          <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
             Framework Shreyas Doshi · Product Sense
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ textAlign: "center", padding: "20px 32px", fontSize: 11, color: "rgba(0,0,0,0.25)", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      <div style={{ textAlign: "center", padding: "20px 32px", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
