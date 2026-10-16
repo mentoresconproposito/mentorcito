@@ -3450,7 +3450,7 @@ function HomeLanding(props) {
             </div>
           </div>
           <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
-            Framework Shreyas Doshi · Product Sense
+            Framework adaptado · Product Sense
           </div>
         </div>
       </div>
