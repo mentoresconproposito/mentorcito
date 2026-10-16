@@ -834,10 +834,10 @@ function ProductSenseRadar(props) {
       var ARCH_BLOCK_H = archetypeData ? 74 : 0;
       // Info cards: superpoder, puntoCiego, proximaSkill — each ~70px
       var INFO_CARDS_H = 0;
-      if (superpoderText) INFO_CARDS_H += 68;
-      if (puntoCiegoText) INFO_CARDS_H += 68;
-      if (proximaSkillData) INFO_CARDS_H += 80;
-      var INFO_GAP = 10;
+      if (superpoderText) INFO_CARDS_H += 76;
+      if (puntoCiegoText) INFO_CARDS_H += 76;
+      if (proximaSkillData) INFO_CARDS_H += 92;
+      var INFO_GAP = 12;
       var N_INFO = (superpoderText ? 1 : 0) + (puntoCiegoText ? 1 : 0) + (proximaSkillData ? 1 : 0);
       INFO_CARDS_H += (N_INFO - 1) * INFO_GAP;
 
@@ -856,23 +856,22 @@ function ProductSenseRadar(props) {
       var ctx = canvas.getContext("2d");
       ctx.scale(SCALE, SCALE);
 
-      // ── BACKGROUND: off-white like superproductdesigner.com ──
-      ctx.fillStyle = "#f5f4f0";
+      // ── BACKGROUND: dark ──
+      ctx.fillStyle = "#0d0d1a";
       ctx.fillRect(0, 0, CARD_W, TOTAL_H);
 
       var y = PAD_V;
 
-      // ── TOP ROW: "MI PERFIL" badge + match % ──
-      // Badge
-      ctx.fillStyle = "#1a1a1a";
-      roundRect(ctx, PAD_H, y, 80, 22, 5);
+      // ── TOP ROW: "MI PERFIL" badge + branding ──
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      roundRect(ctx, PAD_H, y, 84, 22, 5);
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#0d0d1a";
       ctx.font = "700 9px system-ui, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("MI PERFIL", PAD_H + 10, y + 14);
       // Mentorcito branding right
-      ctx.fillStyle = "#888";
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.font = "500 10px system-ui, sans-serif";
       ctx.textAlign = "right";
       ctx.fillText("mentorcito.vercel.app", CARD_W - PAD_H, y + 15);
@@ -880,18 +879,18 @@ function ProductSenseRadar(props) {
 
       // ── ARCHETYPE NAME ──
       if (archetypeData) {
-        ctx.fillStyle = "#111111";
-        ctx.font = "800 38px system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.font = "800 36px system-ui, sans-serif";
         ctx.textAlign = "left";
-        ctx.fillText(archetypeData.label, PAD_H, y + 36);
-        y += 48;
+        ctx.fillText(archetypeData.label, PAD_H, y + 34);
+        y += 46;
 
         // tagline italic
-        ctx.fillStyle = "#555";
-        ctx.font = "italic 400 15px Georgia, serif";
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "italic 400 14px Georgia, serif";
         ctx.textAlign = "left";
         ctx.fillText(archetypeData.tagline, PAD_H, y);
-        y += 26;
+        y += 28;
       }
 
       // ── LEGEND ROW ──
@@ -901,7 +900,7 @@ function ProductSenseRadar(props) {
       ctx.arc(PAD_H + 8, y + 7, 7, 0, Math.PI * 2);
       ctx.fillStyle = "#4f8ef7";
       ctx.fill();
-      ctx.fillStyle = "#333";
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
       ctx.font = "600 11px system-ui, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("Yo", PAD_H + 20, y + 11);
@@ -914,7 +913,7 @@ function ProductSenseRadar(props) {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "#333";
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
       ctx.font = "600 11px system-ui, sans-serif";
       ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), PAD_H + 100, y + 11);
       y += 22;
@@ -929,7 +928,7 @@ function ProductSenseRadar(props) {
         return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
       }
 
-      // grid rings — light gray
+      // grid rings — dark style
       [2,4,6,8,10].forEach(function(v) {
         ctx.beginPath();
         DIMS.forEach(function(d, i) {
@@ -937,7 +936,7 @@ function ProductSenseRadar(props) {
           if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
         });
         ctx.closePath();
-        ctx.strokeStyle = v === 10 ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.08)";
+        ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)";
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.stroke();
@@ -949,7 +948,7 @@ function ProductSenseRadar(props) {
         ctx.beginPath();
         ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
         ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
         ctx.stroke();
@@ -988,19 +987,19 @@ function ProductSenseRadar(props) {
         ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
         ctx.fillStyle = "#4f8ef7";
         ctx.fill();
-        ctx.strokeStyle = "#f5f4f0";
+        ctx.strokeStyle = "#0d0d1a";
         ctx.lineWidth = 1.5;
         ctx.stroke();
       });
 
-      // labels — dark, in Spanish, multi-line
+      // labels — light, in Spanish, multi-line
       DIMS.forEach(function(d, i) {
         var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
         var lx = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
         var ly = y + RADAR_CY + LABEL_R * Math.sin(angle);
         var lines = d.label.split("\n");
         ctx.font = "600 10px system-ui, sans-serif";
-        ctx.fillStyle = "#222";
+        ctx.fillStyle = "rgba(255,255,255,0.75)";
         ctx.textAlign = "center";
         var lineH = 13;
         var totalH = lines.length * lineH;
@@ -1012,19 +1011,24 @@ function ProductSenseRadar(props) {
 
       y += RADAR_W + 20;
 
-      // ── RESULT INFO CARDS (white cards on off-white bg) ──
+      // ── RESULT INFO CARDS (dark cards on dark bg) ──
       function drawInfoCard(label, content, cardY, accentColor) {
-        var CARD_H_EST = 64;
+        var CARD_INNER_W_REAL = CARD_W - PAD_H * 2 - 36; // text wraps within this
         // Pre-measure actual height
         ctx.font = "400 12px system-ui, sans-serif";
-        var lines = wrapText(ctx, content, CARD_INNER_W);
-        var contentH = lines.length * 17;
-        var actualH = 16 + 14 + 6 + contentH + 16; // pad + label + gap + content + pad
+        var lines = wrapText(ctx, content, CARD_INNER_W_REAL);
+        var contentH = lines.length * 18;
+        var actualH = 16 + 12 + 8 + contentH + 16; // top-pad + label + gap + content + bottom-pad
 
-        // Card bg
-        ctx.fillStyle = "#ffffff";
+        // Card bg — slightly lighter dark
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
         roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 10);
         ctx.fill();
+        // Card border
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 1;
+        roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 10);
+        ctx.stroke();
         // Left accent bar
         ctx.fillStyle = accentColor || "#4f8ef7";
         ctx.fillRect(PAD_H, cardY, 3, actualH);
@@ -1033,13 +1037,14 @@ function ProductSenseRadar(props) {
         ctx.fillStyle = accentColor || "#4f8ef7";
         ctx.font = "700 9px system-ui, sans-serif";
         ctx.textAlign = "left";
-        ctx.fillText(label.toUpperCase(), PAD_H + 16, cardY + 20);
+        ctx.letterSpacing = "1px";
+        ctx.fillText(label.toUpperCase(), PAD_H + 16, cardY + 22);
 
         // Content
-        ctx.fillStyle = "#333";
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.font = "400 12px system-ui, sans-serif";
         lines.forEach(function(line, li) {
-          ctx.fillText(line, PAD_H + 16, cardY + 36 + li * 17);
+          ctx.fillText(line, PAD_H + 16, cardY + 38 + li * 18);
         });
 
         return actualH;
@@ -1063,8 +1068,8 @@ function ProductSenseRadar(props) {
       }
 
       // ── FOOTER ──
-      y += 14;
-      ctx.fillStyle = "#aaa";
+      y += 20;
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
       ctx.font = "400 10px system-ui, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("Mentorcito · Mentores con Propósito", CARD_W / 2, y);
@@ -1101,6 +1106,17 @@ function ProductSenseRadar(props) {
     var params = new URLSearchParams();
     DIMS.forEach(function(d) { params.set(d.key, ps[d.key] || 0); });
     params.set("nivel", nivel);
+    if (archetypeData) {
+      params.set("arc_label", archetypeData.label);
+      params.set("arc_tagline", archetypeData.tagline);
+    }
+    if (psPct != null) params.set("pspct", psPct);
+    if (superpoderText) params.set("superpoder", superpoderText);
+    if (puntoCiegoText) params.set("puntociego", puntoCiegoText);
+    if (proximaSkillData) {
+      params.set("proxima_label", proximaSkillData.label);
+      params.set("proxima_tip", proximaSkillData.tip);
+    }
     return base + "/?compartir=1&" + params.toString();
   }
 
@@ -3432,12 +3448,23 @@ function SharedRadarView() {
   });
   var nivel = params.get("nivel") || "mid";
 
+  // Reconstruct shared data from URL params
+  var arcLabel = params.get("arc_label");
+  var arcTagline = params.get("arc_tagline");
+  var archetypeData = (arcLabel && arcTagline) ? { label: arcLabel, tagline: arcTagline } : null;
+  var psPct = params.get("pspct") ? parseInt(params.get("pspct"), 10) : null;
+  var superpoderText = params.get("superpoder") || null;
+  var puntoCiegoText = params.get("puntociego") || null;
+  var proximaLabel = params.get("proxima_label");
+  var proximaTip = params.get("proxima_tip");
+  var proximaSkillData = (proximaLabel && proximaTip) ? { label: proximaLabel, tip: proximaTip } : null;
+
   function goToDiag() {
     window.location.href = window.location.origin;
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0d1117", color: "#f0f0f0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 16px", fontFamily: "sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#0d0d1a", color: "#f0f0f0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 16px", fontFamily: "sans-serif" }}>
       <div style={{ maxWidth: 560, width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Mentorcito · Product Sense Radar</div>
@@ -3445,7 +3472,15 @@ function SharedRadarView() {
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Framework Shreyas Doshi · Nivel <span style={{ color: "#a5b4fc", fontWeight: 700 }}>{nivel}</span></div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px" }}>
-          <ProductSenseRadar productSense={ps} nivel={nivel} />
+          <ProductSenseRadar
+            productSense={ps}
+            nivel={nivel}
+            archetypeData={archetypeData}
+            psPct={psPct}
+            superpoderText={superpoderText}
+            puntoCiegoText={puntoCiegoText}
+            proximaSkillData={proximaSkillData}
+          />
         </div>
         <div style={{ marginTop: 28, textAlign: "center" }}>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>¿Querés ver el tuyo?</div>
