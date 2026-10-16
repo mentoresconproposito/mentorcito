@@ -560,9 +560,9 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "PASO 3 — PREGUNTA 1 (abierta): '¿Cuál es tu rol actual y en qué tipo de empresa o contexto estás?' — inferís patas actuales y estado del loop.\n"
 + "PASO 4 — PREGUNTA 2 (abierta): '¿Cuál es tu principal frustración o desafío hoy en tu trabajo?' — inferís tensiones.\n"
 + "PASO 5 — PREGUNTA 3 (abierta): '¿Cuál sería tu siguiente paso ideal en tu carrera?' — inferís nivel objetivo y estado. Al FINAL de tu respuesta procesando esta pregunta, agregá en una línea separada: 'Ya tengo bastante para armar tu mapa — dos preguntas más y te cuento dónde estás parado/a.' Esto prepara al usuario para las clasificaciones que vienen.\n"
-+ "PASO 6 — PREGUNTA 4 (clasificación): '¿En cuál de estas áreas sentís que tenés más para crecer? A) Tecnología y datos B) Producto — estrategia, métricas, discovery C) Negocio — GTM, liderazgo, influencia' — da las 3 patas.\n"
++ "PASO 6 — PREGUNTA 4 (situación): Presentá esta situación exactamente así: 'Una pregunta de criterio: tu CEO te pide priorizar entre dos features — una que pide el 20% de tus usuarios más activos, y otra que podría abrir un segmento nuevo pero es incierta. ¿Cómo decidís?' — Evaluá la calidad del razonamiento: ¿pide más datos antes de decidir? ¿habla de impacto en negocio? ¿prioriza por intuición o por framework? Esto calibra product_strategy y business_acumen.\n"
 + "PASO 7 — PREGUNTA 5 (clasificación): '¿Cómo describirías tu nivel de experiencia? A) Junior — menos de 2 años B) Mid — 2 a 5 años C) Senior — más de 5 años o liderando equipos' — da el nivel para el matching.\n"
-+ "PASO 8 — PREGUNTA 6 (clasificación): '¿Con qué frecuencia hablás directamente con usuarios o clientes? A) Regularmente B) Cuando puedo C) Casi nunca' — calibra user_insights.\n"
++ "PASO 8 — PREGUNTA 6 (situación): Presentá esta situación exactamente así: 'Otra de criterio: te llega feedback de que el 40% de tus usuarios abandona en el onboarding. Tenés una semana. ¿Qué es lo primero que hacés?' — Evaluá si investiga antes de actuar (alto user_insights), si va directo a la solución (bajo), si analiza datos primero (alto data_fluency), si asume la causa sin validar (bajo). Esto calibra user_insights y data_fluency.\n"
 + "PASO 9 — PREGUNTA 7 (clasificación): '¿Cómo usás IA en tu trabajo hoy? A) La integré en mi proceso B) Experimento con algunas tareas C) Todavía no la incorporé' — calibra ai_fluency.\n"
 + "PASO 10 — RESUMEN DEL PERFIL: Antes del resumen, escribí UNA línea de transición empática, por ejemplo: 'Con esto ya tengo una imagen bastante clara de dónde estás parado/a. Mirá lo que veo:'. Luego mostrá el resumen del perfil detectado con el estado del loop (ver cómo presentar el estado abajo). El resumen debe ser cálido, específico a lo que dijeron, no genérico.\n"
 + "PASO 11 — CONFIRMACIÓN: Terminá el resumen con esta pregunta simple: '¿Esto te representa?' — no ofrescas opciones de ajuste largas, solo hacé la pregunta. Si el usuario ajusta algo, incorporalo brevemente y confirmá el ajuste.\n"
@@ -596,11 +596,18 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "- influence: hacer que las cosas pasen sin autoridad formal — manage up, stakeholders, alineamiento. Alto si tiene buenas relaciones con el equipo. Bajo si menciona que sus ideas no se implementan o que el CEO invalida su criterio.\n"
 + "- data_fluency: tomar decisiones con datos — métricas, SQL, analítica, evidencia cuantitativa. Alto si menciona datos en sus decisiones. Bajo si decide por intuición o no tiene acceso a datos.\n"
 + "- ai_fluency: integración de IA en el trabajo de producto — uso de LLMs para discovery, síntesis, specs, prototipado, análisis. Alto si usa IA como parte del proceso. Bajo si no la incorporó o solo la usa ocasionalmente.\n"
-+ "IMPORTANTE — Preguntas 6 y 7 calibran directamente dos dimensiones:\n"
-+ "- Pregunta 6 (user insights): A=8, B=5, C=2. Ajustá ±1 según señales adicionales de las respuestas abiertas.\n"
++ "IMPORTANTE — Cómo convertir las respuestas situacionales en scores:\n"
++ "- Pregunta 4 (situación de priorización): calibra product_strategy y business_acumen.\n"
++ "  Score ALTO (8-9): pide más datos antes de decidir, habla de impacto en revenue o segmento, usa un framework (ICE, RICE, valor vs esfuerzo), evalúa riesgo estratégico.\n"
++ "  Score MEDIO (5-6): reconoce la tensión pero resuelve por intuición o 'depende del contexto' sin profundizar.\n"
++ "  Score BAJO (2-4): elige una opción sin razonar, responde por preferencia personal ('yo siempre priorizaría a los usuarios activos'), no menciona el impacto en negocio.\n"
++ "- Pregunta 6 (situación de onboarding): calibra user_insights y data_fluency.\n"
++ "  Score ALTO (8-9): lo primero que haría es investigar (entrevistas, grabaciones de sesión, heatmaps, funnel de datos) antes de actuar. Distingue entre síntoma y causa.\n"
++ "  Score MEDIO (5-6): combina investigación con acción, o menciona revisar datos pero no especifica cuáles.\n"
++ "  Score BAJO (2-4): va directo a la solución ('simplificaría el onboarding', 'lo haría más corto') sin validar la causa primero.\n"
 + "- Pregunta 7 (AI fluency): A=9, B=6, C=2. Ajustá ±1 según señales adicionales de las respuestas abiertas.\n"
-+ "- Para data_fluency: inferí de las respuestas abiertas (menciones de métricas, datos, SQL, analytics).\n"
-+ "Calibrá el score según el nivel declarado: un junior con score 7 en influence es distinto a un senior con 7. El benchmark esperado para un senior es 7-8 en la mayoría de dimensiones.\n\n"
++ "- Para data_fluency: usá tanto la respuesta situacional del onboarding como señales de las preguntas abiertas (menciones de métricas, SQL, analytics).\n"
++ "Calibrá el score según el nivel declarado: el benchmark esperado para un senior es 7-8 en la mayoría de dimensiones.\n\n"
 + "Cuando no hay match, mentor_prototipo debe ser:\n"
 + "{\"titulo_ideal\":\"...\",\"patas_clave\":[\"...\"],\"experiencia_minima\":\"...\",\"problemas_que_debe_resolver\":[\"...\"],\"donde_buscarlo\":[\"...\"],\"preguntas_para_validarlo\":[\"...\"]}";
 
@@ -3315,7 +3322,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para gente de producto en Latinoamérica
+            Gratis · Para PMs en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3450,7 +3457,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para gente de producto en Latinoamérica
+        Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
       <style>{`
