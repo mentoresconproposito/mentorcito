@@ -3209,20 +3209,22 @@ function HomeLanding(props) {
       </div>
 
       {/* Hero */}
-      <div style={{
+      <div className="home-hero-gap" style={{
         flex: 1,
         maxWidth: 1100,
         width: "100%",
         margin: "0 auto",
-        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px) clamp(28px, 4vw, 40px)",
+        padding: "clamp(32px, 6vw, 60px) clamp(20px, 5vw, 40px) clamp(28px, 4vw, 40px)",
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
         gap: "clamp(28px, 5vw, 64px)",
         flexWrap: "wrap",
+        boxSizing: "border-box",
+        overflow: "hidden",
       }}>
         {/* Left: copy */}
-        <div style={{ flex: "1 1 300px", minWidth: 0, width: "100%" }}>
+        <div style={{ flex: "1 1 280px", minWidth: 0, maxWidth: "100%", boxSizing: "border-box" }}>
           {/* Badge */}
           <div style={{
             display: "inline-flex",
@@ -3261,7 +3263,7 @@ function HomeLanding(props) {
             color: "rgba(255,255,255,0.55)",
             lineHeight: 1.65,
             marginBottom: 32,
-            maxWidth: 420,
+            maxWidth: "min(420px, 100%)",
           }}>
             Soy Mentorcito — entrenado con el conocimiento de los mejores mentores, coaches y psicólogos de la red. Contame tus desafíos profesionales y te devuelvo un mapa honesto: dónde estás parado hoy, qué fortalezas tenés, y hacia dónde tiene sentido crecer.
           </p>
@@ -3313,7 +3315,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para gente de producto en Latinoamérica
+            Gratis · Para PMs en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3459,13 +3461,17 @@ function HomeLanding(props) {
           .home-tooltip { display: none !important; }
         }
 
-        /* Mobile: el radar no crece más del viewport */
-        @media (max-width: 480px) {
-          .home-radar-svg {
-            max-width: min(300px, calc(100vw - 32px)) !important;
-          }
+        /* Mobile: layout vertical, márgenes seguros */
+        @media (max-width: 600px) {
           .home-hero-gap {
-            row-gap: 24px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            row-gap: 28px !important;
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+          .home-radar-svg {
+            max-width: min(320px, calc(100vw - 40px)) !important;
           }
         }
       `}</style>
