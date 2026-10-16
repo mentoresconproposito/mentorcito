@@ -3313,7 +3313,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para PMs en Latinoamérica
+            Gratis · Para gente de producto en Latinoamérica
           </div>
 
           {/* Urgency block */}
