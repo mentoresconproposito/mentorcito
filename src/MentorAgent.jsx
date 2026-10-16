@@ -3450,7 +3450,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para PMs en Latinoamérica
+        Mentores con Propósito · Para gente de producto en Latinoamérica
       </div>
 
       <style>{`
