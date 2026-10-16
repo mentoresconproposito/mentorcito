@@ -790,32 +790,36 @@ function ProductSenseRadar(props) {
   function downloadRadarPNG() {
     setDownloading(true);
     try {
-      var SCALE = 2;
-      var CARD_W = 600;
-      var PAD_H = 36;
-      var PAD_V = 40;
-      var RADAR_W = 320;
+      // ── Layout: HORIZONTAL — left column text, right column radar ──
+      var SCALE    = 2;
+      var TOTAL_W  = 900;   // canvas width (landscape)
+      var PAD_V    = 36;    // top/bottom padding
+      var PAD_H    = 32;    // outer left/right padding
+      var COL_GAP  = 28;    // gap between columns
+      var LEFT_W   = 440;   // left column width
+      var RADAR_W  = 320;   // radar square size
+      var RADAR_R  = 108;
+      var LABEL_R  = RADAR_R + 34;
       var RADAR_CX = RADAR_W / 2;
       var RADAR_CY = RADAR_W / 2;
-      var RADAR_R = 108;
-      var LABEL_R = RADAR_R + 34;
-      var INFO_GAP = 14;
-      var infoCardFont = "400 14px system-ui, sans-serif";
-      var infoInnerW = CARD_W - PAD_H * 2 - 36;
+      var INFO_GAP = 12;
+      var infoCardFont = "400 13px system-ui, sans-serif";
+      var infoInnerW = LEFT_W - 32;  // inner text width in left col cards
+      // Right col starts at:
+      var RIGHT_X  = PAD_H + LEFT_W + COL_GAP;
 
-      // ── STEP 1: Create canvas first so ctx exists for measurement ──
+      // ── STEP 1: Create canvas (temporary height) for measurement ──
       var canvas = document.createElement("canvas");
-      canvas.width = CARD_W * SCALE;
-      canvas.height = 100 * SCALE; // temporary — will resize before drawing
+      canvas.width  = TOTAL_W * SCALE;
+      canvas.height = 100 * SCALE;
       var ctx = canvas.getContext("2d");
       ctx.scale(SCALE, SCALE);
 
-      // ── STEP 2: wrapText2 (uses outer ctx, defined after canvas) ──
+      // ── STEP 2: wrapText2 helper ──
       function wrapText2(text, font, maxW) {
         ctx.font = font;
         var words = String(text).split(" ");
-        var lines = [];
-        var cur = "";
+        var lines = [], cur = "";
         words.forEach(function(w) {
           var test = cur ? cur + " " + w : w;
           if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
@@ -825,240 +829,208 @@ function ProductSenseRadar(props) {
         return lines;
       }
 
-      // ── STEP 3: Pre-measure all sections ──
-
-      // Archetype card height
-      var arcCardH = 0;
-      var taglineLines = [];
+      // ── STEP 3: Pre-measure left column content ──
+      var arcCardH = 0, taglineLines = [];
       if (archetypeData) {
-        taglineLines = wrapText2(archetypeData.tagline, "italic 400 14px Georgia, serif", CARD_W - PAD_H * 2 - 48);
-        // top-pad(18) + "PS·Shreyas"(18) + gap(10) + "TU RESULTADO"(16) + gap(8) + name(38) + gap(8) + taglines + gap(10) + pct? + bottom-pad(18)
-        arcCardH = 18 + 18 + 10 + 16 + 8 + 38 + 8 + taglineLines.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
+        taglineLines = wrapText2(archetypeData.tagline, "italic 400 13px Georgia, serif", infoInnerW);
+        // pad(16) + "PS·Shreyas"(16) + gap(8) + "TU RESULTADO"(14) + gap(6) + name(34) + gap(8) + taglines + gap(8) + pct? + pad(16)
+        arcCardH = 16 + 16 + 8 + 14 + 6 + 34 + 8 + taglineLines.length * 18 + 8 + (psPct != null ? 28 : 0) + 16;
       }
 
-      // Info cards total height
-      var INFO_CARDS_H = 0;
-      var N_INFO = 0;
+      var INFO_CARDS_H = 0, N_INFO = 0;
       if (superpoderText) {
         var ls = wrapText2(superpoderText, infoCardFont, infoInnerW);
-        INFO_CARDS_H += 16 + 20 + 8 + ls.length * 22 + 18;
-        N_INFO++;
+        INFO_CARDS_H += 14 + 18 + 6 + ls.length * 20 + 14; N_INFO++;
       }
       if (puntoCiegoText) {
         var lp = wrapText2(puntoCiegoText, infoCardFont, infoInnerW);
-        INFO_CARDS_H += 16 + 20 + 8 + lp.length * 22 + 18;
-        N_INFO++;
+        INFO_CARDS_H += 14 + 18 + 6 + lp.length * 20 + 14; N_INFO++;
       }
       if (proximaSkillData) {
         var lt = wrapText2(proximaSkillData.tip, infoCardFont, infoInnerW);
-        INFO_CARDS_H += 16 + 20 + 8 + 30 + lt.length * 22 + 18;
-        N_INFO++;
+        INFO_CARDS_H += 14 + 18 + 6 + 26 + lt.length * 20 + 14; N_INFO++;
       }
       if (N_INFO > 1) INFO_CARDS_H += (N_INFO - 1) * INFO_GAP;
 
-      // ── STEP 4: Calculate total canvas height ──
-      // ORDER: badge(36) → arcCard → infoCards → legend(28) → radar(RADAR_W) → footer(50)
-      var TOTAL_H = PAD_V
-        + 36                                           // badge row
-        + (arcCardH > 0 ? arcCardH + 20 : 0)          // archetype card + gap
-        + (INFO_CARDS_H > 0 ? INFO_CARDS_H + 20 : 0)  // info cards + gap
-        + 28                                           // legend row
-        + 6                                            // small gap before radar
-        + RADAR_W                                      // radar
-        + 20                                           // gap after radar
-        + 50                                           // footer
-        + PAD_V;
+      // Left column total height (excluding badge row at top)
+      var leftContentH = (arcCardH > 0 ? arcCardH + 14 : 0) + (INFO_CARDS_H > 0 ? INFO_CARDS_H : 0);
 
-      // ── STEP 5: Resize canvas to exact height, re-get context ──
-      canvas.width = CARD_W * SCALE;
+      // Right column: legend(20) + gap(6) + radar(RADAR_W) = RADAR_W + 26
+      var rightColH = 20 + 6 + RADAR_W;
+
+      // Canvas height = badge row + max(left, right) + footer
+      var BODY_H = Math.max(leftContentH, rightColH);
+      var BADGE_H = 30;
+      var FOOTER_H = 40;
+      var TOTAL_H = PAD_V + BADGE_H + 14 + BODY_H + FOOTER_H + PAD_V;
+
+      // ── STEP 4: Resize canvas to exact size, re-get context ──
+      canvas.width  = TOTAL_W * SCALE;
       canvas.height = TOTAL_H * SCALE;
-      ctx = canvas.getContext("2d");  // re-get after resize (resize clears canvas)
+      ctx = canvas.getContext("2d");
       ctx.scale(SCALE, SCALE);
 
-      // ── STEP 6: Background ──
+      // ── STEP 5: Background ──
       ctx.fillStyle = "#0d0d1a";
-      ctx.fillRect(0, 0, CARD_W, TOTAL_H);
+      ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+
+      // Optional: subtle vertical divider between columns
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillRect(PAD_H + LEFT_W + COL_GAP / 2 - 0.5, PAD_V, 1, TOTAL_H - PAD_V * 2);
 
       var y = PAD_V;
 
-      // ── STEP 7: Badge row ──
+      // ── STEP 6: Badge row (full width) ──
       ctx.fillStyle = "rgba(255,255,255,0.9)";
-      roundRect(ctx, PAD_H, y, 84, 22, 5);
+      roundRect(ctx, PAD_H, y, 80, 20, 4);
       ctx.fill();
       ctx.fillStyle = "#0d0d1a";
       ctx.font = "700 9px system-ui, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("MI PERFIL", PAD_H + 10, y + 14);
+      ctx.fillText("MI PERFIL", PAD_H + 9, y + 13);
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.font = "500 10px system-ui, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText("mentorcito.vercel.app", CARD_W - PAD_H, y + 15);
-      y += 36;
+      ctx.fillText("mentorcito.vercel.app", TOTAL_W - PAD_H, y + 14);
+      y += BADGE_H + 14;
 
-      // ── STEP 8: Archetype card ──
+      // ── From here: left column (lx origin = PAD_H) ──
+      var ly = y;  // left column y cursor
+      var lx = PAD_H;
+
+      // ── STEP 7: Archetype card (left col) ──
       if (archetypeData && arcCardH > 0) {
-        var grad = ctx.createLinearGradient(PAD_H, y, CARD_W - PAD_H, y + arcCardH);
+        var grad = ctx.createLinearGradient(lx, ly, lx + LEFT_W, ly + arcCardH);
         grad.addColorStop(0, "rgba(67,97,238,0.30)");
         grad.addColorStop(1, "rgba(123,47,247,0.30)");
         ctx.fillStyle = grad;
-        roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
+        roundRect(ctx, lx, ly, LEFT_W, arcCardH, 12);
         ctx.fill();
-        ctx.strokeStyle = "rgba(165,180,252,0.3)";
+        ctx.strokeStyle = "rgba(165,180,252,0.25)";
         ctx.lineWidth = 1;
-        roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
+        roundRect(ctx, lx, ly, LEFT_W, arcCardH, 12);
         ctx.stroke();
 
-        var ay = y + 18;
-
+        var ay = ly + 16;
         // "Product Sense · Shreyas Doshi"
-        ctx.fillStyle = "rgba(165,180,252,0.4)";
-        ctx.font = "600 11px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Product Sense  ·  Shreyas Doshi", CARD_W / 2, ay);
-        ay += 28;
-
+        ctx.fillStyle = "rgba(165,180,252,0.45)";
+        ctx.font = "600 10px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Product Sense  ·  Shreyas Doshi", lx + 16, ay);
+        ay += 24;
         // "TU RESULTADO"
         ctx.fillStyle = "rgba(165,180,252,0.65)";
-        ctx.font = "700 10px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("TU RESULTADO", CARD_W / 2, ay);
-        ay += 8;
-
+        ctx.font = "700 9px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("TU RESULTADO", lx + 16, ay);
+        ay += 6;
         // Archetype name
         ctx.fillStyle = "#a5b4fc";
-        ctx.font = "800 34px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(archetypeData.label, CARD_W / 2, ay + 30);
-        ay += 46;
-
+        ctx.font = "800 28px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(archetypeData.label, lx + 16, ay + 26);
+        ay += 42;
         // Tagline
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.font = "italic 400 14px Georgia, serif";
-        ctx.textAlign = "center";
-        taglineLines.forEach(function(line, li) {
-          ctx.fillText(line, CARD_W / 2, ay + li * 20);
-        });
-        ay += taglineLines.length * 20 + 12;
-
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.font = "italic 400 13px Georgia, serif";
+        ctx.textAlign = "left";
+        taglineLines.forEach(function(line, li) { ctx.fillText(line, lx + 16, ay + li * 18); });
+        ay += taglineLines.length * 18 + 10;
         // % Product Sense
         if (psPct != null) {
-          ctx.font = "800 20px system-ui, sans-serif";
+          ctx.font = "800 18px system-ui, sans-serif";
           var pctW = ctx.measureText(psPct + "%").width;
-          ctx.font = "400 13px system-ui, sans-serif";
-          var restW = ctx.measureText("  de Product Sense desarrollado").width;
-          var startX = CARD_W / 2 - (pctW + restW) / 2;
-
           ctx.fillStyle = "#06d6a0";
-          ctx.font = "800 20px system-ui, sans-serif";
           ctx.textAlign = "left";
-          ctx.fillText(psPct + "%", startX, ay + 18);
-
-          ctx.fillStyle = "rgba(255,255,255,0.45)";
-          ctx.font = "400 13px system-ui, sans-serif";
-          ctx.fillText("  de Product Sense desarrollado", startX + pctW, ay + 18);
+          ctx.fillText(psPct + "%", lx + 16, ay + 16);
+          ctx.fillStyle = "rgba(255,255,255,0.4)";
+          ctx.font = "400 12px system-ui, sans-serif";
+          ctx.fillText("  de Product Sense desarrollado", lx + 16 + pctW, ay + 16);
         }
-
-        y += arcCardH + 20;
+        ly += arcCardH + 14;
       }
 
-      // ── STEP 9: Info cards (Superpoder / Punto ciego / Próxima skill) ──
+      // ── STEP 8: Info cards helper (left col) ──
       function drawInfoCard(emojiChar, label, titleLine, content, cardY, bgColor, borderColor, labelColor) {
-        var contentLines = wrapText2(content, infoCardFont, infoInnerW);
-        var contentH = contentLines.length * 22;
-        var actualH = 16 + 20 + 8 + (titleLine ? 30 : 0) + contentH + 18;
-
+        var contentLines = wrapText2(content, infoCardFont, infoInnerW - 22);
+        var contentH = contentLines.length * 20;
+        var actualH = 14 + 18 + 6 + (titleLine ? 26 : 0) + contentH + 14;
         ctx.fillStyle = bgColor;
-        roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 12);
+        roundRect(ctx, lx, cardY, LEFT_W, actualH, 10);
         ctx.fill();
         ctx.strokeStyle = borderColor;
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 12);
+        ctx.lineWidth = 1.2;
+        roundRect(ctx, lx, cardY, LEFT_W, actualH, 10);
         ctx.stroke();
-
-        var cx = PAD_H + 18;
-        var cy = cardY + 16;
-
-        // Emoji (separate font so it renders)
-        ctx.font = "15px serif";
+        var cx2 = lx + 14, cy2 = cardY + 14;
+        ctx.font = "14px serif";
         ctx.textAlign = "left";
         ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.fillText(emojiChar, cx, cy + 14);
-
-        // Label
+        ctx.fillText(emojiChar, cx2, cy2 + 12);
         ctx.fillStyle = labelColor;
-        ctx.font = "700 11px system-ui, sans-serif";
-        ctx.textAlign = "left";
-        ctx.fillText(label.toUpperCase(), cx + 22, cy + 14);
-        cy += 28;
-
-        // Optional title (Próxima skill)
+        ctx.font = "700 10px system-ui, sans-serif";
+        ctx.fillText(label.toUpperCase(), cx2 + 20, cy2 + 12);
+        cy2 += 24;
         if (titleLine) {
           ctx.fillStyle = "#a5b4fc";
-          ctx.font = "700 15px system-ui, sans-serif";
-          ctx.textAlign = "left";
-          ctx.fillText(titleLine, cx, cy + 16);
-          cy += 30;
+          ctx.font = "700 13px system-ui, sans-serif";
+          ctx.fillText(titleLine, cx2, cy2 + 14);
+          cy2 += 26;
         }
-
-        // Content
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillStyle = "rgba(255,255,255,0.82)";
         ctx.font = infoCardFont;
-        ctx.textAlign = "left";
-        contentLines.forEach(function(line, li) {
-          ctx.fillText(line, cx, cy + li * 22);
-        });
-
+        contentLines.forEach(function(line, li) { ctx.fillText(line, cx2, cy2 + li * 20); });
         return actualH;
       }
 
       if (superpoderText) {
-        var h = drawInfoCard("⚡", "Superpoder", null, superpoderText, y,
-          "rgba(6,214,160,0.10)", "rgba(6,214,160,0.30)", "rgba(6,214,160,0.8)");
-        y += h + INFO_GAP;
+        var h = drawInfoCard("⚡", "Superpoder", null, superpoderText, ly,
+          "rgba(6,214,160,0.09)", "rgba(6,214,160,0.28)", "rgba(6,214,160,0.8)");
+        ly += h + INFO_GAP;
       }
       if (puntoCiegoText) {
-        var h = drawInfoCard("🎯", "Punto ciego", null, puntoCiegoText, y,
-          "rgba(247,37,133,0.10)", "rgba(247,37,133,0.30)", "rgba(247,37,133,0.8)");
-        y += h + INFO_GAP;
+        var h = drawInfoCard("🎯", "Punto ciego", null, puntoCiegoText, ly,
+          "rgba(247,37,133,0.09)", "rgba(247,37,133,0.28)", "rgba(247,37,133,0.8)");
+        ly += h + INFO_GAP;
       }
       if (proximaSkillData) {
-        var h = drawInfoCard("🚀", "Próxima skill", proximaSkillData.label, proximaSkillData.tip, y,
-          "rgba(67,97,238,0.10)", "rgba(67,97,238,0.32)", "rgba(130,150,255,0.85)");
-        y += h + INFO_GAP;
+        var h = drawInfoCard("🚀", "Próxima skill", proximaSkillData.label, proximaSkillData.tip, ly,
+          "rgba(67,97,238,0.09)", "rgba(67,97,238,0.30)", "rgba(130,150,255,0.85)");
+        ly += h;
       }
-      if (N_INFO > 0) y += 20 - INFO_GAP; // replace last gap with larger separator
 
-      // ── STEP 10: Legend row ──
-      y += 8;
+      // ── STEP 9: Right column — Legend + Radar ──
+      var ry = y;  // right column y cursor starts same as left body
+
+      // Legend
       ctx.beginPath();
-      ctx.arc(PAD_H + 8, y + 7, 7, 0, Math.PI * 2);
+      ctx.arc(RIGHT_X + 7, ry + 7, 6, 0, Math.PI * 2);
       ctx.fillStyle = "#4f8ef7";
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.font = "600 10px system-ui, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("Yo", PAD_H + 20, y + 11);
+      ctx.fillText("Yo", RIGHT_X + 18, ry + 11);
       ctx.beginPath();
-      ctx.setLineDash([5, 3]);
-      ctx.moveTo(PAD_H + 70, y + 7);
-      ctx.lineTo(PAD_H + 95, y + 7);
+      ctx.setLineDash([4, 3]);
+      ctx.moveTo(RIGHT_X + 64, ry + 7);
+      ctx.lineTo(RIGHT_X + 85, ry + 7);
       ctx.strokeStyle = "#f72585";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.font = "600 11px system-ui, sans-serif";
-      ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), PAD_H + 100, y + 11);
-      y += 22;
+      ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), RIGHT_X + 90, ry + 11);
+      ry += 26;
 
-      // ── STEP 11: Radar ──
-      y += 6;
-      var radarOffX = (CARD_W - RADAR_W) / 2;
+      // Radar — center it in right column
+      var radarColW = TOTAL_W - PAD_H - RIGHT_X;  // available width for radar
+      var radarOffX = RIGHT_X + (radarColW - RADAR_W) / 2;
 
       function radarPt(idx, val) {
         var angle = (Math.PI * 2 * idx / 8) - Math.PI / 2;
         var r = (val / 10) * RADAR_R;
-        return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
+        return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: ry + RADAR_CY + r * Math.sin(angle) };
       }
 
       // Grid rings
@@ -1070,86 +1042,65 @@ function ProductSenseRadar(props) {
         });
         ctx.closePath();
         ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
-        ctx.stroke();
+        ctx.lineWidth = 1; ctx.setLineDash([]); ctx.stroke();
       });
-
       // Axis lines
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, 10);
         ctx.beginPath();
-        ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
+        ctx.moveTo(radarOffX + RADAR_CX, ry + RADAR_CY);
         ctx.lineTo(p.x, p.y);
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
-        ctx.stroke();
+        ctx.lineWidth = 1; ctx.setLineDash([]); ctx.stroke();
       });
-
-      // Benchmark polygon (pink dashed)
+      // Benchmark polygon
       ctx.beginPath();
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, benchmark[d.key] || 6);
         if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.strokeStyle = "#f72585";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // User polygon (blue fill)
+      ctx.strokeStyle = "#f72585"; ctx.lineWidth = 2;
+      ctx.setLineDash([5, 3]); ctx.stroke(); ctx.setLineDash([]);
+      // User polygon
       ctx.beginPath();
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, ps[d.key] || 0);
         if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.fillStyle = "rgba(79,142,247,0.18)";
-      ctx.fill();
-      ctx.strokeStyle = "#4f8ef7";
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
+      ctx.fillStyle = "rgba(79,142,247,0.18)"; ctx.fill();
+      ctx.strokeStyle = "#4f8ef7"; ctx.lineWidth = 2.5; ctx.stroke();
       // Dots
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, ps[d.key] || 0);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = "#4f8ef7";
-        ctx.fill();
-        ctx.strokeStyle = "#0d0d1a";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#4f8ef7"; ctx.fill();
+        ctx.strokeStyle = "#0d0d1a"; ctx.lineWidth = 1.5; ctx.stroke();
       });
-
-      // Axis labels
+      // Labels
       DIMS.forEach(function(d, i) {
         var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
-        var lx = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
-        var ly = y + RADAR_CY + LABEL_R * Math.sin(angle);
+        var lx2 = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
+        var ly2 = ry + RADAR_CY + LABEL_R * Math.sin(angle);
         var lines = d.label.split("\n");
-        ctx.font = "600 10px system-ui, sans-serif";
+        ctx.font = "600 9.5px system-ui, sans-serif";
         ctx.fillStyle = "rgba(255,255,255,0.75)";
         ctx.textAlign = "center";
-        var lineH = 13;
+        var lineH = 12;
         lines.forEach(function(line, li) {
-          var yOff = (li - (lines.length - 1) / 2) * lineH;
-          ctx.fillText(line, lx, ly + yOff + 4);
+          ctx.fillText(line, lx2, ly2 + (li - (lines.length - 1) / 2) * lineH + 4);
         });
       });
 
-      y += RADAR_W + 20;
-
-      // ── STEP 12: Footer ──
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.font = "400 10px system-ui, sans-serif";
+      // ── STEP 10: Footer (full width) ──
+      var footerY = TOTAL_H - PAD_V - 10;
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.font = "400 9px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Mentorcito · Mentores con Propósito", CARD_W / 2, y + 10);
+      ctx.fillText("Mentorcito · Mentores con Propósito", TOTAL_W / 2, footerY);
 
-      // ── STEP 13: Export ──
+      // ── STEP 11: Export ──
       canvas.toBlob(function(blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -2850,7 +2801,7 @@ function DiagnosisPanel(props) {
       <div style={{ marginTop: 16 }}>
         <ProgressBar />
 
-        {/* ── Hero de resultados ──────────────────────────── */}
+        {/* ── 1. HERO: Tu resultado (archetype) ──────────────── */}
         {ps && psPct !== null && (
           <div style={{ background: "linear-gradient(160deg, rgba(67,97,238,0.08) 0%, rgba(123,47,247,0.06) 100%)", border: "1px solid " + T.border, borderRadius: 20, padding: "24px 20px", marginBottom: 14 }}>
             {/* Tag "TU RESULTADO" */}
@@ -2897,7 +2848,31 @@ function DiagnosisPanel(props) {
             )}
           </div>
         )}
+
+        {/* ── 2. PRODUCT SENSE · SHREYAS DOSHI (radar detallado) ── */}
+        {diagnosis.product_sense && Object.keys(diagnosis.product_sense).length > 0 && (
+          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, color: C.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>
+              Product Sense · Shreyas Doshi
+            </div>
+            <ProductSenseRadar
+              productSense={diagnosis.product_sense}
+              nivel={diagnosis.nivel || "mid"}
+              gaps={diagnosis.gaps || []}
+              archetypeData={archetype}
+              superpoderText={superpoder}
+              puntoCiegoText={puntoCiego}
+              proximaSkillData={proximaSkill}
+              psPct={psPct}
+            />
+          </div>
+        )}
+
+        {/* ── 3. TECNOLOGÍA / PRODUCTO / NEGOCIO (barras) ─────── */}
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
+          <div style={{ fontSize: 9, fontWeight: 800, color: C.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>
+            Niveles por área
+          </div>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
             <RadarChart data={diagnosis} />
           </div>
@@ -2931,21 +2906,7 @@ function DiagnosisPanel(props) {
           })}
         </div>
 
-        {diagnosis.product_sense && Object.keys(diagnosis.product_sense).length > 0 && (
-          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
-            <ProductSenseRadar
-              productSense={diagnosis.product_sense}
-              nivel={diagnosis.nivel || "mid"}
-              gaps={diagnosis.gaps || []}
-              archetypeData={archetype}
-              superpoderText={superpoder}
-              puntoCiegoText={puntoCiego}
-              proximaSkillData={proximaSkill}
-              psPct={psPct}
-            />
-          </div>
-        )}
-
+        {/* ── 4. GAPS IDENTIFICADOS ───────────────────────────── */}
         <div style={{ background: C.gapLight, border: "1px solid " + C.gapBorder, borderRadius: 12, padding: 16, marginBottom: 12 }}>
           <div style={{ color: C.gap, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Gaps identificados</div>
           {(diagnosis.gaps || []).map(function(gap, i) {
@@ -2958,6 +2919,7 @@ function DiagnosisPanel(props) {
           })}
         </div>
 
+        {/* ── 5. MENTORES RECOMENDADOS ────────────────────────── */}
         {hasMatch ? (
           <div style={{ marginBottom: 12 }}>
             <div style={{ color: C.primary, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Mentores recomendados</div>
@@ -2996,6 +2958,7 @@ function DiagnosisPanel(props) {
           <MentorPrototipo prototipo={prototipo} allMessages={allMessages} />
         )}
 
+        {/* ── 6. PRÓXIMOS PASOS ───────────────────────────────── */}
         <div style={{ background: C.successLight, border: "1px solid rgba(123,47,247,0.25)", borderRadius: 12, padding: 16, marginBottom: 12 }}>
           <div style={{ color: C.success, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Próximos pasos</div>
           {(diagnosis.proximos_pasos || []).map(function(paso, i) {
