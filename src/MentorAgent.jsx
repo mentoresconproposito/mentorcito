@@ -826,21 +826,39 @@ function ProductSenseRadar(props) {
       // Archetype card height
       var arcCardH = archetypeData ? (110 + (psPct != null ? 28 : 0)) : 0;
 
-      // Info cards: superpoder, puntoCiego, proximaSkill
+      // Estimate archetype card height for TOTAL_H
+      var arcCardHEst = 0;
+      if (archetypeData) {
+        ctx.font = "italic 400 14px Georgia, serif";
+        var tagEst = wrapText(ctx, archetypeData.tagline, CARD_W - PAD_H * 2 - 48);
+        arcCardHEst = 18 + 18 + 10 + 16 + 8 + 38 + 8 + tagEst.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
+      }
+
+      // Info cards: estimate heights (generous)
       var INFO_CARDS_H = 0;
-      if (superpoderText) INFO_CARDS_H += 76;
-      if (puntoCiegoText) INFO_CARDS_H += 76;
-      if (proximaSkillData) INFO_CARDS_H += 92;
-      var INFO_GAP = 12;
+      ctx.font = "400 14px system-ui, sans-serif";
+      if (superpoderText) {
+        var ls = wrapText(ctx, superpoderText, CARD_W - PAD_H * 2 - 36);
+        INFO_CARDS_H += 16 + 20 + 8 + ls.length * 22 + 18;
+      }
+      if (puntoCiegoText) {
+        var lp = wrapText(ctx, puntoCiegoText, CARD_W - PAD_H * 2 - 36);
+        INFO_CARDS_H += 16 + 20 + 8 + lp.length * 22 + 18;
+      }
+      if (proximaSkillData) {
+        var lt = wrapText(ctx, proximaSkillData.tip, CARD_W - PAD_H * 2 - 36);
+        INFO_CARDS_H += 16 + 20 + 8 + 30 + lt.length * 22 + 18;
+      }
+      var INFO_GAP = 14;
       var N_INFO = (superpoderText ? 1 : 0) + (puntoCiegoText ? 1 : 0) + (proximaSkillData ? 1 : 0);
       if (N_INFO > 1) INFO_CARDS_H += (N_INFO - 1) * INFO_GAP;
 
       var TOTAL_H = PAD_V + 36              // badge "MI PERFIL"
-        + (archetypeData ? (arcCardH + 20) : 0)  // archetype card
+        + (archetypeData ? (arcCardHEst + 20) : 0)  // archetype card
         + 28                               // legend row
         + RADAR_W + 20                     // radar
         + INFO_CARDS_H
-        + 40 + PAD_V;                      // footer
+        + 50 + PAD_V;                      // footer
 
       var canvas = document.createElement("canvas");
       canvas.width  = CARD_W * SCALE;
@@ -871,11 +889,16 @@ function ProductSenseRadar(props) {
 
       // ── ARCHETYPE CARD (gradient bg, like shared URL) ──
       if (archetypeData) {
-        var arcCardH = 110 + (psPct != null ? 28 : 0);
+        // Measure tagline wrap
+        ctx.font = "italic 400 14px Georgia, serif";
+        var taglineLines = wrapText(ctx, archetypeData.tagline, CARD_W - PAD_H * 2 - 48);
+        // Heights: top(18) + "PS·Shreyas"(18) + gap(10) + "TU RESULTADO"(16) + gap(8) + name(38) + gap(8) + taglines + gap(10) + pct(psPct?28:0) + bottom(18)
+        var arcCardH = 18 + 18 + 10 + 16 + 8 + 38 + 8 + taglineLines.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
+
         // gradient background
         var grad = ctx.createLinearGradient(PAD_H, y, CARD_W - PAD_H, y + arcCardH);
-        grad.addColorStop(0, "rgba(67,97,238,0.28)");
-        grad.addColorStop(1, "rgba(123,47,247,0.28)");
+        grad.addColorStop(0, "rgba(67,97,238,0.30)");
+        grad.addColorStop(1, "rgba(123,47,247,0.30)");
         ctx.fillStyle = grad;
         roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
         ctx.fill();
@@ -885,39 +908,60 @@ function ProductSenseRadar(props) {
         roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
         ctx.stroke();
 
+        var ay = y + 18;
+
+        // "Product Sense · Shreyas Doshi" — framework badge
+        ctx.fillStyle = "rgba(165,180,252,0.4)";
+        ctx.font = "600 11px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Product Sense  ·  Shreyas Doshi", CARD_W / 2, ay);
+        ay += 28;
+
         // "TU RESULTADO" label
         ctx.fillStyle = "rgba(165,180,252,0.65)";
-        ctx.font = "700 9px system-ui, sans-serif";
+        ctx.font = "700 10px system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("TU RESULTADO", CARD_W / 2, y + 22);
+        ctx.fillText("TU RESULTADO", CARD_W / 2, ay);
+        ay += 8;
 
         // archetype name
         ctx.fillStyle = "#a5b4fc";
-        ctx.font = "800 30px system-ui, sans-serif";
+        ctx.font = "800 34px system-ui, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(archetypeData.label, CARD_W / 2, y + 58);
+        ctx.fillText(archetypeData.label, CARD_W / 2, ay + 30);
+        ay += 46;
 
         // tagline
         ctx.fillStyle = "rgba(255,255,255,0.6)";
-        ctx.font = "italic 400 13px Georgia, serif";
+        ctx.font = "italic 400 14px Georgia, serif";
         ctx.textAlign = "center";
-        ctx.fillText(archetypeData.tagline, CARD_W / 2, y + 80);
+        taglineLines.forEach(function(line, li) {
+          ctx.fillText(line, CARD_W / 2, ay + li * 20);
+        });
+        ay += taglineLines.length * 20 + 12;
 
-        // % Product Sense
+        // % Product Sense — full line centered
         if (psPct != null) {
-          ctx.fillStyle = "rgba(255,255,255,0.4)";
-          ctx.font = "400 12px system-ui, sans-serif";
-          ctx.textAlign = "center";
-          var pctX = CARD_W / 2;
-          var pctY = y + 105;
-          ctx.fillText("de Product Sense desarrollado", pctX + 36, pctY);
+          // measure both parts to center them together
+          ctx.font = "800 20px system-ui, sans-serif";
+          var pctW = ctx.measureText(psPct + "%").width;
+          ctx.font = "400 13px system-ui, sans-serif";
+          var restW = ctx.measureText("  de Product Sense desarrollado").width;
+          var totalW = pctW + restW;
+          var startX = CARD_W / 2 - totalW / 2;
+
           ctx.fillStyle = "#06d6a0";
-          ctx.font = "800 18px system-ui, sans-serif";
-          ctx.textAlign = "right";
-          ctx.fillText(psPct + "%", pctX - 30, pctY);
+          ctx.font = "800 20px system-ui, sans-serif";
+          ctx.textAlign = "left";
+          ctx.fillText(psPct + "%", startX, ay + 18);
+
+          ctx.fillStyle = "rgba(255,255,255,0.45)";
+          ctx.font = "400 13px system-ui, sans-serif";
+          ctx.fillText("  de Product Sense desarrollado", startX + pctW, ay + 18);
+          ay += 32;
         }
 
-        y += arcCardH + 16;
+        y += arcCardH + 20;
       }
 
       // ── LEGEND ROW ──
@@ -1039,13 +1083,13 @@ function ProductSenseRadar(props) {
       y += RADAR_W + 20;
 
       // ── RESULT INFO CARDS (coloured bg like shared URL) ──
-      function drawInfoCard(emoji, label, titleLine, content, cardY, bgColor, borderColor, labelColor) {
-        var CARD_INNER_W_REAL = CARD_W - PAD_H * 2 - 32;
-        ctx.font = "400 12px system-ui, sans-serif";
-        var contentLines = wrapText(ctx, content, CARD_INNER_W_REAL - 16);
-        var contentH = contentLines.length * 18;
-        // heights: top-pad(14) + label-row(16) + title(titleLine?20:0) + content + bottom-pad(14)
-        var actualH = 14 + 16 + (titleLine ? 20 : 0) + contentH + 14;
+      function drawInfoCard(emojiChar, label, titleLine, content, cardY, bgColor, borderColor, labelColor) {
+        var CARD_INNER_W_REAL = CARD_W - PAD_H * 2 - 36;
+        ctx.font = "400 14px system-ui, sans-serif";
+        var contentLines = wrapText(ctx, content, CARD_INNER_W_REAL);
+        var contentH = contentLines.length * 22;
+        // top(16) + label-row(20) + gap(8) + title(titleLine?24:0) + gap(titleLine?6:0) + content + bottom(18)
+        var actualH = 16 + 20 + 8 + (titleLine ? 30 : 0) + contentH + 18;
 
         // Card bg with colour tint
         ctx.fillStyle = bgColor;
@@ -1053,33 +1097,40 @@ function ProductSenseRadar(props) {
         ctx.fill();
         // Card border
         ctx.strokeStyle = borderColor;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
         roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 12);
         ctx.stroke();
 
-        var cx = PAD_H + 16;
-        var cy = cardY + 14;
+        var cx = PAD_H + 18;
+        var cy = cardY + 16;
 
-        // Label row: emoji + label text
-        ctx.fillStyle = labelColor;
-        ctx.font = "700 9px system-ui, sans-serif";
+        // Emoji — use emoji font so it renders correctly
+        ctx.font = "15px serif";
         ctx.textAlign = "left";
-        ctx.fillText(emoji + "  " + label.toUpperCase(), cx, cy + 12);
-        cy += 16;
+        ctx.fillText(emojiChar, cx, cy + 14);
+
+        // Label text — next to emoji
+        ctx.fillStyle = labelColor;
+        ctx.font = "700 11px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(label.toUpperCase(), cx + 22, cy + 14);
+        cy += 28;
 
         // Optional title (for próxima skill)
         if (titleLine) {
           ctx.fillStyle = "#a5b4fc";
-          ctx.font = "700 13px system-ui, sans-serif";
-          ctx.fillText(titleLine, cx, cy + 14);
-          cy += 20;
+          ctx.font = "700 15px system-ui, sans-serif";
+          ctx.textAlign = "left";
+          ctx.fillText(titleLine, cx, cy + 16);
+          cy += 30;
         }
 
-        // Content
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.font = "400 12px system-ui, sans-serif";
+        // Content — larger text
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.font = "400 14px system-ui, sans-serif";
+        ctx.textAlign = "left";
         contentLines.forEach(function(line, li) {
-          ctx.fillText(line, cx, cy + 4 + li * 18);
+          ctx.fillText(line, cx, cy + li * 22);
         });
 
         return actualH;
@@ -1087,17 +1138,17 @@ function ProductSenseRadar(props) {
 
       if (superpoderText) {
         var h = drawInfoCard("⚡", "Superpoder", null, superpoderText, y,
-          "rgba(6,214,160,0.10)", "rgba(6,214,160,0.28)", "rgba(6,214,160,0.75)");
+          "rgba(6,214,160,0.10)", "rgba(6,214,160,0.30)", "rgba(6,214,160,0.8)");
         y += h + INFO_GAP;
       }
       if (puntoCiegoText) {
         var h = drawInfoCard("🎯", "Punto ciego", null, puntoCiegoText, y,
-          "rgba(247,37,133,0.10)", "rgba(247,37,133,0.28)", "rgba(247,37,133,0.75)");
+          "rgba(247,37,133,0.10)", "rgba(247,37,133,0.30)", "rgba(247,37,133,0.8)");
         y += h + INFO_GAP;
       }
       if (proximaSkillData) {
         var h = drawInfoCard("🚀", "Próxima skill", proximaSkillData.label, proximaSkillData.tip, y,
-          "rgba(67,97,238,0.10)", "rgba(67,97,238,0.30)", "rgba(130,150,255,0.75)");
+          "rgba(67,97,238,0.10)", "rgba(67,97,238,0.32)", "rgba(130,150,255,0.85)");
         y += h + INFO_GAP;
       }
 
