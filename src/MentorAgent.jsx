@@ -3471,6 +3471,45 @@ function SharedRadarView() {
           <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Este es mi mapa de Product Sense</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Framework Shreyas Doshi · Nivel <span style={{ color: "#a5b4fc", fontWeight: 700 }}>{nivel}</span></div>
         </div>
+        {archetypeData && (
+          <div style={{ marginBottom: 20, textAlign: "center" }}>
+            <div style={{ display: "inline-block", background: "linear-gradient(135deg, rgba(67,97,238,0.18), rgba(123,47,247,0.18))", border: "1px solid rgba(165,180,252,0.25)", borderRadius: 14, padding: "16px 24px", maxWidth: 480, width: "100%" }}>
+              <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: "rgba(165,180,252,0.6)", marginBottom: 8 }}>Tu resultado</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: "#a5b4fc", marginBottom: 6, letterSpacing: -0.5 }}>{archetypeData.label}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", fontStyle: "italic", marginBottom: psPct != null ? 12 : 0, lineHeight: 1.5 }}>{archetypeData.tagline}</div>
+              {psPct != null && (
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>
+                  <span style={{ color: "#06d6a0", fontWeight: 800, fontSize: 18 }}>{psPct}%</span> de Product Sense desarrollado
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {(superpoderText || puntoCiegoText || proximaSkillData) && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+            {superpoderText && (
+              <div style={{ background: "rgba(6,214,160,0.07)", border: "1px solid rgba(6,214,160,0.2)", borderRadius: 12, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(6,214,160,0.6)", marginBottom: 4 }}>⚡ Superpoder</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>{superpoderText}</div>
+              </div>
+            )}
+            {puntoCiegoText && (
+              <div style={{ background: "rgba(247,37,133,0.07)", border: "1px solid rgba(247,37,133,0.2)", borderRadius: 12, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(247,37,133,0.6)", marginBottom: 4 }}>🎯 Punto ciego</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>{puntoCiegoText}</div>
+              </div>
+            )}
+            {proximaSkillData && (
+              <div style={{ background: "rgba(67,97,238,0.07)", border: "1px solid rgba(67,97,238,0.25)", borderRadius: 12, padding: "12px 16px" }}>
+                <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "rgba(130,150,255,0.6)", marginBottom: 4 }}>🚀 Próxima skill</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#a5b4fc", marginBottom: 3 }}>{proximaSkillData.label}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{proximaSkillData.tip}</div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px" }}>
           <ProductSenseRadar
             productSense={ps}
