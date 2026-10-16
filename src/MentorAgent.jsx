@@ -791,17 +791,28 @@ function ProductSenseRadar(props) {
     try {
       var SCALE = 2;
       var CARD_W = 600;
-      var PAD_H = 36;    // horizontal padding
-      var PAD_V = 40;    // vertical padding top
+      var PAD_H = 36;
+      var PAD_V = 40;
       var RADAR_W = 320;
       var RADAR_CX = RADAR_W / 2;
       var RADAR_CY = RADAR_W / 2;
       var RADAR_R = 108;
       var LABEL_R = RADAR_R + 34;
+      var INFO_GAP = 14;
+      var infoCardFont = "400 14px system-ui, sans-serif";
+      var infoInnerW = CARD_W - PAD_H * 2 - 36;
 
-      // ── helper: wrap text ──
-      function wrapText(ctx, text, maxW) {
-        var words = text.split(" ");
+      // ── STEP 1: Create canvas first so ctx exists for measurement ──
+      var canvas = document.createElement("canvas");
+      canvas.width = CARD_W * SCALE;
+      canvas.height = 100 * SCALE; // temporary — will resize before drawing
+      var ctx = canvas.getContext("2d");
+      ctx.scale(SCALE, SCALE);
+
+      // ── STEP 2: wrapText2 (uses outer ctx, defined after canvas) ──
+      function wrapText2(text, font, maxW) {
+        ctx.font = font;
+        var words = String(text).split(" ");
         var lines = [];
         var cur = "";
         words.forEach(function(w) {
@@ -813,66 +824,63 @@ function ProductSenseRadar(props) {
         return lines;
       }
 
-      // ── layout: measure info card heights ──
-      // We'll compute the full height after we know all sections
-      // sections: header, radar, legend, result cards, footer
-      var LEGEND_H = 28;
-      var RESULT_CARD_H = 0;
-
-      // Pre-measure result cards
-      var tmpCanvas = document.createElement("canvas");
-      var tmpCtx = tmpCanvas.getContext("2d");
+      // ── STEP 3: Pre-measure all sections ──
 
       // Archetype card height
-      var arcCardH = archetypeData ? (110 + (psPct != null ? 28 : 0)) : 0;
-
-      // Estimate archetype card height for TOTAL_H
-      var arcCardHEst = 0;
+      var arcCardH = 0;
+      var taglineLines = [];
       if (archetypeData) {
-        ctx.font = "italic 400 14px Georgia, serif";
-        var tagEst = wrapText(ctx, archetypeData.tagline, CARD_W - PAD_H * 2 - 48);
-        arcCardHEst = 18 + 18 + 10 + 16 + 8 + 38 + 8 + tagEst.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
+        taglineLines = wrapText2(archetypeData.tagline, "italic 400 14px Georgia, serif", CARD_W - PAD_H * 2 - 48);
+        // top-pad(18) + "PS·Shreyas"(18) + gap(10) + "TU RESULTADO"(16) + gap(8) + name(38) + gap(8) + taglines + gap(10) + pct? + bottom-pad(18)
+        arcCardH = 18 + 18 + 10 + 16 + 8 + 38 + 8 + taglineLines.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
       }
 
-      // Info cards: estimate heights (generous)
+      // Info cards total height
       var INFO_CARDS_H = 0;
-      ctx.font = "400 14px system-ui, sans-serif";
+      var N_INFO = 0;
       if (superpoderText) {
-        var ls = wrapText(ctx, superpoderText, CARD_W - PAD_H * 2 - 36);
+        var ls = wrapText2(superpoderText, infoCardFont, infoInnerW);
         INFO_CARDS_H += 16 + 20 + 8 + ls.length * 22 + 18;
+        N_INFO++;
       }
       if (puntoCiegoText) {
-        var lp = wrapText(ctx, puntoCiegoText, CARD_W - PAD_H * 2 - 36);
+        var lp = wrapText2(puntoCiegoText, infoCardFont, infoInnerW);
         INFO_CARDS_H += 16 + 20 + 8 + lp.length * 22 + 18;
+        N_INFO++;
       }
       if (proximaSkillData) {
-        var lt = wrapText(ctx, proximaSkillData.tip, CARD_W - PAD_H * 2 - 36);
+        var lt = wrapText2(proximaSkillData.tip, infoCardFont, infoInnerW);
         INFO_CARDS_H += 16 + 20 + 8 + 30 + lt.length * 22 + 18;
+        N_INFO++;
       }
-      var INFO_GAP = 14;
-      var N_INFO = (superpoderText ? 1 : 0) + (puntoCiegoText ? 1 : 0) + (proximaSkillData ? 1 : 0);
       if (N_INFO > 1) INFO_CARDS_H += (N_INFO - 1) * INFO_GAP;
 
-      var TOTAL_H = PAD_V + 36              // badge "MI PERFIL"
-        + (archetypeData ? (arcCardHEst + 20) : 0)  // archetype card
-        + 28                               // legend row
-        + RADAR_W + 20                     // radar
-        + INFO_CARDS_H
-        + 50 + PAD_V;                      // footer
+      // ── STEP 4: Calculate total canvas height ──
+      // ORDER: badge(36) → arcCard → infoCards → legend(28) → radar(RADAR_W) → footer(50)
+      var TOTAL_H = PAD_V
+        + 36                                           // badge row
+        + (arcCardH > 0 ? arcCardH + 20 : 0)          // archetype card + gap
+        + (INFO_CARDS_H > 0 ? INFO_CARDS_H + 20 : 0)  // info cards + gap
+        + 28                                           // legend row
+        + 6                                            // small gap before radar
+        + RADAR_W                                      // radar
+        + 20                                           // gap after radar
+        + 50                                           // footer
+        + PAD_V;
 
-      var canvas = document.createElement("canvas");
-      canvas.width  = CARD_W * SCALE;
+      // ── STEP 5: Resize canvas to exact height, re-get context ──
+      canvas.width = CARD_W * SCALE;
       canvas.height = TOTAL_H * SCALE;
-      var ctx = canvas.getContext("2d");
+      ctx = canvas.getContext("2d");  // re-get after resize (resize clears canvas)
       ctx.scale(SCALE, SCALE);
 
-      // ── BACKGROUND: dark ──
+      // ── STEP 6: Background ──
       ctx.fillStyle = "#0d0d1a";
       ctx.fillRect(0, 0, CARD_W, TOTAL_H);
 
       var y = PAD_V;
 
-      // ── TOP ROW: "MI PERFIL" badge + branding ──
+      // ── STEP 7: Badge row ──
       ctx.fillStyle = "rgba(255,255,255,0.9)";
       roundRect(ctx, PAD_H, y, 84, 22, 5);
       ctx.fill();
@@ -880,29 +888,20 @@ function ProductSenseRadar(props) {
       ctx.font = "700 9px system-ui, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("MI PERFIL", PAD_H + 10, y + 14);
-      // Mentorcito branding right
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.font = "500 10px system-ui, sans-serif";
       ctx.textAlign = "right";
       ctx.fillText("mentorcito.vercel.app", CARD_W - PAD_H, y + 15);
       y += 36;
 
-      // ── ARCHETYPE CARD (gradient bg, like shared URL) ──
-      if (archetypeData) {
-        // Measure tagline wrap
-        ctx.font = "italic 400 14px Georgia, serif";
-        var taglineLines = wrapText(ctx, archetypeData.tagline, CARD_W - PAD_H * 2 - 48);
-        // Heights: top(18) + "PS·Shreyas"(18) + gap(10) + "TU RESULTADO"(16) + gap(8) + name(38) + gap(8) + taglines + gap(10) + pct(psPct?28:0) + bottom(18)
-        var arcCardH = 18 + 18 + 10 + 16 + 8 + 38 + 8 + taglineLines.length * 20 + 10 + (psPct != null ? 32 : 0) + 18;
-
-        // gradient background
+      // ── STEP 8: Archetype card ──
+      if (archetypeData && arcCardH > 0) {
         var grad = ctx.createLinearGradient(PAD_H, y, CARD_W - PAD_H, y + arcCardH);
         grad.addColorStop(0, "rgba(67,97,238,0.30)");
         grad.addColorStop(1, "rgba(123,47,247,0.30)");
         ctx.fillStyle = grad;
         roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
         ctx.fill();
-        // border
         ctx.strokeStyle = "rgba(165,180,252,0.3)";
         ctx.lineWidth = 1;
         roundRect(ctx, PAD_H, y, CARD_W - PAD_H * 2, arcCardH, 14);
@@ -910,28 +909,28 @@ function ProductSenseRadar(props) {
 
         var ay = y + 18;
 
-        // "Product Sense · Shreyas Doshi" — framework badge
+        // "Product Sense · Shreyas Doshi"
         ctx.fillStyle = "rgba(165,180,252,0.4)";
         ctx.font = "600 11px system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("Product Sense  ·  Shreyas Doshi", CARD_W / 2, ay);
         ay += 28;
 
-        // "TU RESULTADO" label
+        // "TU RESULTADO"
         ctx.fillStyle = "rgba(165,180,252,0.65)";
         ctx.font = "700 10px system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("TU RESULTADO", CARD_W / 2, ay);
         ay += 8;
 
-        // archetype name
+        // Archetype name
         ctx.fillStyle = "#a5b4fc";
         ctx.font = "800 34px system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(archetypeData.label, CARD_W / 2, ay + 30);
         ay += 46;
 
-        // tagline
+        // Tagline
         ctx.fillStyle = "rgba(255,255,255,0.6)";
         ctx.font = "italic 400 14px Georgia, serif";
         ctx.textAlign = "center";
@@ -940,15 +939,13 @@ function ProductSenseRadar(props) {
         });
         ay += taglineLines.length * 20 + 12;
 
-        // % Product Sense — full line centered
+        // % Product Sense
         if (psPct != null) {
-          // measure both parts to center them together
           ctx.font = "800 20px system-ui, sans-serif";
           var pctW = ctx.measureText(psPct + "%").width;
           ctx.font = "400 13px system-ui, sans-serif";
           var restW = ctx.measureText("  de Product Sense desarrollado").width;
-          var totalW = pctW + restW;
-          var startX = CARD_W / 2 - totalW / 2;
+          var startX = CARD_W / 2 - (pctW + restW) / 2;
 
           ctx.fillStyle = "#06d6a0";
           ctx.font = "800 20px system-ui, sans-serif";
@@ -958,144 +955,20 @@ function ProductSenseRadar(props) {
           ctx.fillStyle = "rgba(255,255,255,0.45)";
           ctx.font = "400 13px system-ui, sans-serif";
           ctx.fillText("  de Product Sense desarrollado", startX + pctW, ay + 18);
-          ay += 32;
         }
 
         y += arcCardH + 20;
       }
 
-      // ── LEGEND ROW ──
-      y += 8;
-      // Dot "Yo"
-      ctx.beginPath();
-      ctx.arc(PAD_H + 8, y + 7, 7, 0, Math.PI * 2);
-      ctx.fillStyle = "#4f8ef7";
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.font = "600 11px system-ui, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("Yo", PAD_H + 20, y + 11);
-      // Line "Benchmark nivel"
-      ctx.beginPath();
-      ctx.setLineDash([5, 3]);
-      ctx.moveTo(PAD_H + 70, y + 7);
-      ctx.lineTo(PAD_H + 95, y + 7);
-      ctx.strokeStyle = "#f72585";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.font = "600 11px system-ui, sans-serif";
-      ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), PAD_H + 100, y + 11);
-      y += 22;
-
-      // ── RADAR ──
-      y += 6;
-      var radarOffX = (CARD_W - RADAR_W) / 2;
-
-      function radarPt(idx, val) {
-        var angle = (Math.PI * 2 * idx / 8) - Math.PI / 2;
-        var r = (val / 10) * RADAR_R;
-        return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
-      }
-
-      // grid rings — dark style
-      [2,4,6,8,10].forEach(function(v) {
-        ctx.beginPath();
-        DIMS.forEach(function(d, i) {
-          var p = radarPt(i, v);
-          if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-        });
-        ctx.closePath();
-        ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
-        ctx.stroke();
-      });
-
-      // axis lines
-      DIMS.forEach(function(d, i) {
-        var p = radarPt(i, 10);
-        ctx.beginPath();
-        ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
-        ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
-        ctx.stroke();
-      });
-
-      // benchmark polygon — pink dashed
-      ctx.beginPath();
-      DIMS.forEach(function(d, i) {
-        var p = radarPt(i, benchmark[d.key] || 6);
-        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-      });
-      ctx.closePath();
-      ctx.strokeStyle = "#f72585";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // user polygon — light blue fill
-      ctx.beginPath();
-      DIMS.forEach(function(d, i) {
-        var p = radarPt(i, ps[d.key] || 0);
-        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-      });
-      ctx.closePath();
-      ctx.fillStyle = "rgba(79,142,247,0.18)";
-      ctx.fill();
-      ctx.strokeStyle = "#4f8ef7";
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // dots
-      DIMS.forEach(function(d, i) {
-        var p = radarPt(i, ps[d.key] || 0);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = "#4f8ef7";
-        ctx.fill();
-        ctx.strokeStyle = "#0d0d1a";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
-
-      // labels — light, in Spanish, multi-line
-      DIMS.forEach(function(d, i) {
-        var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
-        var lx = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
-        var ly = y + RADAR_CY + LABEL_R * Math.sin(angle);
-        var lines = d.label.split("\n");
-        ctx.font = "600 10px system-ui, sans-serif";
-        ctx.fillStyle = "rgba(255,255,255,0.75)";
-        ctx.textAlign = "center";
-        var lineH = 13;
-        var totalH = lines.length * lineH;
-        lines.forEach(function(line, li) {
-          var yOff = (li - (lines.length - 1) / 2) * lineH;
-          ctx.fillText(line, lx, ly + yOff + 4);
-        });
-      });
-
-      y += RADAR_W + 20;
-
-      // ── RESULT INFO CARDS (coloured bg like shared URL) ──
+      // ── STEP 9: Info cards (Superpoder / Punto ciego / Próxima skill) ──
       function drawInfoCard(emojiChar, label, titleLine, content, cardY, bgColor, borderColor, labelColor) {
-        var CARD_INNER_W_REAL = CARD_W - PAD_H * 2 - 36;
-        ctx.font = "400 14px system-ui, sans-serif";
-        var contentLines = wrapText(ctx, content, CARD_INNER_W_REAL);
+        var contentLines = wrapText2(content, infoCardFont, infoInnerW);
         var contentH = contentLines.length * 22;
-        // top(16) + label-row(20) + gap(8) + title(titleLine?24:0) + gap(titleLine?6:0) + content + bottom(18)
         var actualH = 16 + 20 + 8 + (titleLine ? 30 : 0) + contentH + 18;
 
-        // Card bg with colour tint
         ctx.fillStyle = bgColor;
         roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 12);
         ctx.fill();
-        // Card border
         ctx.strokeStyle = borderColor;
         ctx.lineWidth = 1.5;
         roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 12);
@@ -1104,19 +977,20 @@ function ProductSenseRadar(props) {
         var cx = PAD_H + 18;
         var cy = cardY + 16;
 
-        // Emoji — use emoji font so it renders correctly
+        // Emoji (separate font so it renders)
         ctx.font = "15px serif";
         ctx.textAlign = "left";
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.fillText(emojiChar, cx, cy + 14);
 
-        // Label text — next to emoji
+        // Label
         ctx.fillStyle = labelColor;
         ctx.font = "700 11px system-ui, sans-serif";
         ctx.textAlign = "left";
         ctx.fillText(label.toUpperCase(), cx + 22, cy + 14);
         cy += 28;
 
-        // Optional title (for próxima skill)
+        // Optional title (Próxima skill)
         if (titleLine) {
           ctx.fillStyle = "#a5b4fc";
           ctx.font = "700 15px system-ui, sans-serif";
@@ -1125,9 +999,9 @@ function ProductSenseRadar(props) {
           cy += 30;
         }
 
-        // Content — larger text
+        // Content
         ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.font = "400 14px system-ui, sans-serif";
+        ctx.font = infoCardFont;
         ctx.textAlign = "left";
         contentLines.forEach(function(line, li) {
           ctx.fillText(line, cx, cy + li * 22);
@@ -1151,15 +1025,130 @@ function ProductSenseRadar(props) {
           "rgba(67,97,238,0.10)", "rgba(67,97,238,0.32)", "rgba(130,150,255,0.85)");
         y += h + INFO_GAP;
       }
+      if (N_INFO > 0) y += 20 - INFO_GAP; // replace last gap with larger separator
 
-      // ── FOOTER ──
-      y += 20;
+      // ── STEP 10: Legend row ──
+      y += 8;
+      ctx.beginPath();
+      ctx.arc(PAD_H + 8, y + 7, 7, 0, Math.PI * 2);
+      ctx.fillStyle = "#4f8ef7";
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("Yo", PAD_H + 20, y + 11);
+      ctx.beginPath();
+      ctx.setLineDash([5, 3]);
+      ctx.moveTo(PAD_H + 70, y + 7);
+      ctx.lineTo(PAD_H + 95, y + 7);
+      ctx.strokeStyle = "#f72585";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), PAD_H + 100, y + 11);
+      y += 22;
+
+      // ── STEP 11: Radar ──
+      y += 6;
+      var radarOffX = (CARD_W - RADAR_W) / 2;
+
+      function radarPt(idx, val) {
+        var angle = (Math.PI * 2 * idx / 8) - Math.PI / 2;
+        var r = (val / 10) * RADAR_R;
+        return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
+      }
+
+      // Grid rings
+      [2,4,6,8,10].forEach(function(v) {
+        ctx.beginPath();
+        DIMS.forEach(function(d, i) {
+          var p = radarPt(i, v);
+          if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.07)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      });
+
+      // Axis lines
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, 10);
+        ctx.beginPath();
+        ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      });
+
+      // Benchmark polygon (pink dashed)
+      ctx.beginPath();
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, benchmark[d.key] || 6);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = "#f72585";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // User polygon (blue fill)
+      ctx.beginPath();
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, ps[d.key] || 0);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(79,142,247,0.18)";
+      ctx.fill();
+      ctx.strokeStyle = "#4f8ef7";
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Dots
+      DIMS.forEach(function(d, i) {
+        var p = radarPt(i, ps[d.key] || 0);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "#4f8ef7";
+        ctx.fill();
+        ctx.strokeStyle = "#0d0d1a";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+
+      // Axis labels
+      DIMS.forEach(function(d, i) {
+        var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
+        var lx = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
+        var ly = y + RADAR_CY + LABEL_R * Math.sin(angle);
+        var lines = d.label.split("\n");
+        ctx.font = "600 10px system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.75)";
+        ctx.textAlign = "center";
+        var lineH = 13;
+        lines.forEach(function(line, li) {
+          var yOff = (li - (lines.length - 1) / 2) * lineH;
+          ctx.fillText(line, lx, ly + yOff + 4);
+        });
+      });
+
+      y += RADAR_W + 20;
+
+      // ── STEP 12: Footer ──
       ctx.fillStyle = "rgba(255,255,255,0.25)";
       ctx.font = "400 10px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Mentorcito · Mentores con Propósito", CARD_W / 2, y);
+      ctx.fillText("Mentorcito · Mentores con Propósito", CARD_W / 2, y + 10);
 
-      // ── EXPORT ──
+      // ── STEP 13: Export ──
       canvas.toBlob(function(blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -1168,7 +1157,7 @@ function ProductSenseRadar(props) {
         setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
         setDownloading(false);
       }, "image/png");
-    } catch(e) { console.error(e); setDownloading(false); }
+    } catch(e) { console.error("downloadRadarPNG error:", e); setDownloading(false); }
   }
 
   // helper: rounded rect path
