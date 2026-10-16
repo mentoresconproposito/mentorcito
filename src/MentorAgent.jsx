@@ -730,15 +730,21 @@ function ProductSenseRadar(props) {
   var [copied, setCopied] = useState(false);
   var [downloading, setDownloading] = useState(false);
 
+  var archetypeData = props.archetypeData || null;
+  var superpoderText = props.superpoderText || null;
+  var puntoCiegoText = props.puntoCiegoText || null;
+  var proximaSkillData = props.proximaSkillData || null;
+  var psPct = props.psPct || null;
+
   var DIMS = [
-    { key: "user_insights",    label: "User\nInsights" },
-    { key: "business_acumen",  label: "Business\nAcumen" },
-    { key: "product_quality",  label: "Product\nQuality" },
-    { key: "product_strategy", label: "Product\nStrategy" },
-    { key: "execution",        label: "Execution" },
-    { key: "influence",        label: "Influence" },
-    { key: "data_fluency",     label: "Data\nFluency" },
-    { key: "ai_fluency",       label: "AI\nFluency" },
+    { key: "user_insights",    label: "Perspectiva\ndel Usuario" },
+    { key: "business_acumen",  label: "Visión de\nNegocio" },
+    { key: "product_quality",  label: "Calidad de\nProducto" },
+    { key: "product_strategy", label: "Estrategia de\nProducto" },
+    { key: "execution",        label: "Ejecución" },
+    { key: "influence",        label: "Influencia" },
+    { key: "data_fluency",     label: "Fluidez de\nDatos" },
+    { key: "ai_fluency",       label: "Fluidez\nen IA" },
   ];
 
   var BENCHMARKS = {
@@ -782,20 +788,65 @@ function ProductSenseRadar(props) {
     setDownloading(true);
     try {
       var SCALE = 2;
-      var PAD = 40;
-      var RADAR_W = 300;
+      var CARD_W = 600;
+      var PAD_H = 36;    // horizontal padding
+      var PAD_V = 40;    // vertical padding top
+      var RADAR_W = 320;
       var RADAR_CX = RADAR_W / 2;
       var RADAR_CY = RADAR_W / 2;
-      var RADAR_R = 100;
-      var CARD_W = 600;
+      var RADAR_R = 108;
+      var LABEL_R = RADAR_R + 34;
 
-      // ── measure gaps block height ──
-      var gapsToShow = gaps.slice(0, 5);
-      var hasGaps = gapsToShow.length > 0;
-      var GAP_BLOCK_H = hasGaps ? (36 + gapsToShow.length * 34 + 24) : 0;
+      // ── helper: wrap text ──
+      function wrapText(ctx, text, maxW) {
+        var words = text.split(" ");
+        var lines = [];
+        var cur = "";
+        words.forEach(function(w) {
+          var test = cur ? cur + " " + w : w;
+          if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+          else { cur = test; }
+        });
+        if (cur) lines.push(cur);
+        return lines;
+      }
 
-      // total canvas height
-      var TOTAL_H = PAD + 52 + 12 + RADAR_W + 24 + GAP_BLOCK_H + PAD;
+      // ── layout: measure info card heights ──
+      // We'll compute the full height after we know all sections
+      // sections: header, radar, legend, result cards, footer
+      var LEGEND_H = 28;
+      var RESULT_CARD_H = 0;
+
+      // Pre-measure result cards (archetype, %, superpoder, puntoCiego, proximaSkill)
+      // Each card: label 10px + content ~13px, multi-line wrapped at (CARD_W - PAD_H*2 - 32) wide
+      var CARD_INNER_W = CARD_W - PAD_H * 2 - 32; // for wrapped text measurement
+      var tmpCanvas = document.createElement("canvas");
+      var tmpCtx = tmpCanvas.getContext("2d");
+
+      var arcLabel = archetypeData ? archetypeData.label : "";
+      var arcTagline = archetypeData ? archetypeData.tagline : "";
+      var pctStr = psPct != null ? psPct + "% de Product Sense desarrollado" : "";
+
+      // We'll compute card heights at draw time using a fixed estimate
+      // Header block: archetype name + tagline
+      var ARCH_BLOCK_H = archetypeData ? 74 : 0;
+      // Info cards: superpoder, puntoCiego, proximaSkill — each ~70px
+      var INFO_CARDS_H = 0;
+      if (superpoderText) INFO_CARDS_H += 68;
+      if (puntoCiegoText) INFO_CARDS_H += 68;
+      if (proximaSkillData) INFO_CARDS_H += 80;
+      var INFO_GAP = 10;
+      var N_INFO = (superpoderText ? 1 : 0) + (puntoCiegoText ? 1 : 0) + (proximaSkillData ? 1 : 0);
+      INFO_CARDS_H += (N_INFO - 1) * INFO_GAP;
+
+      var TOTAL_H = PAD_V + 20 + 12       // badge "MI PERFIL"
+        + 48 + 8                           // archetype name
+        + 26 + 20                          // tagline + gap
+        + 22 + 6                           // legend row
+        + RADAR_W + 20                     // radar
+        + (archetypeData ? (ARCH_BLOCK_H + 16) : 0)
+        + INFO_CARDS_H
+        + 24 + PAD_V;                      // footer
 
       var canvas = document.createElement("canvas");
       canvas.width  = CARD_W * SCALE;
@@ -803,31 +854,71 @@ function ProductSenseRadar(props) {
       var ctx = canvas.getContext("2d");
       ctx.scale(SCALE, SCALE);
 
-      // ── background ──
-      ctx.fillStyle = "#0d1117";
+      // ── BACKGROUND: off-white like superproductdesigner.com ──
+      ctx.fillStyle = "#f5f4f0";
       ctx.fillRect(0, 0, CARD_W, TOTAL_H);
 
-      var y = PAD;
+      var y = PAD_V;
 
-      // ── header ──
-      ctx.fillStyle = "rgba(255,255,255,0.28)";
-      ctx.font = "600 10px system-ui, sans-serif";
-      ctx.letterSpacing = "2px";
-      ctx.textAlign = "center";
-      ctx.fillText("MENTORCITO · PRODUCT SENSE RADAR", CARD_W / 2, y);
-      y += 18;
-      ctx.fillStyle = "#f0f0f0";
-      ctx.font = "700 22px system-ui, sans-serif";
-      ctx.letterSpacing = "0px";
-      ctx.fillText("Mi mapa de Product Sense", CARD_W / 2, y);
-      y += 16;
-      var nivelLabel = nivel.charAt(0).toUpperCase() + nivel.slice(1);
-      ctx.fillStyle = "rgba(165,180,252,0.9)";
-      ctx.font = "500 12px system-ui, sans-serif";
-      ctx.fillText("Framework Shreyas Doshi · Nivel " + nivelLabel, CARD_W / 2, y);
-      y += 24;
+      // ── TOP ROW: "MI PERFIL" badge + match % ──
+      // Badge
+      ctx.fillStyle = "#1a1a1a";
+      roundRect(ctx, PAD_H, y, 80, 22, 5);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 9px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("MI PERFIL", PAD_H + 10, y + 14);
+      // Mentorcito branding right
+      ctx.fillStyle = "#888";
+      ctx.font = "500 10px system-ui, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("mentorcito.vercel.app", CARD_W - PAD_H, y + 15);
+      y += 36;
 
-      // ── draw radar on canvas ──
+      // ── ARCHETYPE NAME ──
+      if (archetypeData) {
+        ctx.fillStyle = "#111111";
+        ctx.font = "800 38px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(archetypeData.label, PAD_H, y + 36);
+        y += 48;
+
+        // tagline italic
+        ctx.fillStyle = "#555";
+        ctx.font = "italic 400 15px Georgia, serif";
+        ctx.textAlign = "left";
+        ctx.fillText(archetypeData.tagline, PAD_H, y);
+        y += 26;
+      }
+
+      // ── LEGEND ROW ──
+      y += 8;
+      // Dot "Yo"
+      ctx.beginPath();
+      ctx.arc(PAD_H + 8, y + 7, 7, 0, Math.PI * 2);
+      ctx.fillStyle = "#4f8ef7";
+      ctx.fill();
+      ctx.fillStyle = "#333";
+      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("Yo", PAD_H + 20, y + 11);
+      // Line "Benchmark nivel"
+      ctx.beginPath();
+      ctx.setLineDash([5, 3]);
+      ctx.moveTo(PAD_H + 70, y + 7);
+      ctx.lineTo(PAD_H + 95, y + 7);
+      ctx.strokeStyle = "#f72585";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#333";
+      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.fillText("Benchmark " + (nivel.charAt(0).toUpperCase() + nivel.slice(1)), PAD_H + 100, y + 11);
+      y += 22;
+
+      // ── RADAR ──
+      y += 6;
       var radarOffX = (CARD_W - RADAR_W) / 2;
 
       function radarPt(idx, val) {
@@ -836,7 +927,7 @@ function ProductSenseRadar(props) {
         return { x: radarOffX + RADAR_CX + r * Math.cos(angle), y: y + RADAR_CY + r * Math.sin(angle) };
       }
 
-      // grid rings
+      // grid rings — light gray
       [2,4,6,8,10].forEach(function(v) {
         ctx.beginPath();
         DIMS.forEach(function(d, i) {
@@ -844,8 +935,9 @@ function ProductSenseRadar(props) {
           if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
         });
         ctx.closePath();
-        ctx.strokeStyle = v === 10 ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)";
+        ctx.strokeStyle = v === 10 ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.08)";
         ctx.lineWidth = 1;
+        ctx.setLineDash([]);
         ctx.stroke();
       });
 
@@ -855,122 +947,127 @@ function ProductSenseRadar(props) {
         ctx.beginPath();
         ctx.moveTo(radarOffX + RADAR_CX, y + RADAR_CY);
         ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
         ctx.lineWidth = 1;
+        ctx.setLineDash([]);
         ctx.stroke();
       });
 
-      // benchmark polygon
+      // benchmark polygon — pink dashed
       ctx.beginPath();
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, benchmark[d.key] || 6);
         if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.strokeStyle = "rgba(247,37,133,0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = "#f72585";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 3]);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // user polygon fill
+      // user polygon — light blue fill
       ctx.beginPath();
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, ps[d.key] || 0);
         if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.fillStyle = "rgba(67,97,238,0.22)";
+      ctx.fillStyle = "rgba(79,142,247,0.18)";
       ctx.fill();
-      ctx.strokeStyle = "#4361ee";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#4f8ef7";
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // dots
       DIMS.forEach(function(d, i) {
         var p = radarPt(i, ps[d.key] || 0);
-        var isAI = d.key === "ai_fluency";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, isAI ? 6 : 5, 0, Math.PI * 2);
-        ctx.fillStyle = isAI ? "#34d399" : "#4361ee";
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "#4f8ef7";
         ctx.fill();
-        ctx.strokeStyle = "#0d1117";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#f5f4f0";
+        ctx.lineWidth = 1.5;
         ctx.stroke();
       });
 
-      // labels
+      // labels — dark, in Spanish, multi-line
       DIMS.forEach(function(d, i) {
         var angle = (Math.PI * 2 * i / 8) - Math.PI / 2;
-        var labelR = RADAR_R + 28;
-        var lx = radarOffX + RADAR_CX + labelR * Math.cos(angle);
-        var ly = y + RADAR_CY + labelR * Math.sin(angle);
+        var lx = radarOffX + RADAR_CX + LABEL_R * Math.cos(angle);
+        var ly = y + RADAR_CY + LABEL_R * Math.sin(angle);
         var lines = d.label.split("\n");
-        var isAI = d.key === "ai_fluency";
-        ctx.font = (isAI ? "700" : "600") + " 9px system-ui, sans-serif";
-        ctx.fillStyle = isAI ? "#34d399" : "rgba(255,255,255,0.7)";
+        ctx.font = "600 10px system-ui, sans-serif";
+        ctx.fillStyle = "#222";
         ctx.textAlign = "center";
-        var lineH = 12;
+        var lineH = 13;
+        var totalH = lines.length * lineH;
         lines.forEach(function(line, li) {
           var yOff = (li - (lines.length - 1) / 2) * lineH;
-          ctx.fillText(line, lx, ly + yOff + 3);
+          ctx.fillText(line, lx, ly + yOff + 4);
         });
       });
 
-      y += RADAR_W + 24;
+      y += RADAR_W + 20;
 
-      // ── gaps block ──
-      if (hasGaps) {
-        // header
-        ctx.fillStyle = "rgba(247,37,133,0.12)";
-        roundRect(ctx, PAD, y, CARD_W - PAD * 2, GAP_BLOCK_H, 12);
+      // ── RESULT INFO CARDS (white cards on off-white bg) ──
+      function drawInfoCard(label, content, cardY, accentColor) {
+        var CARD_H_EST = 64;
+        // Pre-measure actual height
+        ctx.font = "400 12px system-ui, sans-serif";
+        var lines = wrapText(ctx, content, CARD_INNER_W);
+        var contentH = lines.length * 17;
+        var actualH = 16 + 14 + 6 + contentH + 16; // pad + label + gap + content + pad
+
+        // Card bg
+        ctx.fillStyle = "#ffffff";
+        roundRect(ctx, PAD_H, cardY, CARD_W - PAD_H * 2, actualH, 10);
         ctx.fill();
-        ctx.strokeStyle = "rgba(247,37,133,0.3)";
-        ctx.lineWidth = 1;
-        roundRect(ctx, PAD, y, CARD_W - PAD * 2, GAP_BLOCK_H, 12);
-        ctx.stroke();
+        // Left accent bar
+        ctx.fillStyle = accentColor || "#4f8ef7";
+        ctx.fillRect(PAD_H, cardY, 3, actualH);
 
-        ctx.fillStyle = "#f72585";
-        ctx.font = "700 10px system-ui, sans-serif";
+        // Label
+        ctx.fillStyle = accentColor || "#4f8ef7";
+        ctx.font = "700 9px system-ui, sans-serif";
         ctx.textAlign = "left";
-        ctx.letterSpacing = "1.5px";
-        ctx.fillText("GAPS DETECTADOS", PAD + 16, y + 22);
-        ctx.letterSpacing = "0px";
+        ctx.fillText(label.toUpperCase(), PAD_H + 16, cardY + 20);
 
-        gapsToShow.forEach(function(gap, gi) {
-          var gy = y + 36 + gi * 34;
-          // bullet dot
-          ctx.beginPath();
-          ctx.arc(PAD + 24, gy + 7, 3, 0, Math.PI * 2);
-          ctx.fillStyle = "#f72585";
-          ctx.fill();
-          // text — wrap if needed
-          ctx.fillStyle = "rgba(255,255,255,0.7)";
-          ctx.font = "400 12px system-ui, sans-serif";
-          ctx.textAlign = "left";
-          var maxW = CARD_W - PAD * 2 - 48;
-          var text = gap;
-          if (ctx.measureText(text).width > maxW) {
-            // simple single-line truncation with ellipsis
-            while (ctx.measureText(text + "…").width > maxW && text.length > 0) {
-              text = text.slice(0, -1);
-            }
-            text = text + "…";
-          }
-          ctx.fillText(text, PAD + 36, gy + 12);
+        // Content
+        ctx.fillStyle = "#333";
+        ctx.font = "400 12px system-ui, sans-serif";
+        lines.forEach(function(line, li) {
+          ctx.fillText(line, PAD_H + 16, cardY + 36 + li * 17);
         });
 
-        y += GAP_BLOCK_H;
+        return actualH;
       }
 
-      // ── footer ──
-      y += 16;
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.font = "500 10px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("mentorcito.vercel.app", CARD_W / 2, y);
+      // % Product Sense — no card, just shown in archetype area above radar
+      // (already positioned via archetype label)
 
-      // ── export ──
+      if (superpoderText) {
+        var h = drawInfoCard("Tu superpoder", superpoderText, y, "#4361ee");
+        y += h + INFO_GAP;
+      }
+      if (puntoCiegoText) {
+        var h = drawInfoCard("Tu punto ciego", puntoCiegoText, y, "#f72585");
+        y += h + INFO_GAP;
+      }
+      if (proximaSkillData) {
+        var skillContent = "Tu próxima skill: " + proximaSkillData.label + " — " + proximaSkillData.tip;
+        var h = drawInfoCard("Próxima skill", skillContent, y, "#06d6a0");
+        y += h + INFO_GAP;
+      }
+
+      // ── FOOTER ──
+      y += 14;
+      ctx.fillStyle = "#aaa";
+      ctx.font = "400 10px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Mentorcito · Mentores con Propósito", CARD_W / 2, y);
+
+      // ── EXPORT ──
       canvas.toBlob(function(blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -1895,7 +1992,7 @@ function PantallaPostDiagnostico(props) {
 
       <button onClick={onContinuar}
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
-        Ver mi plan de accion
+        Ver mi radar Product Sense
       </button>
       <div style={{ textAlign: "center", color: T.textMuted, fontSize: 10, marginBottom: 12 }}>
         Tu diagnostico incluye mentores especificos para tu situacion
@@ -2404,12 +2501,7 @@ function DiagnosisPanel(props) {
             trackEvent("vio_paquete", true);
           }}
             style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
-            Ver mi plan de acción →
-          </button>
-
-          <button onClick={function() { setStep(score >= 31 ? "nudo" : "mentores"); trackEvent("vio_paquete", true); }}
-            style={{ width: "100%", padding: "9px 18px", background: "transparent", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer" }}>
-            Continuar sin guardar
+            Ver mi radar Product Sense →
           </button>
         </div>
       </div>
@@ -2752,6 +2844,11 @@ function DiagnosisPanel(props) {
               productSense={diagnosis.product_sense}
               nivel={diagnosis.nivel || "mid"}
               gaps={diagnosis.gaps || []}
+              archetypeData={archetype}
+              superpoderText={superpoder}
+              puntoCiegoText={puntoCiego}
+              proximaSkillData={proximaSkill}
+              psPct={psPct}
             />
           </div>
         )}
@@ -2784,10 +2881,16 @@ function DiagnosisPanel(props) {
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 10 }}>
                         {m.tags.map(function(tag){ return <span key={tag} style={{ padding: "2px 8px", borderRadius: 20, background: "rgba(67,97,238,0.25)", color: T.text, fontSize: 10, fontWeight: 600 }}>{tag}</span>; })}
                       </div>
-                      <a href={m.url} target="_blank" rel="noopener noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: i===0?C.primary:"transparent", color: i===0?"white":C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
-                        Reservar mentoría →
-                      </a>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <a href="https://calendar.app.google/guPzaxaV4QVy3x1ZA" target="_blank" rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: C.primary, color: "white", fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
+                          Reservar un café virtual ☕
+                        </a>
+                        <a href={m.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: "transparent", color: C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", border: "1.5px solid "+C.primary }}>
+                          Ver programa de mentoría →
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2936,6 +3039,9 @@ function EstadoLanding(props) {
 // ─────────────────────────────────────────────
 function HomeLanding(props) {
   var onStart = props.onStart;
+  var [hoveredDim, setHoveredDim] = useState(null);
+  var [tooltipPos, setTooltipPos]  = useState({ x: 0, y: 0 });
+  var svgRef = useRef(null);
 
   // Radar preview estático con valores de ejemplo
   var PREVIEW_PS = {
@@ -2944,14 +3050,54 @@ function HomeLanding(props) {
     ai_fluency: 6,
   };
   var DIMS_HOME = [
-    { key: "user_insights",    label: "User Insights" },
-    { key: "business_acumen",  label: "Business Acumen" },
-    { key: "product_quality",  label: "Product Quality" },
-    { key: "product_strategy", label: "Product Strategy" },
-    { key: "execution",        label: "Execution" },
-    { key: "influence",        label: "Influence" },
-    { key: "data_fluency",     label: "Data Fluency" },
-    { key: "ai_fluency",       label: "AI Fluency" },
+    {
+      key: "user_insights",
+      label: "Perspectiva del Usuario",
+      sublabel: "User Insights",
+      desc: "Capacidad para empatizar con los clientes, entender sus dolores reales y traducir sus necesidades en soluciones de producto.",
+    },
+    {
+      key: "business_acumen",
+      label: "Visión de Negocio",
+      sublabel: "Business Acumen",
+      desc: "Habilidad para conectar las características del producto con la rentabilidad, los objetivos de la empresa y la monetización.",
+    },
+    {
+      key: "product_quality",
+      label: "Calidad de Producto",
+      sublabel: "Product Quality",
+      desc: "Criterio técnico y estético para identificar qué hace que una experiencia de usuario sea fluida, intuitiva y de alto nivel.",
+    },
+    {
+      key: "product_strategy",
+      label: "Estrategia de Producto",
+      sublabel: "Product Strategy",
+      desc: "Visión a largo plazo para definir hacia dónde va el producto y cómo competir en el mercado de manera sostenible.",
+    },
+    {
+      key: "execution",
+      label: "Ejecución",
+      sublabel: "Execution",
+      desc: "Capacidad operativa para coordinar equipos, cumplir plazos, priorizar tareas y transformar ideas en lanzamientos reales.",
+    },
+    {
+      key: "influence",
+      label: "Influencia",
+      sublabel: "Influence",
+      desc: "Habilidad de liderazgo para alinear a diseñadores, desarrolladores y directivos hacia una misma meta sin tener autoridad jerárquica sobre ellos.",
+    },
+    {
+      key: "data_fluency",
+      label: "Fluidez de Datos",
+      sublabel: "Data Fluency",
+      desc: "Destreza para analizar métricas, interpretar experimentos (como pruebas A/B) y tomar decisiones respaldadas por datos objetivos.",
+    },
+    {
+      key: "ai_fluency",
+      label: "Fluidez en IA",
+      sublabel: "AI Fluency",
+      desc: "Capacidad para entender las tecnologías de IA, no solo en su teoría, sino en saber cómo y cuándo aplicarlas para resolver problemas reales de forma eficiente.",
+    },
   ];
   var n = DIMS_HOME.length;
   var W = 320; var cx = W / 2; var cy = W / 2; var R = 110;
@@ -2963,13 +3109,27 @@ function HomeLanding(props) {
   }
   function labelPt(idx) {
     var angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
-    return { x: cx + (R + 38) * Math.cos(angle), y: cy + (R + 38) * Math.sin(angle) };
+    return { x: cx + (R + 42) * Math.cos(angle), y: cy + (R + 42) * Math.sin(angle) };
   }
   function polyFor(obj) {
     return DIMS_HOME.map(function(d, i) {
       var p = pt(i, obj[d.key] || 0);
       return p.x + "," + p.y;
     }).join(" ");
+  }
+
+  function handleDimHover(d, i, e) {
+    setHoveredDim(d);
+    if (svgRef.current) {
+      var rect = svgRef.current.getBoundingClientRect();
+      var lp = labelPt(i);
+      var scaleX = rect.width / W;
+      var scaleY = rect.height / W;
+      setTooltipPos({
+        x: rect.left + lp.x * scaleX,
+        y: rect.top  + lp.y * scaleY,
+      });
+    }
   }
 
   // Grid rings
@@ -2987,7 +3147,7 @@ function HomeLanding(props) {
       flexDirection: "column",
     }}>
       {/* Nav */}
-      <div style={{ padding: "18px 32px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+      <div style={{ padding: "18px clamp(16px, 4vw, 32px)", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: "#f0f0f0", letterSpacing: -0.3 }}>Mentorcito</div>
         <div style={{ marginLeft: 8, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>by Mentores con Propósito</div>
       </div>
@@ -2998,15 +3158,15 @@ function HomeLanding(props) {
         maxWidth: 1100,
         width: "100%",
         margin: "0 auto",
-        padding: "60px 32px 40px",
+        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px) clamp(28px, 4vw, 40px)",
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: 64,
+        gap: "clamp(28px, 5vw, 64px)",
         flexWrap: "wrap",
       }}>
         {/* Left: copy */}
-        <div style={{ flex: "1 1 340px", minWidth: 280 }}>
+        <div style={{ flex: "1 1 300px", minWidth: 0, width: "100%" }}>
           {/* Badge */}
           <div style={{
             display: "inline-flex",
@@ -3029,11 +3189,11 @@ function HomeLanding(props) {
 
           {/* Headline */}
           <h1 style={{
-            fontSize: "clamp(32px, 5vw, 52px)",
+            fontSize: "clamp(28px, 6vw, 52px)",
             fontWeight: 800,
             color: "#f0f0f0",
             lineHeight: 1.1,
-            letterSpacing: -1.5,
+            letterSpacing: "clamp(-0.5px, -0.03em, -1.5px)",
             marginBottom: 20,
           }}>
             Tu mapa de<br /><em style={{ fontStyle: "italic", color: "#a5b4fc" }}>Product Sense</em>,<br />en 8 preguntas
@@ -3041,7 +3201,7 @@ function HomeLanding(props) {
 
           {/* Subtítulo */}
           <p style={{
-            fontSize: 17,
+            fontSize: "clamp(15px, 2.5vw, 17px)",
             color: "rgba(255,255,255,0.55)",
             lineHeight: 1.65,
             marginBottom: 32,
@@ -3079,8 +3239,8 @@ function HomeLanding(props) {
               color: "#fff",
               border: "none",
               borderRadius: 999,
-              padding: "16px 36px",
-              fontSize: 16,
+              padding: "16px clamp(24px, 5vw, 36px)",
+              fontSize: "clamp(15px, 2.5vw, 16px)",
               fontWeight: 700,
               cursor: "pointer",
               letterSpacing: -0.2,
@@ -3088,6 +3248,7 @@ function HomeLanding(props) {
               alignItems: "center",
               gap: 10,
               transition: "opacity 0.15s",
+              minHeight: 52,
             }}
             onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.88"; }}
             onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
@@ -3117,9 +3278,9 @@ function HomeLanding(props) {
           </div>
         </div>
 
-        {/* Right: radar preview */}
-        <div style={{ flex: "1 1 320px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <svg width={W} height={W} viewBox={"0 0 " + W + " " + W} style={{ overflow: "visible" }}>
+        {/* Right: radar preview interactivo */}
+        <div style={{ flex: "1 1 280px", minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", width: "100%" }}>
+          <svg ref={svgRef} className="home-radar-svg" width={W} height={W} viewBox={"0 0 " + W + " " + W} style={{ overflow: "visible", maxWidth: "100%", height: "auto" }}>
             {/* Grid rings */}
             {rings.map(function(v) {
               var rr = (v / 10) * R;
@@ -3145,19 +3306,72 @@ function HomeLanding(props) {
             {/* Dots */}
             {DIMS_HOME.map(function(d, i) {
               var p = pt(i, PREVIEW_PS[d.key] || 0);
-              return <circle key={d.key} cx={p.x} cy={p.y} r="5" fill="#4f8ef7" stroke="#0d1117" strokeWidth="2" />;
+              var isHov = hoveredDim && hoveredDim.key === d.key;
+              return <circle key={d.key} cx={p.x} cy={p.y}
+                r={isHov ? 7 : 5}
+                fill={isHov ? "#a5b4fc" : "#4f8ef7"}
+                stroke="#0d1117" strokeWidth="2"
+                style={{ transition: "r 0.15s, fill 0.15s", cursor: "pointer" }}
+                onMouseEnter={function(e) { handleDimHover(d, i, e); }}
+                onMouseLeave={function() { setHoveredDim(null); }}
+              />;
             })}
-            {/* Labels */}
+            {/* Labels interactivos */}
             {DIMS_HOME.map(function(d, i) {
               var lp = labelPt(i);
+              var isHov = hoveredDim && hoveredDim.key === d.key;
               return (
-                <text key={d.key} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle"
-                  fill="rgba(255,255,255,0.45)" fontSize="11" fontWeight="600" fontFamily="'Plus Jakarta Sans',system-ui,sans-serif">
-                  {d.label}
-                </text>
+                <g key={d.key} style={{ cursor: "pointer" }}
+                  onMouseEnter={function(e) { handleDimHover(d, i, e); }}
+                  onMouseLeave={function() { setHoveredDim(null); }}>
+                  {/* Label principal en español */}
+                  <text x={lp.x} y={lp.y - 7} textAnchor="middle" dominantBaseline="middle"
+                    fill={isHov ? "#a5b4fc" : "rgba(255,255,255,0.75)"} fontSize="10.5" fontWeight="700"
+                    fontFamily="'Plus Jakarta Sans',system-ui,sans-serif"
+                    style={{ transition: "fill 0.15s" }}>
+                    {d.label}
+                  </text>
+                  {/* Sublabel en inglés */}
+                  <text x={lp.x} y={lp.y + 8} textAnchor="middle" dominantBaseline="middle"
+                    fill={isHov ? "rgba(165,180,252,0.7)" : "rgba(255,255,255,0.28)"} fontSize="9" fontWeight="500"
+                    fontFamily="'Plus Jakarta Sans',system-ui,sans-serif"
+                    style={{ transition: "fill 0.15s" }}>
+                    {d.sublabel}
+                  </text>
+                  {/* Hit area invisible más grande para hover cómodo */}
+                  <rect x={lp.x - 50} y={lp.y - 18} width="100" height="34"
+                    fill="transparent" />
+                </g>
               );
             })}
           </svg>
+
+          {/* Tooltip flotante — solo en desktop (hover) */}
+          {hoveredDim && (
+            <div style={{
+              position: "fixed",
+              left: Math.max(8, Math.min(tooltipPos.x - 115, (typeof window !== "undefined" ? window.innerWidth : 400) - 244)),
+              top: Math.min(tooltipPos.y + 16, (typeof window !== "undefined" ? window.innerHeight : 700) - 160),
+              width: "min(230px, calc(100vw - 32px))",
+              background: "rgba(15,20,35,0.97)",
+              border: "1px solid rgba(165,180,252,0.3)",
+              borderRadius: 12,
+              padding: "12px 14px",
+              zIndex: 1000,
+              pointerEvents: "none",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#a5b4fc", letterSpacing: 0.3, marginBottom: 2 }}>
+                {hoveredDim.label}
+              </div>
+              <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                {hoveredDim.sublabel}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.55 }}>
+                {hoveredDim.desc}
+              </div>
+            </div>
+          )}
 
           {/* Legend */}
           <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
@@ -3177,11 +3391,28 @@ function HomeLanding(props) {
       </div>
 
       {/* Footer */}
-      <div style={{ textAlign: "center", padding: "20px 32px", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        /* Mobile: ocultar tooltip hover y mostrar leyenda de dimensiones */
+        @media (hover: none) and (pointer: coarse) {
+          .home-tooltip { display: none !important; }
+        }
+
+        /* Mobile: el radar no crece más del viewport */
+        @media (max-width: 480px) {
+          .home-radar-svg {
+            max-width: min(300px, calc(100vw - 32px)) !important;
+          }
+          .home-hero-gap {
+            row-gap: 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
