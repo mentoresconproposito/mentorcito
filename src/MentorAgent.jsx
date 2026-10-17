@@ -1165,6 +1165,10 @@ function ProductSenseRadar(props) {
 
   function copyShareLink() {
     var url = buildShareUrl();
+    // Guardar la URL en Sheets para poder enviarla por mail después
+    if (diagKey && postToSheets) {
+      postToSheets({ action: "update_share_url", diag_key: diagKey, share_url: url });
+    }
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function() {
         setCopied(true);
@@ -2559,12 +2563,14 @@ function DiagnosisPanel(props) {
             disabled={!(userName.trim() && userEmail.trim())}
             onClick={function() {
               if (userEmail && diagKey) {
+                var shareUrl = buildShareUrl ? buildShareUrl() : "";
                 postToSheets({
                   action: "update_contact",
                   diag_key: diagKey,
                   nombre: userName,
                   email: userEmail,
                   compartir_empresa: compartirEmpresa,
+                  share_url: shareUrl,
                 });
                 trackEvent("dejo_email", true);
               }
