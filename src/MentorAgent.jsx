@@ -755,6 +755,8 @@ function ProductSenseRadar(props) {
   var puntoCiegoText = props.puntoCiegoText || null;
   var proximaSkillData = props.proximaSkillData || null;
   var psPct = props.psPct || null;
+  var diagKey = props.diagKey || null;
+  var postToSheets = props.postToSheets || null;
 
   var DIMS = [
     { key: "user_insights",    label: "Perspectiva\ndel Usuario" },
@@ -2937,6 +2939,8 @@ function DiagnosisPanel(props) {
               puntoCiegoText={puntoCiego}
               proximaSkillData={proximaSkill}
               psPct={psPct}
+              diagKey={diagKey}
+              postToSheets={postToSheets}
             />
           </div>
         )}
