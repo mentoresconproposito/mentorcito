@@ -1169,11 +1169,31 @@ function ProductSenseRadar(props) {
     if (diagKey && postToSheets) {
       postToSheets({ action: "update_share_url", diag_key: diagKey, share_url: url });
     }
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function() {
-        setCopied(true);
-        setTimeout(function() { setCopied(false); }, 2500);
+    // Intentar clipboard API; fallback a execCommand para iframes/HTTP
+    var doCopy = function() {
+      setCopied(true);
+      setTimeout(function() { setCopied(false); }, 2500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(doCopy).catch(function() {
+        // Fallback: crear input temporal y copiar
+        var el = document.createElement("textarea");
+        el.value = url;
+        el.style.position = "fixed"; el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus(); el.select();
+        try { document.execCommand("copy"); doCopy(); } catch(e) {}
+        document.body.removeChild(el);
       });
+    } else {
+      // Fallback directo para navegadores sin clipboard API
+      var el = document.createElement("textarea");
+      el.value = url;
+      el.style.position = "fixed"; el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.focus(); el.select();
+      try { document.execCommand("copy"); doCopy(); } catch(e) {}
+      document.body.removeChild(el);
     }
   }
 
@@ -2563,7 +2583,7 @@ function DiagnosisPanel(props) {
             disabled={!(userName.trim() && userEmail.trim())}
             onClick={function() {
               if (userEmail && diagKey) {
-                // Construir share URL con los datos disponibles en este scope
+                // Construir share URL completa con todos los datos del diagnóstico
                 var shareUrl = "";
                 try {
                   var ps2 = diagnosis.product_sense || {};
@@ -2571,6 +2591,17 @@ function DiagnosisPanel(props) {
                   var params2 = new URLSearchParams();
                   PS_KEYS.forEach(function(k) { params2.set(k, ps2[k] || 0); });
                   params2.set("nivel", diagnosis.nivel || "mid");
+                  // Incluir archetype, superpoder, punto ciego y próxima skill
+                  var arc2 = inferirArchetype(ps2);
+                  if (arc2) { params2.set("arc_label", arc2.label); params2.set("arc_tagline", arc2.tagline); }
+                  var pct2 = calcPSPct(ps2);
+                  if (pct2 != null) params2.set("pspct", pct2);
+                  var sup2 = inferirSuperpoder(ps2);
+                  if (sup2) params2.set("superpoder", sup2);
+                  var pc2 = inferirPuntoCiego(ps2);
+                  if (pc2) params2.set("puntociego", pc2);
+                  var prox2 = inferirProximaSkill(ps2);
+                  if (prox2) { params2.set("proxima_label", prox2.label); params2.set("proxima_tip", prox2.tip); }
                   shareUrl = window.location.origin + "/?compartir=1&" + params2.toString();
                 } catch(e) { shareUrl = ""; }
                 postToSheets({
