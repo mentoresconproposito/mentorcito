@@ -933,7 +933,7 @@ function ProductSenseRadar(props) {
         ctx.fillStyle = "rgba(165,180,252,0.45)";
         ctx.font = "600 10px system-ui, sans-serif";
         ctx.textAlign = "left";
-        ctx.fillText("Product Sense  ·  Shreyas Doshi", lx + 16, ay);
+        ctx.fillText("Tu radar Product Sense", lx + 16, ay);
         ay += 24;
         // "TU RESULTADO"
         ctx.fillStyle = "rgba(165,180,252,0.65)";
@@ -1178,7 +1178,7 @@ function ProductSenseRadar(props) {
   return (
     <div style={{ marginTop: 24 }}>
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
-        Product Sense · Shreyas Doshi
+        Tu radar Product Sense
       </div>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
         {/* Radar */}
@@ -1252,20 +1252,28 @@ function ProductSenseRadar(props) {
         </div>
       </div>
       {/* Acciones: descargar + compartir */}
-      <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-        <button
-          onClick={downloadRadarPNG}
-          disabled={downloading}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(67,97,238,0.15)", border: "1px solid rgba(67,97,238,0.4)", borderRadius: 8, padding: "8px 14px", color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: downloading ? "wait" : "pointer", transition: "all 0.2s" }}>
-          <span>{downloading ? "⏳" : "⬇️"}</span>
-          {downloading ? "Generando..." : "Descargar mi radar"}
-        </button>
-        <button
-          onClick={copyShareLink}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: copied ? "rgba(6,214,160,0.15)" : "rgba(247,37,133,0.12)", border: "1px solid " + (copied ? "rgba(6,214,160,0.4)" : "rgba(247,37,133,0.35)"), borderRadius: 8, padding: "8px 14px", color: copied ? "#06d6a0" : "#f9a8d4", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-          <span>{copied ? "✅" : "🔗"}</span>
-          {copied ? "¡Link copiado!" : "Compartir mi resultado"}
-        </button>
+      <div style={{ marginTop: 20, padding: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontWeight: 600, marginBottom: 4, textAlign: "center" }}>
+          ¿Querés guardar o compartir tu resultado?
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 14, textAlign: "center" }}>
+          Descargá tu radar como imagen o compartí el link con tu equipo.
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            onClick={downloadRadarPNG}
+            disabled={downloading}
+            style={{ flex: 1, minWidth: 140, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: downloading ? "rgba(67,97,238,0.08)" : "rgba(67,97,238,0.18)", border: "1px solid rgba(67,97,238,0.5)", borderRadius: 10, padding: "11px 16px", color: "#a5b4fc", fontSize: 13, fontWeight: 700, cursor: downloading ? "wait" : "pointer", transition: "all 0.2s" }}>
+            <span style={{ fontSize: 16 }}>{downloading ? "⏳" : "⬇️"}</span>
+            {downloading ? "Generando..." : "Descargar radar"}
+          </button>
+          <button
+            onClick={copyShareLink}
+            style={{ flex: 1, minWidth: 140, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: copied ? "rgba(6,214,160,0.18)" : "rgba(247,37,133,0.15)", border: "1px solid " + (copied ? "rgba(6,214,160,0.5)" : "rgba(247,37,133,0.45)"), borderRadius: 10, padding: "11px 16px", color: copied ? "#06d6a0" : "#f9a8d4", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+            <span style={{ fontSize: 16 }}>{copied ? "✅" : "🔗"}</span>
+            {copied ? "¡Link copiado!" : "Compartir resultado"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -2547,21 +2555,23 @@ function DiagnosisPanel(props) {
             </div>
           )}
 
-          <button onClick={function() {
-            if (userEmail && diagKey) {
-              postToSheets({
-                action: "update_contact",
-                diag_key: diagKey,
-                nombre: userName,
-                email: userEmail,
-                compartir_empresa: compartirEmpresa,
-              });
-              trackEvent("dejo_email", true);
-            }
-            setStep(score >= 31 ? "nudo" : "mentores");
-            trackEvent("vio_paquete", true);
-          }}
-            style={{ width: "100%", padding: "13px 18px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}>
+          <button
+            disabled={!(userName.trim() && userEmail.trim())}
+            onClick={function() {
+              if (userEmail && diagKey) {
+                postToSheets({
+                  action: "update_contact",
+                  diag_key: diagKey,
+                  nombre: userName,
+                  email: userEmail,
+                  compartir_empresa: compartirEmpresa,
+                });
+                trackEvent("dejo_email", true);
+              }
+              setStep(score >= 31 ? "nudo" : "mentores");
+              trackEvent("vio_paquete", true);
+            }}
+            style={{ width: "100%", padding: "13px 18px", background: (userName.trim() && userEmail.trim()) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.08)", border: "none", borderRadius: 12, color: (userName.trim() && userEmail.trim()) ? "white" : "rgba(255,255,255,0.3)", fontSize: 14, fontWeight: 800, cursor: (userName.trim() && userEmail.trim()) ? "pointer" : "not-allowed", marginBottom: 10, transition: "all 0.2s" }}>
             Ver mi radar Product Sense →
           </button>
         </div>
@@ -2870,7 +2880,7 @@ function DiagnosisPanel(props) {
         {diagnosis.product_sense && Object.keys(diagnosis.product_sense).length > 0 && (
           <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 16, padding: 20, marginBottom: 12 }}>
             <div style={{ fontSize: 9, fontWeight: 800, color: C.textSecondary, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>
-              Product Sense · Shreyas Doshi
+              Tu radar Product Sense
             </div>
             <ProductSenseRadar
               productSense={diagnosis.product_sense}
@@ -3460,7 +3470,7 @@ function HomeLanding(props) {
             </div>
           </div>
           <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
-            Framework Shreyas Doshi · Product Sense
+            Product Sense · Mentores con Propósito
           </div>
         </div>
       </div>
@@ -3530,7 +3540,7 @@ function SharedRadarView() {
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>Mentorcito · Product Sense Radar</div>
           <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Este es mi mapa de Product Sense</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Framework Shreyas Doshi · Nivel <span style={{ color: "#a5b4fc", fontWeight: 700 }}>{nivel}</span></div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Product Sense · Nivel <span style={{ color: "#a5b4fc", fontWeight: 700 }}>{nivel}</span></div>
         </div>
         {archetypeData && (
           <div style={{ marginBottom: 20, textAlign: "center" }}>
