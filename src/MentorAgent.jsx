@@ -1167,17 +1167,6 @@ function ProductSenseRadar(props) {
 
   function copyShareLink() {
     var url = buildShareUrl();
-    // Debug: verificar que diagKey y postToSheets están disponibles
-    console.log("[Mentorcito] copyShareLink → diagKey:", diagKey, "| postToSheets:", typeof postToSheets, "| url:", url ? url.slice(0, 80) + "..." : "(vacía)");
-    // Guardar la URL en Sheets para poder enviarla por mail después
-    if (diagKey && postToSheets) {
-      console.log("[Mentorcito] Enviando update_share_url a Sheets...");
-      postToSheets({ action: "update_share_url", diag_key: diagKey, share_url: url })
-        .then(function() { console.log("[Mentorcito] update_share_url enviado OK"); })
-        .catch(function(err) { console.error("[Mentorcito] update_share_url error:", err); });
-    } else {
-      console.warn("[Mentorcito] NO se envió a Sheets — diagKey:", diagKey, "postToSheets:", typeof postToSheets);
-    }
     // Intentar clipboard API; fallback a execCommand para iframes/HTTP
     var doCopy = function() {
       setCopied(true);
@@ -3728,16 +3717,14 @@ export default function MentorAgent(props) {
   // Calcular tema actual en cada render y sincronizar global T
 
   // URL del Google Apps Script — reemplazá con la tuya
-  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzDc_NaVxWDRQTNU_QlQG9i37IECxsbo4VuO5ElfstYz29vYevoXQvEbJkI5o-FWxON0g/exec";
+  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbw4B5AVsgikVBFii9mhNcqCTi7B-zQbFcK00AWETBKxgRzte0U_g4amGfFFBv-MpkYscQ/exec";
 
   async function postToSheets(payload) {
     try {
-      // Usar GET con parámetros para evitar bloqueo CORS en POST
-      var params = new URLSearchParams();
-      params.set("payload", JSON.stringify(payload));
-      await fetch(SHEETS_URL + "?" + params.toString(), {
-        method: "GET",
+      await fetch(SHEETS_URL, {
+        method: "POST",
         mode: "no-cors",
+        body: JSON.stringify(payload),
       });
     } catch (e) {}
   }
