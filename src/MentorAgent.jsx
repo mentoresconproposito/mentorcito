@@ -3732,11 +3732,12 @@ export default function MentorAgent(props) {
 
   async function postToSheets(payload) {
     try {
-      await fetch(SHEETS_URL, {
-        method: "POST",
+      // Usar GET con parámetros para evitar bloqueo CORS en POST
+      var params = new URLSearchParams();
+      params.set("payload", JSON.stringify(payload));
+      await fetch(SHEETS_URL + "?" + params.toString(), {
+        method: "GET",
         mode: "no-cors",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify(payload),
       });
     } catch (e) {}
   }
