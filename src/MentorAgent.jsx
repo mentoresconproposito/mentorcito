@@ -3728,7 +3728,7 @@ export default function MentorAgent(props) {
   // Calcular tema actual en cada render y sincronizar global T
 
   // URL del Google Apps Script — reemplazá con la tuya
-  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbz37pHd5brr_s6woRm-SosGVPVV9SCi-QzhjsLfJArpDF7R11A-VEh3GyDvfjkaEmfUag/exec";
+  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbzDc_NaVxWDRQTNU_QlQG9i37IECxsbo4VuO5ElfstYz29vYevoXQvEbJkI5o-FWxON0g/exec";
 
   async function postToSheets(payload) {
     try {
