@@ -1168,8 +1168,12 @@ function ProductSenseRadar(props) {
   function copyShareLink() {
     var url = buildShareUrl();
     // Guardar share_url en el sheet
+    console.log("[share_url] diagKey:", diagKey, "postToSheets:", !!postToSheets, "url:", url);
     if (postToSheets && diagKey) {
       postToSheets({ action: "update_share_url", diag_key: diagKey, share_url: url });
+      console.log("[share_url] POST enviado");
+    } else {
+      console.log("[share_url] POST NO enviado - falta diagKey o postToSheets");
     }
     // Intentar clipboard API; fallback a execCommand para iframes/HTTP
     var doCopy = function() {
