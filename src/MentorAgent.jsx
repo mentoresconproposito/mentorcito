@@ -3693,6 +3693,7 @@ export default function MentorAgent(props) {
   var [diagnosis, setDiagnosis] = useState(null);
   var [phase, setPhase] = useState("intro");
   var [currentDiagKey, setCurrentDiagKey] = useState(null);
+  var currentDiagKeyRef = useRef(null); // ref para acceso sincrónico desde callbacks
   var [liveStats, setLiveStats] = useState(null);
   var bottomRef = useRef(null);
 
@@ -3837,6 +3838,7 @@ export default function MentorAgent(props) {
         try {
           var diagKey = "diag:" + Date.now();
           setCurrentDiagKey(diagKey);
+          currentDiagKeyRef.current = diagKey;
           if (SHEETS_URL.indexOf("TU_GOOGLE") === -1) {
             // Build chat summary (first 3 user messages)
             var resumen = newMessages.filter(function(m){ return m.role === "user"; })
@@ -3985,7 +3987,7 @@ export default function MentorAgent(props) {
                   <div style={{ padding: "13px 16px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "4px 18px 18px 18px", background: msg.role === "user" ? "rgba(67,97,238,0.14)" : "rgba(255,255,255,0.05)", border: "1px solid " + (msg.role === "user" ? "rgba(67,97,238,0.35)" : "rgba(255,255,255,0.08)"), fontSize: 14, lineHeight: "1.6" }}>
                     {formatMessage(msg.content)}
                     {msg.role === "assistant" && diagnosis && i === messages.length - 1 && (
-                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey} empresaCtx={empresaConfig} />
+                      <DiagnosisPanel diagnosis={diagnosis} allMessages={messages} trackEvent={trackFunnelEvent} postToSheets={postToSheets} diagKey={currentDiagKey || currentDiagKeyRef.current} empresaCtx={empresaConfig} />
                     )}
                   </div>
                   {/* Social proof debajo del primer mensaje */}
