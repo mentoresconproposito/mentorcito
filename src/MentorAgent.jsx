@@ -1167,6 +1167,10 @@ function ProductSenseRadar(props) {
 
   function copyShareLink() {
     var url = buildShareUrl();
+    // Guardar share_url en el sheet
+    if (postToSheets && diagKey) {
+      postToSheets({ action: "update_share_url", diag_key: diagKey, share_url: url });
+    }
     // Intentar clipboard API; fallback a execCommand para iframes/HTTP
     var doCopy = function() {
       setCopied(true);
@@ -3717,7 +3721,7 @@ export default function MentorAgent(props) {
   // Calcular tema actual en cada render y sincronizar global T
 
   // URL del Google Apps Script — reemplazá con la tuya
-  var SHEETS_URL = "https://script.google.com/macros/s/AKfycbw4B5AVsgikVBFii9mhNcqCTi7B-zQbFcK00AWETBKxgRzte0U_g4amGfFFBv-MpkYscQ/exec";
+  var SHEETS_URL = "https://script.google.com/macros/s/AKfycby_UmXK49W239AN1ZbmDIpdMpcbGqqlHIuT7DwmWoWQ7AXt8b-_g6PGIeLeIlKWgNng9Q/exec";
 
   async function postToSheets(payload) {
     try {
