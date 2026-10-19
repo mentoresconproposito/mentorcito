@@ -3396,7 +3396,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para PMs en Latinoamérica
+            Gratis · Para profesionales de producto en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3531,7 +3531,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para PMs en Latinoamérica
+        Mentores con Propósito · Para profesionales de producto en Latinoamérica
       </div>
 
       <style>{`
