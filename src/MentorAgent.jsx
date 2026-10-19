@@ -2390,6 +2390,117 @@ function CtaAccordion(props) {
   );
 }
 
+// ── Helpers de Product Sense (nivel módulo para reusar en postToSheets) ──────
+var PS_ARCHETYPES_MODULE = [
+  { id: "estratega",   label: "El Estratega",     tagline: "Pensás en sistemas, no en features.",    top: ["product_strategy","business_acumen","influence"] },
+  { id: "detective",   label: "El Detective",     tagline: "No construís hasta entender el problema de verdad.", top: ["user_insights","product_quality"] },
+  { id: "ejecutor",    label: "El Ejecutor/a",    tagline: "Llevás ideas al mundo cuando el resto todavía las debate.", top: ["execution","product_quality"] },
+  { id: "constructor", label: "El Constructor/a", tagline: "Sabés qué construir, cuándo y por qué.", top: ["product_strategy","execution","data_fluency"] },
+  { id: "influencer",  label: "El Comunicador/a", tagline: "Hacés que las cosas pasen sin tener autoridad formal.", top: ["influence","business_acumen","product_strategy"] },
+  { id: "datadriven",  label: "El Data Mind",     tagline: "Tus decisiones tienen evidencia detrás, no solo intuición.", top: ["data_fluency","user_insights","business_acumen"] },
+  { id: "aiadopter",   label: "El Augmented PM",  tagline: "Usás IA como palanca para multiplicar tu impacto.", top: ["ai_fluency","execution","product_strategy"] },
+  { id: "generalista", label: "El Generalista",   tagline: "Cubrís todas las patas. Tu valor está en la versatilidad.", top: [] },
+];
+var PS_DIMS_KEYS = ["user_insights","business_acumen","product_quality","product_strategy","execution","influence","data_fluency","ai_fluency"];
+var PS_SUPERPODERES = {
+  user_insights:    "Encontrás lo que los usuarios sienten pero no dicen.",
+  business_acumen:  "Conectás producto con negocio con naturalidad.",
+  product_quality:  "Tu criterio de calidad eleva el estándar del equipo.",
+  product_strategy: "Tenés visión de largo plazo cuando el resto opera en el corto.",
+  execution:        "Llevás ideas al mundo mientras otros todavía debaten.",
+  influence:        "Hacés que las cosas pasen sin necesitar autoridad formal.",
+  data_fluency:     "Tus decisiones tienen evidencia detrás, no solo intuición.",
+  ai_fluency:       "Usás IA como palanca cuando el resto la usa como juguete.",
+};
+var PS_PUNTOS_CIEGOS = {
+  user_insights:    "Construís antes de escuchar suficiente. A veces la solución llega antes que el problema.",
+  business_acumen:  "Te concentrás en el usuario y el producto, pero la lógica del negocio queda en segundo plano.",
+  product_quality:  "Priorizás velocidad sobre pulido. Eso suma deuda que después hay que pagar.",
+  product_strategy: "Operás bien en el corto plazo. La dirección de largo plazo todavía no está clara.",
+  execution:        "Pensás bien, pero la ejecución consistente puede ser el cuello de botella.",
+  influence:        "Tenés el criterio pero que se escuche depende más del contexto que de vos.",
+  data_fluency:     "Tomás buenas decisiones, pero sin datos que las soporten es difícil defenderlas.",
+  ai_fluency:       "Hay ciclos que podrían automatizarse. Eso todavía no está pasando.",
+};
+var PS_PROXIMA_SKILLS = {
+  user_insights:    { label: "Discovery continuo",      tip: "Agendá una entrevista de usuario esta semana. Una conversación real vale más que diez métricas de comportamiento." },
+  business_acumen:  { label: "Métricas de negocio",     tip: "Conectá tu roadmap a revenue, CAC o retención. Que cada feature tenga una métrica de negocio asociada." },
+  product_quality:  { label: "Criterio de calidad",     tip: "Definí los 3 principios de calidad de tu producto antes de escribir la próxima spec." },
+  product_strategy: { label: "Estrategia de producto",  tip: "Escribí en una página: ¿a dónde va el producto en 12 meses y por qué ese camino y no otro?" },
+  execution:        { label: "Sistema de entrega",      tip: "Elegí un proceso de priorización y seguilo consistentemente por 30 días. La disciplina vence al talento." },
+  influence:        { label: "Comunicación ejecutiva",  tip: "La próxima presentación que hagas, empezá por el 'por qué importa', no por el 'qué hicimos'." },
+  data_fluency:     { label: "Data para PMs",           tip: "Aprendé a leer un funnel en tu herramienta de analytics. No necesitás saber SQL — necesitás saber qué preguntar." },
+  ai_fluency:       { label: "IA en tu proceso",        tip: "Elegí una tarea repetitiva de tu semana y automatizala con IA. Un solo flujo que funcione vale más que diez prompts sueltos." },
+};
+function _calcPSPct(ps) {
+  if (!ps) return null;
+  var vals = Object.values(ps).filter(function(v) { return typeof v === "number"; });
+  if (!vals.length) return null;
+  var avg = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
+  return Math.round(avg * 10);
+}
+function _inferirArchetype(ps) {
+  if (!ps) return PS_ARCHETYPES_MODULE[PS_ARCHETYPES_MODULE.length - 1];
+  var scores = Object.keys(ps).map(function(k) { return { k: k, v: ps[k] || 0 }; });
+  var sorted = scores.slice().sort(function(a, b) { return b.v - a.v; });
+  var top2 = sorted.slice(0, 2).map(function(x) { return x.k; });
+  var best = null, bestHits = -1;
+  PS_ARCHETYPES_MODULE.forEach(function(arc) {
+    var hits = arc.top.filter(function(t) { return top2.indexOf(t) !== -1; }).length;
+    if (hits > bestHits) { bestHits = hits; best = arc; }
+  });
+  return best || PS_ARCHETYPES_MODULE[PS_ARCHETYPES_MODULE.length - 1];
+}
+function _inferirSuperpoder(ps) {
+  if (!ps) return null;
+  var entries = Object.entries(ps);
+  if (!entries.length) return null;
+  var top = entries.slice().sort(function(a, b) { return b[1] - a[1]; })[0];
+  return PS_SUPERPODERES[top[0]] || null;
+}
+function _inferirPuntoCiego(ps) {
+  if (!ps) return null;
+  var entries = Object.entries(ps);
+  if (!entries.length) return null;
+  var low = entries.slice().sort(function(a, b) { return a[1] - b[1]; })[0];
+  return PS_PUNTOS_CIEGOS[low[0]] || null;
+}
+function _inferirProximaSkill(ps) {
+  if (!ps) return null;
+  var entries = Object.entries(ps);
+  if (!entries.length) return null;
+  var low = entries.slice().sort(function(a, b) { return a[1] - b[1]; })[0];
+  return PS_PROXIMA_SKILLS[low[0]] || null;
+}
+function buildShareUrlFromDiag(diag) {
+  try {
+    var ps = diag.product_sense || {};
+    var nivel = diag.nivel || "mid";
+    var base = (typeof window !== "undefined" ? window.location.origin : "https://mentorcito.vercel.app");
+    var params = new URLSearchParams();
+    PS_DIMS_KEYS.forEach(function(k) { params.set(k, ps[k] || 0); });
+    params.set("nivel", nivel);
+    var archetypeData = _inferirArchetype(ps);
+    if (archetypeData) {
+      params.set("arc_label", archetypeData.label);
+      params.set("arc_tagline", archetypeData.tagline);
+    }
+    var psPct = _calcPSPct(ps);
+    if (psPct != null) params.set("pspct", psPct);
+    var superpoderText = _inferirSuperpoder(ps);
+    if (superpoderText) params.set("superpoder", superpoderText);
+    var puntoCiegoText = _inferirPuntoCiego(ps);
+    if (puntoCiegoText) params.set("puntociego", puntoCiegoText);
+    var proximaSkillData = _inferirProximaSkill(ps);
+    if (proximaSkillData) {
+      params.set("proxima_label", proximaSkillData.label);
+      params.set("proxima_tip", proximaSkillData.tip);
+    }
+    return base + "/?compartir=1&" + params.toString();
+  } catch(e) { return ""; }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function DiagnosisPanel(props) {
   var diagnosis    = props.diagnosis;
   var allMessages  = props.allMessages;
@@ -3396,7 +3507,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para profesionales de producto en Latinoamérica
+            Gratis · Para PMs en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3531,7 +3642,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para profesionales de producto en Latinoamérica
+        Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
       <style>{`
@@ -3872,6 +3983,7 @@ export default function MentorAgent(props) {
               skills_tech: clasificarGapsEnSkills(diag.gaps || []).tech.join("|"),
               skills_producto: clasificarGapsEnSkills(diag.gaps || []).producto.join("|"),
               skills_negocio: clasificarGapsEnSkills(diag.gaps || []).negocio.join("|"),
+              share_url: buildShareUrlFromDiag(diag),
             });
           }
         } catch (e) {}
