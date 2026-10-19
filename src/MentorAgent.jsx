@@ -2439,8 +2439,9 @@ function _calcPSPct(ps) {
   var avg = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
   return Math.round(avg * 10);
 }
-function _inferirArchetype(ps) {
-  if (!ps) return PS_ARCHETYPES_MODULE[PS_ARCHETYPES_MODULE.length - 1];
+function _inferirArchetype(ps, gaps) {
+  var generalista = PS_ARCHETYPES_MODULE[PS_ARCHETYPES_MODULE.length - 1];
+  if (!ps) return generalista;
   var scores = Object.keys(ps).map(function(k) { return { k: k, v: ps[k] || 0 }; });
   var sorted = scores.slice().sort(function(a, b) { return b.v - a.v; });
   var top2 = sorted.slice(0, 2).map(function(x) { return x.k; });
@@ -2449,13 +2450,25 @@ function _inferirArchetype(ps) {
     var hits = arc.top.filter(function(t) { return top2.indexOf(t) !== -1; }).length;
     if (hits > bestHits) { bestHits = hits; best = arc; }
   });
-  return best || PS_ARCHETYPES_MODULE[PS_ARCHETYPES_MODULE.length - 1];
+  var chosen = best || generalista;
+  // Si el archetype asignado tiene en su "top" alguna dimensión que también es gap principal,
+  // el archetype suena contradictorio — caer al Generalista
+  if (chosen.top.length > 0 && gaps && gaps.length > 0) {
+    var gapDims = gaps.map(function(g) { return g.split("_")[0] + "_" + g.split("_")[1]; });
+    var contradiction = chosen.top.some(function(t) {
+      return gapDims.some(function(g) { return g.indexOf(t) !== -1 || t.indexOf(g) !== -1; });
+    });
+    if (contradiction) return generalista;
+  }
+  return chosen;
 }
 function _inferirSuperpoder(ps) {
   if (!ps) return null;
   var entries = Object.entries(ps);
   if (!entries.length) return null;
   var top = entries.slice().sort(function(a, b) { return b[1] - a[1]; })[0];
+  // Si el score más alto no supera 7.5, no hay superpoder real — es solo la fortaleza relativa
+  if (top[1] < 7.5) return null;
   return PS_SUPERPODERES[top[0]] || null;
 }
 function _inferirPuntoCiego(ps) {
@@ -2480,7 +2493,7 @@ function buildShareUrlFromDiag(diag) {
     var params = new URLSearchParams();
     PS_DIMS_KEYS.forEach(function(k) { params.set(k, ps[k] || 0); });
     params.set("nivel", nivel);
-    var archetypeData = _inferirArchetype(ps);
+    var archetypeData = _inferirArchetype(ps, diag.gaps || []);
     if (archetypeData) {
       params.set("arc_label", archetypeData.label);
       params.set("arc_tagline", archetypeData.tagline);
@@ -2903,8 +2916,9 @@ function DiagnosisPanel(props) {
     { id: "generalista",label: "El Generalista",  tagline: "Cubrís todas las patas. Tu valor está en la versatilidad.", top: [] },
   ];
 
-  function inferirArchetype(ps) {
-    if (!ps) return PS_ARCHETYPES[PS_ARCHETYPES.length - 1];
+  function inferirArchetype(ps, gaps) {
+    var generalista = PS_ARCHETYPES[PS_ARCHETYPES.length - 1];
+    if (!ps) return generalista;
     var scores = Object.keys(ps).map(function(k) { return { k: k, v: ps[k] || 0 }; });
     var sorted = scores.slice().sort(function(a, b) { return b.v - a.v; });
     var top2 = sorted.slice(0, 2).map(function(x) { return x.k; });
@@ -2913,7 +2927,17 @@ function DiagnosisPanel(props) {
       var hits = arc.top.filter(function(t) { return top2.indexOf(t) !== -1; }).length;
       if (hits > bestHits) { bestHits = hits; best = arc; }
     });
-    return best || PS_ARCHETYPES[PS_ARCHETYPES.length - 1];
+    var chosen = best || generalista;
+    // Si el archetype asignado tiene en su "top" alguna dimensión que también es gap principal,
+    // el archetype suena contradictorio — caer al Generalista
+    if (chosen.top.length > 0 && gaps && gaps.length > 0) {
+      var gapDims = gaps.map(function(g) { return g.split("_")[0] + "_" + g.split("_")[1]; });
+      var contradiction = chosen.top.some(function(t) {
+        return gapDims.some(function(g) { return g.indexOf(t) !== -1 || t.indexOf(g) !== -1; });
+      });
+      if (contradiction) return generalista;
+    }
+    return chosen;
   }
 
   function calcPSPct(ps) {
@@ -2928,7 +2952,9 @@ function DiagnosisPanel(props) {
     if (!ps) return null;
     var entries = Object.entries(ps);
     if (!entries.length) return null;
-    var top = entries.sort(function(a,b){ return b[1]-a[1]; })[0];
+    var top = entries.slice().sort(function(a,b){ return b[1]-a[1]; })[0];
+    // Si el score más alto no supera 7.5, no hay superpoder real
+    if (top[1] < 7.5) return null;
     var superpoderes = {
       user_insights:    "Encontrás lo que los usuarios sienten pero no dicen.",
       business_acumen:  "Conectás producto con negocio con naturalidad.",
@@ -2982,7 +3008,7 @@ function DiagnosisPanel(props) {
   if (step === "mentores") {
     var ps = diagnosis.product_sense || null;
     var psPct = calcPSPct(ps);
-    var archetype = inferirArchetype(ps);
+    var archetype = inferirArchetype(ps, diagnosis.gaps || []);
     var superpoder = inferirSuperpoder(ps);
     var puntoCiego = inferirPuntoCiego(ps);
     var proximaSkill = inferirProximaSkill(ps);
