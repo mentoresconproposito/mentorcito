@@ -5,8 +5,9 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const SHEETS_URL = process.env.VITE_SHEETS_URL;
-  if (!SHEETS_URL) return res.status(500).json({ error: "VITE_SHEETS_URL not configured" });
+  // SHEETS_URL (privada, sin prefijo VITE_) tiene prioridad; VITE_SHEETS_URL queda como respaldo.
+  const SHEETS_URL = process.env.SHEETS_URL || process.env.VITE_SHEETS_URL;
+  if (!SHEETS_URL) return res.status(500).json({ error: "SHEETS_URL not configured" });
 
   try {
     if (req.method === "GET") {
