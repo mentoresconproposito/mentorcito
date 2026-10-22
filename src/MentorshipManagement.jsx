@@ -219,6 +219,7 @@ export default function MentorshipManagement() {
   var [mentorResources, setMentorResources] = useState([]); // recursos compartidos con mentees
   var [noteInput, setNoteInput] = useState("");
   var [savingNote, setSavingNote] = useState(false);
+  var [noteError, setNoteError] = useState("");
   var [resTitulo, setResTitulo] = useState("");
   var [resUrl, setResUrl] = useState("");
   var [resError, setResError] = useState("");
@@ -274,9 +275,11 @@ export default function MentorshipManagement() {
     try {
       var res = await fetch("/api/sheets?action=get_mentor_notes&mentor_email=" + encodeURIComponent(mail));
       var data = await res.json();
+      if (data.error) throw new Error(data.error);
       setMentorNotes(data.notes || []);
     } catch (e) {
       console.error("Error cargando notas:", e);
+      setResError("No se pudieron cargar notas/recursos: " + e.message);
     }
   }
 
@@ -284,30 +287,37 @@ export default function MentorshipManagement() {
     try {
       var res = await fetch("/api/sheets?action=get_mentor_resources&mentor_email=" + encodeURIComponent(mail));
       var data = await res.json();
+      if (data.error) throw new Error(data.error);
       setMentorResources(data.resources || []);
     } catch (e) {
       console.error("Error cargando recursos:", e);
+      setResError("No se pudieron cargar notas/recursos: " + e.message);
     }
   }
 
   async function postAction(body) {
-    await fetch("/api/sheets", {
+    var res = await fetch("/api/sheets", {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(body),
     });
+    var data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    return data;
   }
 
   async function handleGuardarNota(menteeKey) {
     var texto = noteInput.trim();
     if (!texto) return;
     setSavingNote(true);
+    setNoteError("");
     try {
       await postAction({ action: "save_mentor_note", mentor_email: email, mentee_key: menteeKey, texto: texto });
       setNoteInput("");
       await loadNotes(email);
     } catch (e) {
       console.error("Error guardando nota:", e);
+      setNoteError("No se pudo guardar la nota: " + e.message);
     } finally {
       setSavingNote(false);
     }
@@ -341,6 +351,7 @@ export default function MentorshipManagement() {
       await loadResources(email);
     } catch (e) {
       console.error("Error guardando recurso:", e);
+      setResError("No se pudo guardar el recurso: " + e.message);
     } finally {
       setSavingRes(false);
     }
@@ -826,6 +837,7 @@ export default function MentorshipManagement() {
                       placeholder="Ej: le cuesta delegar, ojo con esto en la próxima..."
                       style={Object.assign({}, inputStyle, { resize: "vertical" })}
                     />
+                    {noteError && <div style={{ fontSize: 11.5, color: "#ff8a8a", marginBottom: 8 }}>{noteError}</div>}
                     <button onClick={function () { handleGuardarNota(selectedMentee); }} disabled={savingNote || !noteInput.trim()} style={btnStyle(!savingNote && !!noteInput.trim())}>
                       {savingNote ? "Guardando..." : "Agregar nota"}
                     </button>
