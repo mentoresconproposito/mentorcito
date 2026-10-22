@@ -87,6 +87,113 @@ var PREP_SYSTEM_PROMPT =
   "- 1-2 sugerencias concretas de por dónde podría arrancar esta sesión.\n\n" +
   "Sé breve — esto se lee en 30 segundos antes de entrar a la sesión, no es un informe.";
 
+// Semana (lunes) de una fecha "yyyy-mm-dd", como número comparable.
+function numeroDeSemana(fechaStr) {
+  var d = new Date(fechaStr + "T12:00:00");
+  if (isNaN(d.getTime())) return null;
+  var dia = (d.getDay() + 6) % 7; // lunes = 0
+  d.setDate(d.getDate() - dia);
+  return Math.floor(d.getTime() / (7 * 24 * 3600 * 1000));
+}
+
+// Racha: semanas seguidas con al menos una sesión, contando hacia atrás desde
+// la última semana con actividad (si fue esta semana o la pasada, sigue viva).
+function calcularRacha(logs) {
+  var semanas = {};
+  logs.forEach(function (l) { var n = numeroDeSemana(l.fecha); if (n !== null) semanas[n] = true; });
+  var lista = Object.keys(semanas).map(Number).sort(function (a, b) { return b - a; });
+  if (lista.length === 0) return 0;
+  var actual = numeroDeSemana(new Date().toISOString().slice(0, 10));
+  if (actual - lista[0] > 1) return 0;
+  var racha = 1;
+  for (var i = 1; i < lista.length; i++) {
+    if (lista[i - 1] - lista[i] === 1) racha++; else break;
+  }
+  return racha;
+}
+
+function MentorStats(props) {
+  var logs = props.logs;
+  var grupos = props.grupos;
+  var keys = Object.keys(grupos);
+  var totalSesiones = logs.length;
+  var programasCompletos = keys.filter(function (k) {
+    var g = grupos[k].logs;
+    var t = (g.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
+    return t && g.length >= t;
+  }).length;
+  var menteesActivos = keys.length;
+  var feedbacks = logs.filter(function (l) { return l.feedback_mentee; }).length;
+  var racha = calcularRacha(logs);
+
+  var niveles = [
+    { min: 0, nombre: "Mentor en marcha", emoji: "🌱" },
+    { min: 5, nombre: "Mentor constante", emoji: "🔥" },
+    { min: 15, nombre: "Mentor experimentado", emoji: "⭐" },
+    { min: 30, nombre: "Mentor referente", emoji: "🏅" },
+    { min: 60, nombre: "Mentor leyenda", emoji: "👑" },
+  ];
+  var idx = 0;
+  niveles.forEach(function (n, i) { if (totalSesiones >= n.min) idx = i; });
+  var nivel = niveles[idx];
+  var siguiente = niveles[idx + 1];
+  var pct = siguiente ? Math.min(100, ((totalSesiones - nivel.min) / (siguiente.min - nivel.min)) * 100) : 100;
+
+  var insignias = [
+    { emoji: "🎬", titulo: "Primera sesión", desc: "Cargaste tu primera sesión", ok: totalSesiones >= 1 },
+    { emoji: "🔟", titulo: "10 sesiones", desc: "10 sesiones registradas", ok: totalSesiones >= 10 },
+    { emoji: "👥", titulo: "Equipo de 3", desc: "3 mentees en simultáneo", ok: menteesActivos >= 3 },
+    { emoji: "🎓", titulo: "Primer programa completo", desc: "Un mentee terminó su programa", ok: programasCompletos >= 1 },
+    { emoji: "💬", titulo: "Te escuchan", desc: "Recibiste 5 feedbacks de mentees", ok: feedbacks >= 5 },
+    { emoji: "📆", titulo: "Racha de 4 semanas", desc: "Sesiones 4 semanas seguidas", ok: racha >= 4 },
+  ];
+  var ganadas = insignias.filter(function (b) { return b.ok; }).length;
+
+  var stat = function (valor, label) {
+    return (
+      <div style={{ flex: 1, textAlign: "center", background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 4px" }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "white" }}>{valor}</div>
+        <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>{label}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ background: "linear-gradient(160deg, rgba(67,97,238,0.10), rgba(123,47,247,0.08))", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 14, padding: 16, marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>{nivel.emoji} {nivel.nombre}</div>
+        <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)" }}>{totalSesiones} sesión{totalSesiones !== 1 ? "es" : ""}</div>
+      </div>
+      <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: 6 }}>
+        <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(90deg, #4361ee, #7b2ff7)", borderRadius: 3 }} />
+      </div>
+      <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", marginBottom: 14 }}>
+        {siguiente ? "Te faltan " + (siguiente.min - totalSesiones) + " sesiones para ser " + siguiente.nombre + " " + siguiente.emoji : "¡Llegaste al nivel máximo! 👑"}
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        {stat(menteesActivos, "mentees")}
+        {stat(programasCompletos, "programas completos")}
+        {stat(racha > 0 ? "🔥 " + racha : "—", "semanas seguidas")}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 1 }}>Insignias</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>{ganadas} de {insignias.length}</div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {insignias.map(function (b) {
+          return (
+            <div key={b.titulo} title={b.desc} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 20, fontSize: 11.5, fontWeight: 600, background: b.ok ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.03)", border: "1px solid " + (b.ok ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.06)"), color: b.ok ? "white" : "rgba(255,255,255,0.3)" }}>
+              <span style={{ filter: b.ok ? "none" : "grayscale(1)" }}>{b.ok ? b.emoji : "🔒"}</span>{b.titulo}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function MentorshipManagement() {
   var [initializing, setInitializing] = useState(true);
   var [email, setEmail] = useState(null);
@@ -108,6 +215,14 @@ export default function MentorshipManagement() {
   var [saving, setSaving] = useState(false);
   var [prepResults, setPrepResults] = useState({}); // { [menteeName]: texto }
   var [prepLoading, setPrepLoading] = useState(null); // nombre del mentee que está cargando
+  var [mentorNotes, setMentorNotes] = useState([]); // notas privadas (solo el mentor las ve)
+  var [mentorResources, setMentorResources] = useState([]); // recursos compartidos con mentees
+  var [noteInput, setNoteInput] = useState("");
+  var [savingNote, setSavingNote] = useState(false);
+  var [resTitulo, setResTitulo] = useState("");
+  var [resUrl, setResUrl] = useState("");
+  var [resError, setResError] = useState("");
+  var [savingRes, setSavingRes] = useState(false);
 
   useEffect(function () {
     var stored = localStorage.getItem("mentorship_email");
@@ -132,6 +247,8 @@ export default function MentorshipManagement() {
           setNecesitaNombre(true);
         }
         await loadSessionLogs(mail);
+        loadNotes(mail);
+        loadResources(mail);
       }
     } catch (e) {
       console.error("Error chequeando acceso:", e);
@@ -151,6 +268,96 @@ export default function MentorshipManagement() {
       console.error("Error cargando sesiones:", e);
       return [];
     }
+  }
+
+  async function loadNotes(mail) {
+    try {
+      var res = await fetch("/api/sheets?action=get_mentor_notes&mentor_email=" + encodeURIComponent(mail));
+      var data = await res.json();
+      setMentorNotes(data.notes || []);
+    } catch (e) {
+      console.error("Error cargando notas:", e);
+    }
+  }
+
+  async function loadResources(mail) {
+    try {
+      var res = await fetch("/api/sheets?action=get_mentor_resources&mentor_email=" + encodeURIComponent(mail));
+      var data = await res.json();
+      setMentorResources(data.resources || []);
+    } catch (e) {
+      console.error("Error cargando recursos:", e);
+    }
+  }
+
+  async function postAction(body) {
+    await fetch("/api/sheets", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function handleGuardarNota(menteeKey) {
+    var texto = noteInput.trim();
+    if (!texto) return;
+    setSavingNote(true);
+    try {
+      await postAction({ action: "save_mentor_note", mentor_email: email, mentee_key: menteeKey, texto: texto });
+      setNoteInput("");
+      await loadNotes(email);
+    } catch (e) {
+      console.error("Error guardando nota:", e);
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function handleBorrarNota(noteId) {
+    if (!window.confirm("¿Borrar esta nota privada?")) return;
+    try {
+      await postAction({ action: "delete_mentor_note", mentor_email: email, note_id: noteId });
+      setMentorNotes(function (prev) { return prev.filter(function (n) { return n.note_id !== noteId; }); });
+    } catch (e) {
+      console.error("Error borrando nota:", e);
+    }
+  }
+
+  async function handleGuardarRecurso(menteeKey, menteeEmail) {
+    var titulo = resTitulo.trim();
+    var url = resUrl.trim();
+    if (!titulo || !url) return;
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    if (!/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(url)) {
+      setResError("Revisá que el link sea válido.");
+      return;
+    }
+    setResError("");
+    setSavingRes(true);
+    try {
+      await postAction({ action: "save_resource", mentor_email: email, mentee_key: menteeKey, mentee_email: menteeEmail, titulo: titulo, url: url });
+      setResTitulo("");
+      setResUrl("");
+      await loadResources(email);
+    } catch (e) {
+      console.error("Error guardando recurso:", e);
+    } finally {
+      setSavingRes(false);
+    }
+  }
+
+  async function handleBorrarRecurso(resourceId) {
+    if (!window.confirm("¿Quitar este recurso? Tu mentee dejará de verlo.")) return;
+    try {
+      await postAction({ action: "delete_resource", mentor_email: email, resource_id: resourceId });
+      setMentorResources(function (prev) { return prev.filter(function (r) { return r.resource_id !== resourceId; }); });
+    } catch (e) {
+      console.error("Error borrando recurso:", e);
+    }
+  }
+
+  function formatearCreado(iso) {
+    return iso ? String(iso).slice(0, 10) : "";
   }
 
   function handleStartEmail() {
@@ -411,6 +618,7 @@ export default function MentorshipManagement() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <MentorStats logs={sessionLogs} grupos={grupos} />
                 {menteeKeys.map(function (key) {
                   var grupo = grupos[key];
                   var logsDeM = grupo.logs;
@@ -587,6 +795,70 @@ export default function MentorshipManagement() {
                 {prepResults[selectedMentee]}
               </div>
             )}
+
+            {(function () {
+              var notasDeEste = mentorNotes.filter(function (n) { return n.mentee_key === selectedMentee; });
+              var recursosDeEste = mentorResources.filter(function (r) { return r.mentee_key === selectedMentee; });
+              var menteeEmailGrupo = ((logsDelSeleccionado.find(function (l) { return l.mentee_email; }) || {}).mentee_email || "").trim().toLowerCase();
+              var inputStyle = { width: "100%", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid " + T.border, color: T.text, fontSize: 12.5, marginBottom: 8, boxSizing: "border-box" };
+              var btnStyle = function (activo) { return { padding: "7px 14px", borderRadius: 8, border: "none", background: activo ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", color: activo ? "white" : T.textDisabled, fontWeight: 600, fontSize: 12, cursor: activo ? "pointer" : "not-allowed" }; };
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>
+                  {/* Notas privadas */}
+                  <div style={{ background: "rgba(255,193,7,0.05)", border: "1px solid rgba(255,193,7,0.25)", borderRadius: 12, padding: 16 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#ffd666", marginBottom: 2 }}>🔒 Notas privadas</div>
+                    <div style={{ fontSize: 11.5, color: T.textMuted, marginBottom: 12 }}>Solo vos las ves. Tu mentee no tiene acceso a esto.</div>
+                    {notasDeEste.map(function (n) {
+                      return (
+                        <div key={n.note_id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "9px 11px", marginBottom: 8 }}>
+                          <div style={{ fontSize: 12.5, color: T.text, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{n.texto}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: T.textMuted }}>
+                            <span>{formatearCreado(n.created_at)}</span>
+                            <span onClick={function () { handleBorrarNota(n.note_id); }} style={{ cursor: "pointer", textDecoration: "underline" }}>Borrar</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <textarea
+                      value={noteInput}
+                      onChange={function (e) { setNoteInput(e.target.value); }}
+                      rows={2}
+                      placeholder="Ej: le cuesta delegar, ojo con esto en la próxima..."
+                      style={Object.assign({}, inputStyle, { resize: "vertical" })}
+                    />
+                    <button onClick={function () { handleGuardarNota(selectedMentee); }} disabled={savingNote || !noteInput.trim()} style={btnStyle(!savingNote && !!noteInput.trim())}>
+                      {savingNote ? "Guardando..." : "Agregar nota"}
+                    </button>
+                  </div>
+
+                  {/* Recursos compartidos */}
+                  <div style={{ background: "rgba(67,97,238,0.06)", border: "1px solid rgba(67,97,238,0.3)", borderRadius: 12, padding: 16 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#9db0ff", marginBottom: 2 }}>📎 Recursos para tu mentee</div>
+                    <div style={{ fontSize: 11.5, color: T.textMuted, marginBottom: 12 }}>
+                      {menteeEmailGrupo
+                        ? "Tu mentee los ve en /miprogreso. Pegá links a Drive, Notion, Figma, artículos, videos, etc."
+                        : "Este mentee no tiene email cargado, así que todavía no puede verlos. Agregá su email en una nueva sesión."}
+                    </div>
+                    {recursosDeEste.map(function (r) {
+                      return (
+                        <div key={r.resource_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "9px 11px", marginBottom: 8 }}>
+                          <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, color: "#9db0ff", textDecoration: "none", wordBreak: "break-word", flex: 1 }}>
+                            🔗 {r.titulo}
+                          </a>
+                          <span onClick={function () { handleBorrarRecurso(r.resource_id); }} style={{ cursor: "pointer", fontSize: 11, color: T.textMuted, textDecoration: "underline", flexShrink: 0 }}>Quitar</span>
+                        </div>
+                      );
+                    })}
+                    <input type="text" value={resTitulo} onChange={function (e) { setResTitulo(e.target.value); }} placeholder="Título (ej: Plantilla de roadmap)" style={inputStyle} />
+                    <input type="text" value={resUrl} onChange={function (e) { setResUrl(e.target.value); setResError(""); }} placeholder="Link (https://...)" style={inputStyle} />
+                    {resError && <div style={{ fontSize: 11.5, color: "#ff8a8a", marginBottom: 8 }}>{resError}</div>}
+                    <button onClick={function () { handleGuardarRecurso(selectedMentee, menteeEmailGrupo); }} disabled={savingRes || !resTitulo.trim() || !resUrl.trim()} style={btnStyle(!savingRes && !!resTitulo.trim() && !!resUrl.trim())}>
+                      {savingRes ? "Guardando..." : "Agregar recurso"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Historial de sesiones</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
