@@ -21,11 +21,103 @@ var PREP_MENTEE_SYSTEM_PROMPT =
   "- Un cierre breve y alentador.\n\n" +
   "Tono cercano, en segunda persona (\"venís trabajando en...\", \"te quedó pendiente...\"). Sé breve — esto se lee en menos de un minuto.";
 
+// Recorrido visual: un camino de nodos (uno por sesión) + insignias que se
+// desbloquean con lo que el mentee ya hizo. Todo se calcula con datos existentes.
+function JourneyPath(props) {
+  var logs = props.logs;            // más reciente primero
+  var total = props.total;          // puede ser null
+  var count = logs.length;
+  var completo = !!total && count >= total;
+  var cantNodos = total ? Math.max(total, count) : count + 1;
+  var tieneFeedback = logs.some(function (l) { return l.feedback_mentee; });
+  var cantFeedback = logs.filter(function (l) { return l.feedback_mentee; }).length;
+  var mitad = !!total && count >= Math.ceil(total / 2);
+
+  var nodos = [];
+  for (var i = 1; i <= cantNodos; i++) nodos.push(i);
+
+  var insignias = [
+    { emoji: "🌱", titulo: "Primer paso", desc: "Tuviste tu primera sesión", ok: count >= 1 },
+    { emoji: "🔥", titulo: "Constancia", desc: "3 sesiones realizadas", ok: count >= 3 },
+    { emoji: "💬", titulo: "Voz propia", desc: "Dejaste feedback de una sesión", ok: tieneFeedback },
+    { emoji: "⛰️", titulo: "A mitad de camino", desc: "Pasaste la mitad del programa", ok: mitad, solo: !!total },
+    { emoji: "🏆", titulo: "Programa completo", desc: "Completaste todas las sesiones", ok: completo, solo: !!total },
+  ].filter(function (b) { return b.solo === undefined || b.solo; });
+  var ganadas = insignias.filter(function (b) { return b.ok; }).length;
+
+  var mensaje;
+  if (completo) mensaje = "¡Llegaste a la meta! Mirá todo lo que recorriste.";
+  else if (count === 0) mensaje = "Tu camino empieza con la primera sesión.";
+  else if (total) mensaje = "Llevás " + count + " de " + total + " sesiones — te faltan " + (total - count) + " para la meta.";
+  else mensaje = "Ya recorriste " + count + " sesión" + (count !== 1 ? "es" : "") + ". ¡Seguí así!";
+
+  return (
+    <div style={{ background: "linear-gradient(160deg, rgba(67,97,238,0.10), rgba(123,47,247,0.08))", border: "1px solid rgba(123,47,247,0.25)", borderRadius: 14, padding: "16px 14px", marginBottom: 14 }}>
+      <style>
+        {"@keyframes mpPop { 0% { transform: scale(0.4); opacity: 0 } 70% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } } @keyframes mpPulse { 0% { box-shadow: 0 0 0 0 rgba(123,47,247,0.6) } 70% { box-shadow: 0 0 0 10px rgba(123,47,247,0) } 100% { box-shadow: 0 0 0 0 rgba(123,47,247,0) } }"}
+      </style>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "white", marginBottom: 2 }}>Tu recorrido</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginBottom: 16 }}>{mensaje}</div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", rowGap: 14, marginBottom: 18 }}>
+        {nodos.map(function (n) {
+          var hecho = n <= count;
+          var actual = !completo && n === count + 1;
+          var esMeta = !!total && n === total;
+          var log = hecho ? logs[count - n] : null;
+          var fondo = hecho ? (esMeta ? "linear-gradient(135deg, #f7b733, #fc4a1a)" : "linear-gradient(135deg, #4361ee, #7b2ff7)") : "rgba(255,255,255,0.05)";
+          return (
+            <div key={n} style={{ display: "flex", alignItems: "center", flex: n === cantNodos ? "0 0 auto" : "1 1 auto", minWidth: n === cantNodos ? 0 : 28 }}>
+              <div
+                title={log ? "Sesión " + n + " · " + log.fecha : actual ? "Tu próxima sesión" : "Sesión " + n}
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: esMeta ? 16 : 13, fontWeight: 700, color: hecho ? "white" : "rgba(255,255,255,0.35)",
+                  background: fondo,
+                  border: hecho ? "none" : actual ? "2px solid #7b2ff7" : "2px dashed rgba(255,255,255,0.18)",
+                  animation: hecho ? "mpPop 0.45s ease both" : actual ? "mpPulse 1.8s infinite" : "none",
+                  animationDelay: hecho ? (n * 0.08) + "s" : "0s",
+                }}
+              >
+                {esMeta ? "🏆" : hecho ? "✓" : n}
+              </div>
+              {n !== cantNodos && (
+                <div style={{ flex: 1, height: 3, borderRadius: 2, margin: "0 4px", background: n < count ? "linear-gradient(90deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.08)" }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 1 }}>Insignias</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>{ganadas} de {insignias.length}</div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {insignias.map(function (b) {
+          return (
+            <div key={b.titulo} title={b.desc} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 20, fontSize: 11.5, fontWeight: 600, background: b.ok ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.03)", border: "1px solid " + (b.ok ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.06)"), color: b.ok ? "white" : "rgba(255,255,255,0.3)", opacity: b.ok ? 1 : 0.7 }}>
+              <span style={{ filter: b.ok ? "none" : "grayscale(1)" }}>{b.ok ? b.emoji : "🔒"}</span>{b.titulo}
+            </div>
+          );
+        })}
+      </div>
+      {!tieneFeedback && count > 0 && (
+        <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", marginTop: 10 }}>
+          💡 Dejá feedback en alguna sesión para desbloquear "Voz propia".
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MenteeProgress() {
   var [initializing, setInitializing] = useState(true);
   var [email, setEmail] = useState(null);
   var [emailInput, setEmailInput] = useState("");
   var [logs, setLogs] = useState([]);
+  var [resources, setResources] = useState([]);
   var [feedbackDrafts, setFeedbackDrafts] = useState({}); // { [log_id]: texto en edición }
   var [feedbackSaving, setFeedbackSaving] = useState(null); // log_id que se está guardando
   var [prepResults, setPrepResults] = useState({}); // { [mentorKey]: texto }
@@ -46,6 +138,7 @@ export default function MenteeProgress() {
       var res = await fetch("/api/sheets?action=get_mentee_progress&mentee_email=" + encodeURIComponent(mail));
       var data = await res.json();
       setLogs(data.logs || []);
+      setResources(data.resources || []);
     } catch (e) {
       console.error("Error cargando progreso:", e);
     } finally {
@@ -263,6 +356,8 @@ export default function MenteeProgress() {
                     </div>
                   )}
 
+                  <JourneyPath logs={grupo.logs} total={totalPrograma || null} />
+
                   <button
                     onClick={function () { handlePrepararResumen(mentorKey, grupo.logs); }}
                     disabled={prepLoading === mentorKey}
@@ -276,6 +371,23 @@ export default function MenteeProgress() {
                       {prepResults[mentorKey]}
                     </div>
                   )}
+
+                  {(function () {
+                    var recursosMentor = resources.filter(function (r) { return (r.mentor_email || "").trim().toLowerCase() === mentorKey; });
+                    if (recursosMentor.length === 0) return null;
+                    return (
+                      <div style={{ background: "rgba(67,97,238,0.06)", border: "1px solid rgba(67,97,238,0.3)", borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#9db0ff", marginBottom: 10 }}>📎 Recursos de {grupo.nombre}</div>
+                        {recursosMentor.map(function (r) {
+                          return (
+                            <a key={r.resource_id} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "9px 11px", marginBottom: 8, fontSize: 12.5, color: "#9db0ff", textDecoration: "none", wordBreak: "break-word" }}>
+                              🔗 {r.titulo}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {grupo.logs.map(function (log, i) {
