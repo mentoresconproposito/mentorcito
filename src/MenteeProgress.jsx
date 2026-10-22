@@ -273,7 +273,7 @@ export default function MenteeProgress() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>
-        {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; }"}
+        {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; } .mp-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}.mp-side,.mp-main{min-width:0}@media (min-width:900px){.mp-grid{gap:24px}.mp-grid--left{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}.mp-grid--right{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}.mp-grid--right>.mp-side{grid-column:2;grid-row:1}.mp-grid--right>.mp-main{grid-column:1;grid-row:1}.mp-side{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;padding-right:2px}}"}
       </style>
 
       <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header }}>
@@ -291,7 +291,7 @@ export default function MenteeProgress() {
         )}
       </div>
 
-      <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
+      <div style={{ padding: 20, maxWidth: 1080, margin: "0 auto" }}>
         {logs.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px", color: T.textMuted, fontSize: 13, lineHeight: 1.6 }}>
             Todavía no tenés sesiones registradas. Pedile a tu mentor que empiece a cargarlas después de cada encuentro.
@@ -311,6 +311,8 @@ export default function MenteeProgress() {
                     </div>
                   )}
 
+                  <div className="mp-grid mp-grid--left">
+                  <div className="mp-side">
                   {totalPrograma && (
                     <div style={{ marginBottom: 14 }}>
                       {completo && (
@@ -358,20 +360,6 @@ export default function MenteeProgress() {
 
                   <JourneyPath logs={grupo.logs} total={totalPrograma || null} />
 
-                  <button
-                    onClick={function () { handlePrepararResumen(mentorKey, grupo.logs); }}
-                    disabled={prepLoading === mentorKey}
-                    style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid rgba(123,47,247,0.4)", background: "rgba(123,47,247,0.1)", color: "#c9b8ff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 14 }}
-                  >
-                    {prepLoading === mentorKey ? "Generando..." : "✨ Ver cómo viene mi progreso"}
-                  </button>
-
-                  {prepResults[mentorKey] && (
-                    <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 13, color: T.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                      {prepResults[mentorKey]}
-                    </div>
-                  )}
-
                   {(function () {
                     var recursosMentor = resources.filter(function (r) { return (r.mentor_email || "").trim().toLowerCase() === mentorKey; });
                     if (recursosMentor.length === 0) return null;
@@ -388,6 +376,22 @@ export default function MenteeProgress() {
                       </div>
                     );
                   })()}
+
+                  </div>
+                  <div className="mp-main">
+                  <button
+                    onClick={function () { handlePrepararResumen(mentorKey, grupo.logs); }}
+                    disabled={prepLoading === mentorKey}
+                    style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid rgba(123,47,247,0.4)", background: "rgba(123,47,247,0.1)", color: "#c9b8ff", fontWeight: 600, fontSize: 13, cursor: "pointer", marginBottom: 14 }}
+                  >
+                    {prepLoading === mentorKey ? "Generando..." : "✨ Ver cómo viene mi progreso"}
+                  </button>
+
+                  {prepResults[mentorKey] && (
+                    <div style={{ background: "rgba(123,47,247,0.06)", border: "1px solid rgba(123,47,247,0.2)", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 13, color: T.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                      {prepResults[mentorKey]}
+                    </div>
+                  )}
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {grupo.logs.map(function (log, i) {
@@ -428,6 +432,8 @@ export default function MenteeProgress() {
                         </div>
                       );
                     })}
+                  </div>
+                  </div>
                   </div>
                 </div>
               );
