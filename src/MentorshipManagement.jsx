@@ -591,7 +591,7 @@ export default function MentorshipManagement() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <style>
-        {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; }"}
+        {"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; } .mp-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}.mp-side,.mp-main{min-width:0}@media (min-width:900px){.mp-grid{gap:24px}.mp-grid--left{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}.mp-grid--right{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}.mp-grid--right>.mp-side{grid-column:2;grid-row:1}.mp-grid--right>.mp-main{grid-column:1;grid-row:1}.mp-side{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;padding-right:2px}}"}
       </style>
 
       <div style={{ padding: "16px 20px", borderBottom: "1px solid " + T.border, background: T.header, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -618,7 +618,7 @@ export default function MentorshipManagement() {
         )}
       </div>
 
-      <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
+      <div style={{ padding: 20, maxWidth: 1080, margin: "0 auto" }}>
 
         {/* Lista de mentees */}
         {!selectedMentee && !showNewForm && (
@@ -628,8 +628,11 @@ export default function MentorshipManagement() {
                 Todavía no cargaste ninguna sesión. Empezá con "+ Nueva sesión" arriba.
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <MentorStats logs={sessionLogs} grupos={grupos} />
+              <div className="mp-grid mp-grid--right">
+                <div className="mp-side">
+                  <MentorStats logs={sessionLogs} grupos={grupos} />
+                </div>
+                <div className="mp-main" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {menteeKeys.map(function (key) {
                   var grupo = grupos[key];
                   var logsDeM = grupo.logs;
@@ -662,6 +665,7 @@ export default function MentorshipManagement() {
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>
@@ -669,7 +673,7 @@ export default function MentorshipManagement() {
 
         {/* Formulario nueva sesión */}
         {showNewForm && (
-          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 20 }}>
+          <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 20, maxWidth: 640, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Mentee</div>
             <input
               list="mentee-options"
@@ -771,7 +775,8 @@ export default function MentorshipManagement() {
 
         {/* Historial de un mentee */}
         {selectedMentee && grupoSeleccionado && !showNewForm && (
-          <div>
+          <div className="mp-grid mp-grid--right">
+          <div className="mp-main">
             {(function () {
               var totalPrograma = (logsDelSeleccionado.find(function (l) { return l.total_sesiones_programa; }) || {}).total_sesiones_programa;
               if (!totalPrograma) return null;
@@ -807,6 +812,27 @@ export default function MentorshipManagement() {
               </div>
             )}
 
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Historial de sesiones</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {logsDelSeleccionado.map(function (log, i) {
+                var numeroSesion = logsDelSeleccionado.length - i;
+                return (
+                  <div key={log.log_id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>Sesión {numeroSesion} · {log.fecha}</div>
+                    <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
+                    {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Se llevó: </strong>{log.que_se_llevo}</div>}
+                    {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text, marginBottom: log.feedback_mentee ? 8 : 0 }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
+                    {log.feedback_mentee && (
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid " + T.border, fontSize: 12.5, color: "#c9b8ff" }}>
+                        💬 <strong>Feedback del mentee: </strong>{log.feedback_mentee}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="mp-side">
             {(function () {
               var notasDeEste = mentorNotes.filter(function (n) { return n.mentee_key === selectedMentee; });
               var recursosDeEste = mentorResources.filter(function (r) { return r.mentee_key === selectedMentee; });
@@ -872,25 +898,7 @@ export default function MentorshipManagement() {
               );
             })()}
 
-            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Historial de sesiones</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {logsDelSeleccionado.map(function (log, i) {
-                var numeroSesion = logsDelSeleccionado.length - i;
-                return (
-                  <div key={log.log_id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "14px 16px" }}>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, fontWeight: 600 }}>Sesión {numeroSesion} · {log.fecha}</div>
-                    <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Temas: </strong>{log.temas_vistos}</div>
-                    {log.que_se_llevo && <div style={{ fontSize: 12.5, color: T.text, marginBottom: 6 }}><strong style={{ color: T.textSub }}>Se llevó: </strong>{log.que_se_llevo}</div>}
-                    {log.proximos_pasos && <div style={{ fontSize: 12.5, color: T.text, marginBottom: log.feedback_mentee ? 8 : 0 }}><strong style={{ color: T.textSub }}>Próximos pasos: </strong>{log.proximos_pasos}</div>}
-                    {log.feedback_mentee && (
-                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid " + T.border, fontSize: 12.5, color: "#c9b8ff" }}>
-                        💬 <strong>Feedback del mentee: </strong>{log.feedback_mentee}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          </div>
           </div>
         )}
       </div>
