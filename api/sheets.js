@@ -46,7 +46,7 @@ export default async function handler(req, res) {
         ? req.body
         : JSON.stringify(req.body);
 
-      await fetch(SHEETS_URL, {
+      const gsResponse = await fetch(SHEETS_URL, {
         method: "POST",
         redirect: "follow",
         headers: {
@@ -55,7 +55,14 @@ export default async function handler(req, res) {
         },
         body,
       });
-      return res.status(200).json({ ok: true });
+      // Devolvemos lo que respondió Apps Script (antes se ignoraba y siempre
+      // se devolvía ok:true, escondiendo errores como "Acción no reconocida").
+      const gsText = (await gsResponse.text()).trim();
+      try {
+        return res.status(200).json(JSON.parse(gsText));
+      } catch (e) {
+        return res.status(200).json({ ok: true });
+      }
     }
 
     return res.status(405).json({ error: "Method not allowed" });
