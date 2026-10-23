@@ -3670,9 +3670,15 @@ function HomeLanding(props) {
       <div style={{
         borderTop: "1px solid rgba(255,255,255,0.07)",
         background: "linear-gradient(180deg, #0d1117 0%, rgba(67,97,238,0.04) 100%)",
-        padding: "64px clamp(20px, 4vw, 32px)",
       }}>
-        <div style={{ maxWidth: 820, margin: "0 auto" }}>
+        <div style={{
+          maxWidth: 1100,
+          width: "100%",
+          margin: "0 auto",
+          padding: "64px clamp(20px, 5vw, 40px)",
+          boxSizing: "border-box",
+        }}>
+        <div style={{ maxWidth: 820 }}>
 
           {/* Eyebrow */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -3808,6 +3814,7 @@ function HomeLanding(props) {
             </button>
           </div>
 
+        </div>
         </div>
       </div>
 
