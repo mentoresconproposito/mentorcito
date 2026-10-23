@@ -3533,7 +3533,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para PMs en Latinoamérica
+            Gratis · Para profesionales de producto en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3684,7 +3684,7 @@ function HomeLanding(props) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 24, height: 1, background: "#a5b4fc", opacity: 0.6 }}></div>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a5b4fc" }}>
-              Diagnósticos reales · 218 PMs
+              Diagnósticos reales · 197 profesionales de producto
             </span>
           </div>
 
@@ -3820,7 +3820,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para PMs en Latinoamérica
+        Mentores con Propósito · Para profesionales de producto en Latinoamérica
       </div>
 
       <style>{`
