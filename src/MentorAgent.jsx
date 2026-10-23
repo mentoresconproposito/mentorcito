@@ -3701,7 +3701,7 @@ function HomeLanding(props) {
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 40, maxWidth: 560 }}>
             Estas son las brechas que aparecen una y otra vez en los diagnósticos de Mentorcito.
-            No son categorías abstractas — son las palabras exactas de los PMs que ya pasaron por acá.
+            No son categorías abstractas, son las palabras exactas de profesionales de producto que ya pasaron por acá.
           </p>
 
           {/* Categorías de gaps */}
