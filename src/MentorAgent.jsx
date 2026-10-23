@@ -3709,7 +3709,7 @@ function HomeLanding(props) {
             {
               label: "Liderazgo e influencia",
               pills: [
-                { text: "Liderazgo sin autoridad formal", count: "×77", highlight: true },
+                { text: "Liderazgo sin autoridad formal", count: "×63", highlight: true },
                 { text: "Me cuesta influir en stakeholders sin poder formal" },
                 { text: "Comunicación ejecutiva: sintetizar para mover decisiones" },
                 { text: "Defender mis decisiones con criterios de negocio" },
@@ -3718,7 +3718,7 @@ function HomeLanding(props) {
             {
               label: "Priorización y roadmap",
               pills: [
-                { text: "No tengo sistema de priorización claro: todo es reactivo", count: "×55", highlight: true },
+                { text: "No tengo sistema de priorización claro: todo es reactivo", count: "×46", highlight: true },
                 { text: "Me cuesta mantener el foco cuando hay presión constante por nuevas ideas" },
                 { text: "No sé defender mi roadmap con criterios de negocio" },
               ],
@@ -3726,7 +3726,7 @@ function HomeLanding(props) {
             {
               label: "Datos y decisiones",
               pills: [
-                { text: "Entiendo las métricas en teoría, pero no las uso en decisiones reales", count: "×63", highlight: true },
+                { text: "Entiendo las métricas en teoría, pero no las uso en decisiones reales", count: "×51", highlight: true },
                 { text: "No sé qué métricas medir ni cómo interpretar los datos" },
                 { text: "Dependo del equipo de data para tomar decisiones" },
                 { text: "Crecimiento basado en datos, no en opiniones" },
@@ -3737,7 +3737,7 @@ function HomeLanding(props) {
               pills: [
                 { text: "No sé estructurar mi go-to-market" },
                 { text: "Validar hipótesis sin gastar presupuesto" },
-                { text: "Posicionarme como AI PM — entender IA en producto", count: "×44", highlight: true },
+                { text: "Posicionarme como AI PM — entender IA en producto", count: "×37", highlight: true },
               ],
             },
           ].map(function(cat) {
