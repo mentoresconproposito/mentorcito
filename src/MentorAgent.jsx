@@ -3533,7 +3533,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para profesionales de producto en LATAM
+            Gratis · Para PMs en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3666,9 +3666,154 @@ function HomeLanding(props) {
         </div>
       </div>
 
+      {/* ── SECCIÓN GAPS REALES ── */}
+      <div style={{
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+        background: "linear-gradient(180deg, #0d1117 0%, rgba(67,97,238,0.04) 100%)",
+        padding: "64px clamp(20px, 4vw, 32px)",
+      }}>
+        <div style={{ maxWidth: 820, margin: "0 auto" }}>
+
+          {/* Eyebrow */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 24, height: 1, background: "#a5b4fc", opacity: 0.6 }}></div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a5b4fc" }}>
+              Diagnósticos reales · 218 PMs
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h2 style={{
+            fontSize: "clamp(22px, 3.5vw, 34px)",
+            fontWeight: 800,
+            color: "#f0f0f0",
+            lineHeight: 1.15,
+            letterSpacing: -1,
+            marginBottom: 12,
+          }}>
+            ¿Alguno de estos te suena?
+          </h2>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 40, maxWidth: 560 }}>
+            Estas son las brechas que aparecen una y otra vez en los diagnósticos de Mentorcito.
+            No son categorías abstractas — son las palabras exactas de los PMs que ya pasaron por acá.
+          </p>
+
+          {/* Categorías de gaps */}
+          {[
+            {
+              label: "Liderazgo e influencia",
+              pills: [
+                { text: "Liderazgo sin autoridad formal", count: "×77", highlight: true },
+                { text: "Me cuesta influir en stakeholders sin poder formal" },
+                { text: "Comunicación ejecutiva: sintetizar para mover decisiones" },
+                { text: "Defender mis decisiones con criterios de negocio" },
+              ],
+            },
+            {
+              label: "Priorización y roadmap",
+              pills: [
+                { text: "No tengo sistema de priorización claro: todo es reactivo", count: "×55", highlight: true },
+                { text: "Me cuesta mantener el foco cuando hay presión constante por nuevas ideas" },
+                { text: "No sé defender mi roadmap con criterios de negocio" },
+              ],
+            },
+            {
+              label: "Datos y decisiones",
+              pills: [
+                { text: "Entiendo las métricas en teoría, pero no las uso en decisiones reales", count: "×63", highlight: true },
+                { text: "No sé qué métricas medir ni cómo interpretar los datos" },
+                { text: "Dependo del equipo de data para tomar decisiones" },
+                { text: "Crecimiento basado en datos, no en opiniones" },
+              ],
+            },
+            {
+              label: "Estrategia de negocio y GTM",
+              pills: [
+                { text: "No sé estructurar mi go-to-market" },
+                { text: "Validar hipótesis sin gastar presupuesto" },
+                { text: "Posicionarme como AI PM — entender IA en producto", count: "×44", highlight: true },
+              ],
+            },
+          ].map(function(cat) {
+            return (
+              <div key={cat.label} style={{ marginBottom: 36 }}>
+                {/* Category label */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.3)", marginBottom: 14,
+                }}>
+                  {cat.label}
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }}></div>
+                </div>
+                {/* Pills */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                  {cat.pills.map(function(pill) {
+                    return (
+                      <div key={pill.text} style={{
+                        display: "inline-flex", alignItems: "center", gap: 8,
+                        background: pill.highlight ? "rgba(67,97,238,0.1)" : "rgba(255,255,255,0.04)",
+                        border: pill.highlight ? "1px solid rgba(165,180,252,0.25)" : "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: 10, padding: "10px 16px",
+                        fontSize: 13.5, fontWeight: 500,
+                        color: pill.highlight ? "#a5b4fc" : "rgba(255,255,255,0.65)",
+                        lineHeight: 1.35,
+                      }}>
+                        {pill.text}
+                        {pill.count && (
+                          <span style={{
+                            marginLeft: 4, fontSize: 10, fontWeight: 700,
+                            color: "rgba(255,255,255,0.25)",
+                            background: "rgba(255,255,255,0.06)",
+                            borderRadius: 999, padding: "2px 7px",
+                          }}>
+                            {pill.count}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* CTA cierre */}
+          <div style={{
+            marginTop: 44, paddingTop: 36,
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            flexWrap: "wrap", gap: 20,
+          }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.55 }}>
+              Si reconociste uno o más de estos gaps, el diagnóstico de Mentorcito<br />
+              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero</strong>.
+            </p>
+            <button
+              onClick={onStart}
+              style={{
+                flexShrink: 0,
+                background: "linear-gradient(135deg, #4361ee, #7b2ff7)",
+                color: "#fff", border: "none", borderRadius: 999,
+                padding: "16px 36px", fontSize: 16, fontWeight: 700,
+                cursor: "pointer", letterSpacing: -0.2,
+                display: "inline-flex", alignItems: "center", gap: 10,
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.88"; }}
+              onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
+            >
+              Empezar mi diagnóstico
+              <span style={{ fontSize: 18 }}>→</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para profesionales de producto en LATAM
+        Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
       <style>{`
