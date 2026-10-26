@@ -2025,36 +2025,90 @@ function PantallaPostDiagnostico(props) {
         </div>
       </div>
 
-      <div style={{ background: nivel.color + "0e", border: "1px solid " + nivel.color + "35", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
-        {/* Header */}
-        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>
-          Índice de Tensión Profesional
-        </div>
+      {(function() {
+        // Brechas críticas: dimensiones PS con score < 5
+        var ps = (diagnosis.product_sense) || {};
+        var DIMS_LABEL = {
+          user_insights:   "User Insights",
+          business_acumen: "Business Acumen",
+          product_quality: "Product Quality",
+          product_strategy:"Product Strategy",
+          execution:       "Execution",
+          influence:       "Influence",
+          data_fluency:    "Data Fluency",
+          ai_fluency:      "AI Fluency",
+        };
+        var allDims = Object.keys(DIMS_LABEL).map(function(k) {
+          return { key: k, label: DIMS_LABEL[k], val: ps[k] || 0 };
+        }).sort(function(a, b) { return a.val - b.val; });
+        var criticas = allDims.filter(function(d) { return d.val < 5; });
+        var nCriticas = criticas.length || 1;
 
-        {/* Número + nivel */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-          <div style={{ fontSize: 48, fontWeight: 800, color: T.textWhite, lineHeight: 1 }}>{score}</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: nivel.color, marginBottom: 2 }}>{nivel.label}</div>
-            <div style={{ fontSize: 11, color: T.textMuted }}>de 100 posibles</div>
-          </div>
-        </div>
+        // Tiempo estimado según nCriticas
+        var tiempoSolo = nCriticas >= 3 ? "2–3 años" : nCriticas === 2 ? "1–2 años" : "6–12 meses";
+        var tiempoMentoria = nCriticas >= 3 ? "4–6 meses" : nCriticas === 2 ? "3–4 meses" : "2–3 meses";
 
-        {/* Barra */}
-        <div style={{ height: 8, background: T.highlightBg, borderRadius: 4, marginBottom: 10, position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: score + "%", background: "linear-gradient(90deg, #4361ee, " + nivel.color + ")", borderRadius: 4, transition: "width 1s ease" }} />
-        </div>
+        // Mostrar top 5 dims ordenadas por score asc
+        var dimsVis = allDims.slice(0, 5);
 
-        {/* Descripción del nivel */}
-        <div style={{ color: nivel.color, fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{nivel.desc}</div>
+        function barColor(v) {
+          if (v < 5) return "#f72585";
+          if (v < 7) return "#fb8500";
+          return "#06d6a0";
+        }
 
-        {/* Frase interpretativa */}
-        <div style={{ color: T.textSub, fontSize: 12, lineHeight: "1.6", marginBottom: 14 }}>{tension}</div>
+        var tensiones = detectarTensiones(Object.assign({}, diagnosis, { estado: estado }));
+        var bm = BENCHMARK[estado];
 
-        {/* Tensiones detectadas */}
-        {(function() {
-          var tensiones = detectarTensiones(Object.assign({}, diagnosis, { estado: estado }));
-          return (
+        return (
+          <div style={{ background: nivel.color + "0e", border: "1px solid " + nivel.color + "35", borderRadius: 14, padding: "18px 20px", marginBottom: 12 }}>
+            {/* Header */}
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 14 }}>
+              Índice de Tensión Profesional
+            </div>
+
+            {/* HERO: brechas críticas */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 52, fontWeight: 800, color: nivel.color, lineHeight: 1, flexShrink: 0 }}>{nCriticas}</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: T.textWhite, lineHeight: 1.2, marginBottom: 4 }}>
+                  {nCriticas === 1 ? "brecha crítica" : "brechas críticas"} para tu próximo salto
+                </div>
+                <div style={{ fontSize: 11, color: T.textSub, lineHeight: 1.45 }}>
+                  Dimensiones con score menor a 5/10 — las que frenan el avance
+                </div>
+              </div>
+            </div>
+
+            {/* Banner de tiempo */}
+            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "11px 13px", marginBottom: 14, display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>⏱</span>
+              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.55 }}>
+                Sin intervención, cerrar {nCriticas === 1 ? "esta brecha" : "estas brechas"} puede llevar <strong style={{ color: T.textWhite }}>{tiempoSolo}</strong> de ensayo y error.
+                Con mentoría directa, el horizonte es <strong style={{ color: T.textWhite }}>{tiempoMentoria}</strong>.
+              </div>
+            </div>
+
+            {/* Barras por dimensión */}
+            <div style={{ borderTop: "1px solid " + T.border, paddingTop: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                Dónde está cada brecha
+              </div>
+              {dimsVis.map(function(d) {
+                var color = barColor(d.val);
+                return (
+                  <div key={d.key} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.textWhite, width: 120, flexShrink: 0 }}>{d.label}</div>
+                    <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 3, position: "relative", overflow: "hidden" }}>
+                      <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: (d.val * 10) + "%", background: color, borderRadius: 3, transition: "width 0.8s ease" }} />
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: color, width: 34, textAlign: "right", flexShrink: 0 }}>{d.val}/10</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Tensiones */}
             <div style={{ borderTop: "1px solid " + T.border, paddingTop: 12, marginBottom: 12 }}>
               <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
                 Tensiones detectadas en tu perfil
@@ -2071,23 +2125,24 @@ function PantallaPostDiagnostico(props) {
                 );
               })}
             </div>
-          );
-        })()}
 
-        {/* Benchmark */}
-        {(function() {
-          var bm = BENCHMARK[estado];
-          if (!bm) return null;
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: T.sectionBg, borderRadius: 8 }}>
-              <span style={{ fontSize: 14 }}>👥</span>
-              <span style={{ color: T.textMuted, fontSize: 11, lineHeight: "1.4" }}>
-                El <strong style={{ color: T.text }}>{bm.pct}%</strong> {bm.desc}
-              </span>
+            {/* Benchmark */}
+            {bm && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: T.sectionBg, borderRadius: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 14 }}>👥</span>
+                <span style={{ color: T.textMuted, fontSize: 11, lineHeight: "1.4" }}>
+                  El <strong style={{ color: T.text }}>{bm.pct}%</strong> {bm.desc}
+                </span>
+              </div>
+            )}
+
+            {/* Score como footnote */}
+            <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center" }}>
+              Índice de tensión: {score}/100 · {nivel.label}
             </div>
-          );
-        })()}
-      </div>
+          </div>
+        );
+      })()}
 
       <button onClick={onContinuar}
         style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #4361ee, #7b2ff7)", border: "none", borderRadius: 12, color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer", marginBottom: 8 }}>
@@ -3533,7 +3588,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para profesionales de producto en Latinoamérica
+            Gratis · Para PMs en Latinoamérica
           </div>
 
           {/* Urgency block */}
@@ -3684,7 +3739,7 @@ function HomeLanding(props) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 24, height: 1, background: "#a5b4fc", opacity: 0.6 }}></div>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a5b4fc" }}>
-              Diagnósticos reales · 197 profesionales de producto
+              Diagnósticos reales · 218 PMs
             </span>
           </div>
 
@@ -3701,7 +3756,7 @@ function HomeLanding(props) {
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 40, maxWidth: 560 }}>
             Estas son las brechas que aparecen una y otra vez en los diagnósticos de Mentorcito.
-            No son categorías abstractas, son las palabras exactas de profesionales de producto que ya pasaron por acá.
+            No son categorías abstractas — son las palabras exactas de los PMs que ya pasaron por acá.
           </p>
 
           {/* Categorías de gaps */}
@@ -3709,7 +3764,7 @@ function HomeLanding(props) {
             {
               label: "Liderazgo e influencia",
               pills: [
-                { text: "Liderazgo sin autoridad formal", count: "×63", highlight: true },
+                { text: "Liderazgo sin autoridad formal", count: "×77", highlight: true },
                 { text: "Me cuesta influir en stakeholders sin poder formal" },
                 { text: "Comunicación ejecutiva: sintetizar para mover decisiones" },
                 { text: "Defender mis decisiones con criterios de negocio" },
@@ -3718,7 +3773,7 @@ function HomeLanding(props) {
             {
               label: "Priorización y roadmap",
               pills: [
-                { text: "No tengo sistema de priorización claro: todo es reactivo", count: "×46", highlight: true },
+                { text: "No tengo sistema de priorización claro: todo es reactivo", count: "×55", highlight: true },
                 { text: "Me cuesta mantener el foco cuando hay presión constante por nuevas ideas" },
                 { text: "No sé defender mi roadmap con criterios de negocio" },
               ],
@@ -3726,7 +3781,7 @@ function HomeLanding(props) {
             {
               label: "Datos y decisiones",
               pills: [
-                { text: "Entiendo las métricas en teoría, pero no las uso en decisiones reales", count: "×51", highlight: true },
+                { text: "Entiendo las métricas en teoría, pero no las uso en decisiones reales", count: "×63", highlight: true },
                 { text: "No sé qué métricas medir ni cómo interpretar los datos" },
                 { text: "Dependo del equipo de data para tomar decisiones" },
                 { text: "Crecimiento basado en datos, no en opiniones" },
@@ -3737,7 +3792,7 @@ function HomeLanding(props) {
               pills: [
                 { text: "No sé estructurar mi go-to-market" },
                 { text: "Validar hipótesis sin gastar presupuesto" },
-                { text: "Posicionarme como AI PM — entender IA en producto", count: "×37", highlight: true },
+                { text: "Posicionarme como AI PM — entender IA en producto", count: "×44", highlight: true },
               ],
             },
           ].map(function(cat) {
@@ -3793,7 +3848,7 @@ function HomeLanding(props) {
           }}>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.55 }}>
               Si reconociste uno o más de estos gaps, el diagnóstico de Mentorcito<br />
-              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero y con quién</strong>.
+              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero</strong>.
             </p>
             <button
               onClick={onStart}
@@ -3820,7 +3875,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para profesionales de producto en Latinoamérica
+        Mentores con Propósito · Para PMs en Latinoamérica
       </div>
 
       <style>{`
