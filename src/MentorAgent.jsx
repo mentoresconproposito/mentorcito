@@ -3588,7 +3588,7 @@ function HomeLanding(props) {
             <span style={{ fontSize: 18 }}>→</span>
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-            Gratis · Para PMs en Latinoamérica
+            Gratis · Para profesionoales de producto y emprendedores en LATAM
           </div>
 
           {/* Urgency block */}
@@ -3739,7 +3739,7 @@ function HomeLanding(props) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 24, height: 1, background: "#a5b4fc", opacity: 0.6 }}></div>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a5b4fc" }}>
-              Diagnósticos reales · 218 PMs
+              Diagnósticos reales · 201
             </span>
           </div>
 
@@ -3756,7 +3756,7 @@ function HomeLanding(props) {
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 40, maxWidth: 560 }}>
             Estas son las brechas que aparecen una y otra vez en los diagnósticos de Mentorcito.
-            No son categorías abstractas — son las palabras exactas de los PMs que ya pasaron por acá.
+            No son categorías abstractas — son las palabras exactas de profesionales que ya pasaron por acá.
           </p>
 
           {/* Categorías de gaps */}
@@ -3848,7 +3848,7 @@ function HomeLanding(props) {
           }}>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.55 }}>
               Si reconociste uno o más de estos gaps, el diagnóstico de Mentorcito<br />
-              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero</strong>.
+              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero y con quién</strong>.
             </p>
             <button
               onClick={onStart}
@@ -3875,7 +3875,7 @@ function HomeLanding(props) {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "20px clamp(16px, 4vw, 32px)", fontSize: 11, color: "rgba(255,255,255,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        Mentores con Propósito · Para PMs en Latinoamérica
+        Mentores con Propósito · Para profesionoales de producto y emprendedores en LATAM
       </div>
 
       <style>{`
