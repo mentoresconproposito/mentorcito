@@ -3793,7 +3793,7 @@ function HomeLanding(props) {
           }}>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.55 }}>
               Si reconociste uno o más de estos gaps, el diagnóstico de Mentorcito<br />
-              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero</strong>.
+              te va a decir exactamente <strong style={{ color: "#f0f0f0" }}>cuál trabajar primero y con quién</strong>.
             </p>
             <button
               onClick={onStart}
