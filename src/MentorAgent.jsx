@@ -4140,7 +4140,7 @@ export default function MentorAgent(props) {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
-          temperature: 0,
+          temperature: 0.3,
           stream: true,
           system: SYSTEM_PROMPT,
           messages: apiMessages,
