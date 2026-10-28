@@ -541,6 +541,11 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "- En la fase conversacional (preguntas y respuestas) tus mensajes deben ser cortos: máximo 3-4 líneas.\n"
 + "- No acumules información ni hagas resúmenes intermedios largos.\n"
 + "- El diagnóstico final puede ser más extenso — el usuario ya está comprometido en ese punto.\n\n"
++ "FORMATO DE TEXTO — MUY IMPORTANTE:\n"
++ "- NO uses markdown: ningún #, ##, ---, **, *, ni guiones decorativos.\n"
++ "- Si querés destacar algo, usalo en la estructura de la oración, no con símbolos.\n"
++ "- Podés usar listas con un punto al inicio (•) si es realmente necesario, pero evitá los guiones como bullets.\n"
++ "- El texto debe verse limpio cuando se lee como texto plano. Nada de caracteres raros.\n\n"
 + "3 PATAS:\n1. Tecnología: ingeniería, arquitectura, datos, infraestructura\n2. Producto: PM, discovery, UX/UI, métricas, roadmap, PMF\n3. Negocio: GTM, revenue, modelos de negocio, liderazgo, estrategia\n\n"
 + "MENTORES ACTIVOS (usá solo estos IDs para recomendar):\n" + MENTOR_LIST + "\n\n"
 + "PERFILES EN BÚSQUEDA ACTIVA (la plataforma está reclutando estos mentores):\n" + BUSCADOS_LIST + "\n\n"
@@ -576,7 +581,7 @@ var SYSTEM_PROMPT = "Eres Mentorcito, agente de auto-diagnóstico de carrera en 
 + "PASO 9 — PREGUNTA 7 (clasificación): '¿Cómo usás IA en tu trabajo hoy? A) La integré en mi proceso B) Experimento con algunas tareas C) Todavía no la incorporé' — calibra ai_fluency.\n"
 + "PASO 10 — RESUMEN DEL PERFIL: Antes del resumen, escribí UNA línea de transición empática, por ejemplo: 'Con esto ya tengo una imagen bastante clara de dónde estás parado/a. Mirá lo que veo:'. Luego mostrá el resumen del perfil detectado con el estado del loop (ver cómo presentar el estado abajo). El resumen debe ser cálido, específico a lo que dijeron, no genérico.\n"
 + "PASO 11 — CONFIRMACIÓN: Terminá el resumen con esta pregunta simple: '¿Esto te representa?' — no ofrescas opciones de ajuste largas, solo hacé la pregunta. Si el usuario ajusta algo, incorporalo brevemente y confirmá el ajuste.\n"
-+ "PASO 12 — DIAGNÓSTICO: Tu respuesta DEBE comenzar SIEMPRE con el bloque <DIAGNOSIS>...</DIAGNOSIS> con TODOS los campos completos y valores reales (no ceros, no placeholders). Este bloque es lo que activa el radar visual — si no lo emitís, el usuario no ve ningún resultado. DESPUÉS de cerrar </DIAGNOSIS>, recomendás 2-3 mentores en texto con razones claras y específicas para esta persona. NO repitas el mismo mentor dos veces. El orden es fijo: primero el bloque, después el texto.\n"
++ "PASO 12 — DIAGNÓSTICO: Tu respuesta DEBE comenzar SIEMPRE con el bloque <DIAGNOSIS>...</DIAGNOSIS> con TODOS los campos completos y valores reales (no ceros, no placeholders). Este bloque es lo que activa el radar visual — si no lo emitís, el usuario no ve ningún resultado. DESPUÉS de cerrar </DIAGNOSIS>, antes de las recomendaciones, agregá SIEMPRE esta línea de contexto (adaptándola al género detectado): 'Este diagnóstico es una inferencia basada en lo que me contaste. Cuanto más específico/a fuiste, más preciso es el mapa.' Luego recomendás 2-3 mentores en texto con razones claras y específicas para esta persona. NO repitas el mismo mentor dos veces. El orden es fijo: primero el bloque, después el disclaimer, después los mentores.\n"
 + "PASO 13 — PEDIDO DE EMAIL: Después de mostrar los mentores, pedí el email. Decí exactamente: '¿Me dejás tu email? Así te enviamos el resumen del diagnóstico y coordinamos la primera sesión con el mentor que elijas.' Esperá la respuesta. IMPORTANTE: Si el usuario responde 'sí', 'si', 'dale', 'ok' o cualquier afirmación SIN incluir un email, respondé: 'Perfecto, ¿cuál es tu email?' No avances al PASO 14 hasta tener un email real con formato usuario@dominio.\n"
 + "PASO 14 — CIERRE: Cuando recibís un email válido (con formato usuario@dominio), confirmalo con: '📩 Anotado: [email]'. Luego cerrá con: 'Perfecto, guardamos tu diagnóstico. El equipo de Mentores con Propósito te va a escribir a [email] para coordinar la primera sesión con el mentor que elijas.' NO preguntes '¿Hay algo más que quieras saber?' — esa pregunta reabre el loop. Si el usuario pregunta algo después del cierre, respondé brevemente y recordales que el equipo los va a contactar. NO vuelvas a pedir el email — ya lo tenés.\n\n"
 + "⚠️ ANTI-REOPEN: Una vez en PASO 14 (email recibido y confirmado), NO volvás a pedir el email nunca más en la misma conversación. Si alguien pregunta algo más, respondé y cerrá con 'Cualquier otra duda te la resolvemos cuando nos contactemos.'\n\n"
@@ -4135,6 +4140,7 @@ export default function MentorAgent(props) {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
+          temperature: 0,
           stream: true,
           system: SYSTEM_PROMPT,
           messages: apiMessages,
@@ -4254,10 +4260,43 @@ export default function MentorAgent(props) {
   }
 
   function formatMessage(text) {
-    return text.split("\n").map(function(line, i) {
-      var html = line.replace(/\*\*(.*?)\*\*/g, "<strong style=\"color:rgba(255,255,255,0.95)\">$1</strong>");
-      return <p key={i} style={{ margin: "3px 0", lineHeight: "1.6", color: "rgba(255,255,255,0.82)" }} dangerouslySetInnerHTML={{ __html: html }} />;
+    // Limpia artefactos markdown crudos antes de renderizar
+    var lines = text.split("\n");
+    var result = [];
+    lines.forEach(function(line, i) {
+      // Eliminar separadores horizontales (---, ---, ===)
+      if (/^[\s]*[-=]{2,}[\s]*$/.test(line)) return;
+
+      // Detectar títulos: líneas que empiezan con # o ##
+      var headingMatch = line.match(/^#{1,3}\s+(.+)/);
+      if (headingMatch) {
+        result.push(
+          <p key={i} style={{ margin: "10px 0 4px", lineHeight: "1.4", color: "rgba(255,255,255,0.97)", fontWeight: 700, fontSize: 13, letterSpacing: "0.5px", textTransform: "uppercase" }}>
+            {headingMatch[1]}
+          </p>
+        );
+        return;
+      }
+
+      // Limpiar bullets "- " o "* " al inicio
+      var cleanLine = line.replace(/^[\s]*[-*]\s+/, "• ");
+
+      // Convertir **negrita** a <strong>
+      var html = cleanLine.replace(/\*\*(.*?)\*\*/g, "<strong style=\"color:rgba(255,255,255,0.95)\">$1</strong>");
+      // Limpiar * sueltos que no sean bold
+      html = html.replace(/\*([^*]+)\*/g, "$1");
+
+      // Línea vacía → separador liviano
+      if (cleanLine.trim() === "") {
+        result.push(<div key={i} style={{ height: 6 }} />);
+        return;
+      }
+
+      result.push(
+        <p key={i} style={{ margin: "3px 0", lineHeight: "1.6", color: "rgba(255,255,255,0.82)" }} dangerouslySetInnerHTML={{ __html: html }} />
+      );
     });
+    return result;
   }
 
   return (
