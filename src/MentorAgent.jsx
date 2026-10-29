@@ -3484,6 +3484,32 @@ function HomeLanding(props) {
       <div style={{ padding: "18px clamp(16px, 4vw, 32px)", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: "#f0f0f0", letterSpacing: -0.3 }}>Mentorcito</div>
         <div style={{ marginLeft: 8, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>by Mentores con Propósito</div>
+        <a
+          href="https://mentorcito.vercel.app/empresas"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            marginLeft: "auto",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.75)",
+            borderRadius: 999,
+            padding: "8px 16px",
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: "none",
+            letterSpacing: -0.1,
+            transition: "background 0.15s, border-color 0.15s",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={function(e) { e.currentTarget.style.background = "rgba(255,255,255,0.11)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.28)"; }}
+          onMouseLeave={function(e) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
+        >
+          🏢 Para empresas
+        </a>
       </div>
 
       {/* Hero */}
@@ -3594,6 +3620,34 @@ function HomeLanding(props) {
           </button>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
             Gratis · Para profesionales de producto y emprendedores en LATAM
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <a
+              href="https://mentorcito.vercel.app/empresas"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.75)",
+                borderRadius: 999,
+                padding: "10px 20px",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+                letterSpacing: -0.1,
+                transition: "background 0.15s, border-color 0.15s",
+              }}
+              onMouseEnter={function(e) { e.currentTarget.style.background = "rgba(255,255,255,0.11)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.28)"; }}
+              onMouseLeave={function(e) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
+            >
+              <span style={{ fontSize: 15 }}>🏢</span>
+              Mentorcito para empresas
+              <span style={{ fontSize: 13, opacity: 0.5 }}>→</span>
+            </a>
           </div>
 
           {/* Urgency block */}
@@ -4140,7 +4194,7 @@ export default function MentorAgent(props) {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
-          temperature: 0.3,
+          temperature: 0,
           stream: true,
           system: SYSTEM_PROMPT,
           messages: apiMessages,
