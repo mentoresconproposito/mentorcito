@@ -79,9 +79,9 @@ var PASOS = [
 ];
 
 var DATOS = [
-  { numero: "+175", label: "diagnósticos realizados en Latam", color: "#4361EE" },
+  { numero: "+200", label: "diagnósticos realizados en Latam", color: "#4361EE" },
   { numero: "56%", label: "en Transición a Liderazgo — seniority sin herramientas para el salto", color: "#06D6A0" },
-  { numero: "31%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
+  { numero: "29%", label: "en Estancamiento — alto riesgo de rotación silenciosa", color: "#F72585" },
 ];
 
 var DIFERENCIAL = [
