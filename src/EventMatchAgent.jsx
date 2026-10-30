@@ -823,6 +823,38 @@ function ResultadoAsistente(props) {
 }
 
 // ─────────────────────────────────────────────
+// PORTADA: /eventos sin ?evento= (no hay a qué evento sumar a la persona)
+// ─────────────────────────────────────────────
+function PortadaSinEvento() {
+  var [codigo, setCodigo] = useState("");
+  function ir() {
+    var c = codigo.trim().toLowerCase().replace(/\s+/g, "-");
+    if (c) window.location.search = "?evento=" + encodeURIComponent(c);
+  }
+  return (
+    <>
+      <EstilosBase />
+      <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ maxWidth: 440, width: "100%", display: "flex", flexDirection: "column", gap: 14, textAlign: "center" }}>
+          <div style={{ fontSize: 40 }}>🤝</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: T.textWhite, lineHeight: 1.25 }}>Mentorcito para eventos</div>
+          <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
+            Te ayudamos a saber con quién conversar en un evento según lo que ofrecés y lo que buscás. Para empezar necesitás el link de tu evento: pedíselo a quien lo organiza.
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input value={codigo} onChange={function(e) { setCodigo(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") ir(); }}
+              placeholder="¿Tenés el código del evento?"
+              style={{ flex: 1, minWidth: 0, background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 10, color: T.text, padding: "10px 12px", fontSize: 14, outline: "none" }} />
+            <button onClick={ir} disabled={!codigo.trim()} style={Object.assign({}, btnStyle(true), { opacity: codigo.trim() ? 1 : 0.5 })}>Entrar</button>
+          </div>
+          <a href="https://mentorcito.vercel.app/" style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────
 export default function EventMatchAgent(props) {
@@ -857,6 +889,8 @@ export default function EventMatchAgent(props) {
   }, [messages, loading]);
 
   if (esOrganizador) return <PanelOrganizador eventoId={eventoId} nombreEvento={nombreEvento} />;
+
+  if (!eventoId) return <PortadaSinEvento />;
 
   if (perfilGuardado) {
     return (
