@@ -823,6 +823,12 @@ function ResultadoAsistente(props) {
   );
 }
 
+function nombreDesdeCodigo(codigo) {
+  return (codigo || "").split(/[-_\s]+/).filter(Boolean).map(function(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(" ");
+}
+
 // ─────────────────────────────────────────────
 // PORTADA: /eventos sin ?evento= (no hay a qué evento sumar a la persona)
 // ─────────────────────────────────────────────
@@ -868,7 +874,8 @@ function PortadaSinEvento() {
 export default function EventMatchAgent(props) {
   var urlParams = new URLSearchParams(window.location.search);
   var eventoId = props.eventoId || urlParams.get("evento") || "";
-  var nombreEvento = props.nombreEvento || urlParams.get("nombre") || "";
+  // Si el link no trae &nombre=, se arma uno a partir del código ("pm-day-nov" → "Pm Day Nov")
+  var nombreEvento = props.nombreEvento || urlParams.get("nombre") || nombreDesdeCodigo(eventoId);
   var esOrganizador = urlParams.get("organizador") === "1";
 
   var INITIAL_MSG = {
