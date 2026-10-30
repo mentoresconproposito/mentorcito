@@ -405,6 +405,17 @@ async function postToSheets(payload) {
   } catch (e) {}
 }
 
+// Consulta el registro de eventos del Sheet. Con clave, además dice si es la del organizador.
+async function fetchEventoInfo(eventoId, clave) {
+  var url = "/api/sheets?action=event_info&evento=" + encodeURIComponent(eventoId);
+  if (clave) url += "&clave=" + encodeURIComponent(clave);
+  var r = await fetch(url);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  var d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d;
+}
+
 async function fetchPerfilesEvento(eventoId) {
   var r = await fetch("/api/sheets?action=event_profiles&evento=" + encodeURIComponent(eventoId));
   if (!r.ok) throw new Error("HTTP " + r.status);
@@ -832,7 +843,7 @@ function nombreDesdeCodigo(codigo) {
 // ─────────────────────────────────────────────
 // PORTADA: /eventos sin ?evento= (no hay a qué evento sumar a la persona)
 // ─────────────────────────────────────────────
-function PortadaSinEvento() {
+function PortadaSinEvento(props) {
   var [codigo, setCodigo] = useState("");
   function ir() {
     var c = codigo.trim().toLowerCase().replace(/\s+/g, "-");
@@ -848,6 +859,9 @@ function PortadaSinEvento() {
           <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
             Te ayudamos a saber con quién conversar en un evento según lo que ofrecés y lo que buscás. Para empezar necesitás el link de tu evento: pedíselo a quien lo organiza.
           </div>
+          {props.error && (
+            <div style={{ fontSize: 13, color: T.pink, background: T.pink + "14", border: "1px solid " + T.pink + "44", borderRadius: 10, padding: "10px 12px", lineHeight: 1.5 }}>{props.error}</div>
+          )}
           <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input value={codigo} onChange={function(e) { setCodigo(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") ir(); }}
               placeholder="¿Tenés el código del evento?"
@@ -871,12 +885,98 @@ function PortadaSinEvento() {
 // ─────────────────────────────────────────────
 // COMPONENTE PRINCIPAL
 // ─────────────────────────────────────────────
+function PantallaCargando() {
+  return (
+    <>
+      <EstilosBase />
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        {[0, 1, 2].map(function(i) {
+          return <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.primary, animation: "pulse 1.2s ease-in-out infinite", animationDelay: (i * 0.2) + "s" }} />;
+        })}
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// PANEL CON CLAVE: el organizador entra con &clave= en el link o la escribe acá
+// ─────────────────────────────────────────────
+function PanelConClave(props) {
+  var claveUrl = new URLSearchParams(window.location.search).get("clave") || "";
+  var [estado, setEstado] = useState(claveUrl ? "verificando" : "pedir");
+  var [clave, setClave] = useState(claveUrl);
+  var [error, setError] = useState("");
+
+  function verificar(c) {
+    setEstado("verificando"); setError("");
+    fetchEventoInfo(props.eventoId, c)
+      .then(function(d) {
+        if (d.clave_ok) setEstado("ok");
+        else { setEstado("pedir"); setError("La clave no es correcta."); }
+      })
+      .catch(function(e) { setEstado("pedir"); setError("No pude verificar la clave (" + e.message + ")."); });
+  }
+
+  useEffect(function() { if (claveUrl) verificar(claveUrl); }, []);
+
+  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} />;
+  if (estado === "verificando") return <PantallaCargando />;
+
+  return (
+    <>
+      <EstilosBase />
+      <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ maxWidth: 380, width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 PANEL DEL EVENTO</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: T.textWhite }}>{props.nombreEvento}</div>
+          <div style={{ fontSize: 13, color: T.textSub }}>Ingresá la clave de organizador para ver los asistentes y los matches.</div>
+          <input type="password" value={clave} onChange={function(e) { setClave(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter" && clave.trim()) verificar(clave.trim()); }}
+            placeholder="Clave"
+            style={{ background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 10, color: T.text, padding: "10px 12px", fontSize: 14, outline: "none" }} />
+          <button onClick={function() { if (clave.trim()) verificar(clave.trim()); }} style={btnStyle(true)}>Entrar</button>
+          {error && <div style={{ fontSize: 12, color: T.pink }}>{error}</div>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// COMPONENTE RAÍZ: valida el código contra el registro de eventos y decide qué mostrar
+// ─────────────────────────────────────────────
 export default function EventMatchAgent(props) {
   var urlParams = new URLSearchParams(window.location.search);
-  var eventoId = props.eventoId || urlParams.get("evento") || "";
-  // Si el link no trae &nombre=, se arma uno a partir del código ("pm-day-nov" → "Pm Day Nov")
-  var nombreEvento = props.nombreEvento || urlParams.get("nombre") || nombreDesdeCodigo(eventoId);
+  var eventoId = (props.eventoId || urlParams.get("evento") || "").trim().toLowerCase();
   var esOrganizador = urlParams.get("organizador") === "1";
+  var [info, setInfo] = useState(null); // null = verificando
+
+  useEffect(function() {
+    if (!eventoId) return;
+    fetchEventoInfo(eventoId)
+      .then(function(d) { setInfo(d); })
+      .catch(function(e) { setInfo({ error: e.message }); });
+  }, [eventoId]);
+
+  if (!eventoId) return <PortadaSinEvento />;
+  if (!info) return <PantallaCargando />;
+  if (info.error) return <PortadaSinEvento error={"No pudimos verificar el evento. Probá de nuevo en un rato."} />;
+  if (!info.found) return <PortadaSinEvento error={"No encontramos ningún evento con el código “" + eventoId + "”. Revisá el link o el código."} />;
+  if (!info.activo) return <PortadaSinEvento error={"El evento “" + (info.nombre || eventoId) + "” ya no está activo."} />;
+
+  // Prioridad del nombre: &nombre= del link, el del registro, o uno armado desde el código
+  var nombreEvento = props.nombreEvento || urlParams.get("nombre") || info.nombre || nombreDesdeCodigo(eventoId);
+
+  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} />;
+  return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} />;
+}
+
+// ─────────────────────────────────────────────
+// VISTA DEL ASISTENTE: chat, o sus matches si ya hizo el chat
+// ─────────────────────────────────────────────
+function VistaAsistente(props) {
+  var urlParams = new URLSearchParams(window.location.search);
+  var eventoId = props.eventoId;
+  var nombreEvento = props.nombreEvento;
 
   var INITIAL_MSG = {
     role: "assistant",
@@ -903,9 +1003,6 @@ export default function EventMatchAgent(props) {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  if (esOrganizador) return <PanelOrganizador eventoId={eventoId} nombreEvento={nombreEvento} />;
-
-  if (!eventoId) return <PortadaSinEvento />;
 
   if (perfilGuardado) {
     return (
