@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
           creatumentoria: resolve(__dirname, 'creatumentoria.html'),
           gestionarmentoria: resolve(__dirname, 'gestionarmentoria.html'),
           miprogreso: resolve(__dirname, 'miprogreso.html'),
+          eventos: resolve(__dirname, 'eventos.html'),
         },
       },
     },

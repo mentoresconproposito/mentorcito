@@ -8,6 +8,7 @@
     { "source": "/creatumentoria",     "destination": "/creatumentoria.html" },
     { "source": "/gestionarmentoria",  "destination": "/gestionarmentoria.html" },
     { "source": "/miprogreso",         "destination": "/miprogreso.html" },
+    { "source": "/eventos", "destination": "/eventos.html" },
     { "source": "/(.*)",               "destination": "/index.html" }
   ]
 }
