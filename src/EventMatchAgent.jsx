@@ -14,8 +14,8 @@ var MODEL = "claude-haiku-4-5-20251001";
 var SHEETS_URL = "https://script.google.com/macros/s/AKfycby_UmXK49W239AN1ZbmDIpdMpcbGqqlHIuT7DwmWoWQ7AXt8b-_g6PGIeLeIlKWgNng9Q/exec";
 
 var MAX_MATCHES = 3;      // matches 1 a 1 por persona
-var MIN_MATCH_PCT = 30;
-var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent   // por debajo de esto no se sugiere
+var MIN_MATCH_PCT = 30;   // por debajo de esto no se sugiere
+var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent
 var MESA_MIN = 3;
 var MESA_MAX = 6;
 
@@ -90,6 +90,25 @@ function clasificarEnSkills(textos) {
 
 function unique(arr) {
   return arr.filter(function(x, i) { return x && arr.indexOf(x) === i; });
+}
+
+// Solo dígitos, con código de país. Menos de 8 dígitos no es un número usable.
+function limpiarWhatsapp(s) {
+  var d = (s || "").toString().replace(/\D/g, "");
+  return d.length >= 8 ? d : "";
+}
+
+function urlLinkedin(s) {
+  var t = (s || "").toString().trim();
+  if (!t) return "";
+  if (/^https?:\/\//i.test(t)) return t;
+  if (/linkedin\.com/i.test(t)) return "https://" + t.replace(/^\/+/, "");
+  return "https://www.linkedin.com/in/" + t.replace(/^@/, "");
+}
+
+// Identifica a una persona dentro del evento (para no duplicarla ni matchearla consigo misma)
+function claveIdentidad(p) {
+  return (p.nombre || "").toString().trim().toLowerCase() + "|" + (limpiarWhatsapp(p.whatsapp) || (p.linkedin || p.contacto || "").toString().trim().toLowerCase());
 }
 
 // Normaliza un perfil: une las skills que tipificó el LLM con las que detecta el clasificador por keywords
@@ -351,7 +370,7 @@ function buildSystemPrompt(nombreEvento) {
   + "PASO 4 — PREGUNTA 3: '¿Qué desafío te gustaría destrabar con alguien que ya pasó por eso?' — esto es lo que BUSCA (sus gaps).\n"
   + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento?' y mostrá las opciones en una lista con •: aprender de alguien con más experiencia, compartir experiencia o mentorear, contratar, buscar trabajo o proyecto, buscar inversión, invertir, conseguir clientes, encontrar proveedor o solución, encontrar socio o cofounder, ampliar red. Puede elegir hasta 2.\n"
   + "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
-  + "PASO 7 — PREGUNTA 6 (consentimiento): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés, dejame también tu LinkedIn o email para que te contacten.'\n"
+  + "PASO 7 — PREGUNTA 6 (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés que te escriban para encontrarse en el evento, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo lo van a ver tus matches.'\n"
   + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
   + "⚠️ ANTI-LOOP: después de la pregunta 6 no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
   + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 8.\n"
@@ -361,10 +380,12 @@ function buildSystemPrompt(nombreEvento) {
   + "- ofrece_skills / busca_skills: ids del catálogo que mejor representan esas frases. Si nada encaja, dejá la lista vacía.\n"
   + "- nivel: junior (menos de 2 años), mid (2 a 5), senior (más de 5 o lidera equipos), senior-ejecutivo (C-level, founder con tracción, director).\n"
   + "- formato: 1a1, grupo o ambos.\n"
+  + "- whatsapp: solo dígitos con código de país, sin + ni espacios (ej: 5491123456789). Si es un número argentino sin código, agregá 549 y sacá el 0 y el 15. Si no lo dio, dejalo vacío.\n"
+  + "- linkedin: la URL o el usuario de LinkedIn si lo dio; si no, vacío. contacto: un email si lo dio; si no, vacío.\n"
   + "- resumen: una línea en tercera persona para que otros asistentes entiendan quién es.\n\n"
   + "FORMATO DEL BLOQUE (reemplazá con datos reales):\n"
   + "<PERFIL>\n"
-  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"formato\":\"ambos\",\"consentimiento\":true,\"contacto\":\"\",\"resumen\":\"\"}\n"
+  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"formato\":\"ambos\",\"consentimiento\":true,\"whatsapp\":\"\",\"linkedin\":\"\",\"contacto\":\"\",\"resumen\":\"\"}\n"
   + "</PERFIL>";
 }
 
@@ -416,16 +437,28 @@ async function fetchEventoInfo(eventoId, clave) {
   return d;
 }
 
-async function fetchPerfilesEvento(eventoId) {
-  var r = await fetch("/api/sheets?action=event_profiles&evento=" + encodeURIComponent(eventoId));
+// Lista completa del evento: solo para el panel, requiere la clave de organizador
+async function fetchPerfilesEvento(eventoId, clave) {
+  var r = await fetch("/api/sheets?action=event_profiles&evento=" + encodeURIComponent(eventoId) + "&clave=" + encodeURIComponent(clave || ""));
   if (!r.ok) throw new Error("HTTP " + r.status);
   var d = await r.json();
+  if (d.error) throw new Error(d.error);
   var lista = Array.isArray(d) ? d : (d.perfiles || []);
   return lista.map(function(x) { return typeof x === "string" ? JSON.parse(x) : x; })
     .filter(function(p) { return p && p.consentimiento !== false; });
 }
 
-// Acepta JSON (array de perfiles) o CSV con columnas: nombre,rol,empresa,nivel,ofrece,busca,objetivos,formato,contacto
+// Matches de una persona: el Apps Script calcula con todo el evento y devuelve solo
+// sus matches (con contacto) y su mesa (solo nombres). Ver MatchEventos.gs.
+async function fetchMisMatches(eventoId, perfil) {
+  var r = await fetch("/api/sheets?action=event_matches&evento=" + encodeURIComponent(eventoId) + "&perfil=" + encodeURIComponent(codificarPerfil(perfil)));
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  var d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d;
+}
+
+// Acepta JSON (array de perfiles) o CSV con columnas: nombre,rol,empresa,nivel,ofrece,busca,objetivos,formato,whatsapp,linkedin
 // En CSV, las listas van separadas por "|"
 function parsearPerfiles(texto) {
   var t = (texto || "").trim();
@@ -452,11 +485,11 @@ function parsearPerfiles(texto) {
 function exportarCSV(res, nombreArchivo) {
   var byId = {};
   res.perfiles.forEach(function(p) { byId[p.id] = p; });
-  var filas = [["persona", "match", "porcentaje", "por_que", "rompehielos", "contacto_match"]];
+  var filas = [["persona", "match", "porcentaje", "por_que", "rompehielos", "whatsapp_match", "linkedin_match", "email_match"]];
   res.perfiles.forEach(function(a) {
     res.porPersona[a.id].forEach(function(m) {
       var b = byId[m.id];
-      filas.push([a.nombre, b.nombre, m.pct + "%", porQueHablar(a, b, m.razones), rompehielos(a, b, m.razones), b.contacto || ""]);
+      filas.push([a.nombre, b.nombre, m.pct + "%", porQueHablar(a, b, m.razones), rompehielos(a, b, m.razones), b.whatsapp || "", b.linkedin || "", b.contacto || ""]);
     });
   });
   filas.push([]);
@@ -516,7 +549,44 @@ function MatchCard(props) {
       </div>
       <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{porQueHablar(a, b, m.razones)}</div>
       <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5, background: T.highlightBg, borderRadius: 10, padding: "8px 10px" }}>💬 {rompehielos(a, b, m.razones)}</div>
-      {b.contacto && <div style={{ fontSize: 11, color: T.textMuted }}>Contacto: {b.contacto}</div>}
+      <BotonesContacto yo={a} otro={b} razones={m.razones} nombreEvento={props.nombreEvento} />
+    </div>
+  );
+}
+
+// Mensaje que A le manda a B, escrito en primera persona desde A
+function mensajeWhatsapp(a, b, razones, nombreEvento) {
+  var skills = function(de) {
+    return listaNatural(razones.filter(function(r) { return r.tipo === "skill" && r.de === de; }).map(function(r) { return enMinuscula(SKILL_BY_ID[r.skill].label); }));
+  };
+  var aprendo = skills(b.id), aporto = skills(a.id);
+  var motivo = [];
+  if (aprendo) motivo.push("me encantaría aprender de vos sobre " + aprendo);
+  if (aporto) motivo.push((aprendo ? "y yo te puedo dar una mano con " : "te puedo dar una mano con ") + aporto);
+  var porque = motivo.length ? motivo.join(" ") : "creo que tenemos mucho para conversar";
+  return "Hola " + primerNombre(b) + "! Soy " + (a.nombre || "") + (a.rol ? " (" + a.rol + ")" : "") + ". Mentorcito nos hizo match en "
+    + (nombreEvento || "el evento") + ": " + porque + ". ¿Nos encontramos un rato en el evento? Te cuento dónde estoy 👋";
+}
+
+function BotonesContacto(props) {
+  var a = props.yo, b = props.otro;
+  var wa = limpiarWhatsapp(b.whatsapp);
+  var li = urlLinkedin(b.linkedin);
+  if (!wa && !li && !b.contacto) {
+    return <div style={{ fontSize: 11, color: T.textMuted }}>No dejó contacto: buscalo/a en el evento por su nombre.</div>;
+  }
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {wa && (
+        <a href={"https://wa.me/" + wa + "?text=" + encodeURIComponent(mensajeWhatsapp(a, b, props.razones, props.nombreEvento))}
+          target="_blank" rel="noopener noreferrer"
+          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>💬 Escribile por WhatsApp</a>
+      )}
+      {li && (
+        <a href={li} target="_blank" rel="noopener noreferrer"
+          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#0a66c2", color: "#5b9ee8" })}>in Ver su LinkedIn</a>
+      )}
+      {!wa && !li && b.contacto && <div style={{ fontSize: 11, color: T.textMuted }}>Contacto: {b.contacto}</div>}
     </div>
   );
 }
@@ -576,7 +646,7 @@ function PanelOrganizador(props) {
   function cargarDesdeSheets() {
     if (!eventoId) return;
     setCargando(true); setError("");
-    fetchPerfilesEvento(eventoId)
+    fetchPerfilesEvento(eventoId, props.clave)
       .then(function(l) { setPerfiles(l); })
       .catch(function(e) { setError("No pude leer los perfiles del evento (" + e.message + "). Podés pegarlos abajo."); })
       .finally(function() { setCargando(false); });
@@ -622,7 +692,7 @@ function PanelOrganizador(props) {
         </div>
 
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontSize: 13, color: T.textSub }}>Cargá los perfiles: se leen solos del Sheet del evento, o pegá un JSON / CSV (columnas: nombre, rol, empresa, nivel, ofrece, busca, objetivos, formato, contacto; listas separadas por |).</div>
+          <div style={{ fontSize: 13, color: T.textSub }}>Cargá los perfiles: se leen solos del Sheet del evento, o pegá un JSON / CSV (columnas: nombre, rol, empresa, nivel, ofrece, busca, objetivos, formato, whatsapp, linkedin; listas separadas por |).</div>
           <textarea value={texto} onChange={function(e) { setTexto(e.target.value); }} rows={4} placeholder="Pegá acá el JSON o CSV de asistentes…"
             style={{ width: "100%", background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.text, padding: 10, fontSize: 12, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -654,7 +724,7 @@ function PanelOrganizador(props) {
                     <div style={{ fontSize: 11, color: T.textMuted }}>{a.rol}</div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 8 }}>
-                    {ms.map(function(m) { return <MatchCard key={m.id} yo={a} otro={byId[m.id]} match={m} />; })}
+                    {ms.map(function(m) { return <MatchCard key={m.id} yo={a} otro={byId[m.id]} match={m} nombreEvento={props.nombreEvento} />; })}
                   </div>
                 </div>
               );
@@ -777,27 +847,22 @@ function LinkPersonal(props) {
 function ResultadoAsistente(props) {
   var perfil = props.perfil;
   var eventoId = props.eventoId;
-  var [otros, setOtros] = useState(null);
+  var [datos, setDatos] = useState(null); // null = cargando; { matches, mesa }
   var [recarga, setRecarga] = useState(0);
 
   useEffect(function() {
-    if (!eventoId) { setOtros([]); return; }
-    setOtros(null);
-    fetchPerfilesEvento(eventoId)
-      .then(function(l) { setOtros(l); })
-      .catch(function() { setOtros([]); });
+    if (!eventoId) { setDatos({ matches: [], mesa: null }); return; }
+    setDatos(null);
+    fetchMisMatches(eventoId, perfil)
+      .then(function(d) { setDatos(d); })
+      .catch(function() { setDatos({ matches: [], mesa: null }); });
   }, [eventoId, recarga]);
 
-  var yo = normalizarPerfil(perfil, 0);
-  yo.id = "yo";
-  var res = null, mesa = null, byId = {};
-  if (otros && otros.length) {
-    var lista = [yo].concat(otros.filter(function(o) { return (o.nombre || "") !== (perfil.nombre || "") || (o.contacto || "") !== (perfil.contacto || ""); }));
-    res = calcularEvento(lista);
-    res.perfiles.forEach(function(p) { byId[p.id] = p; });
-    var yoNorm = res.perfiles[0];
-    mesa = res.mesas.filter(function(m) { return m.integrantes.indexOf(yoNorm.id) !== -1; })[0] || null;
-  }
+  var yo = Object.assign(normalizarPerfil(perfil, 0), { id: "yo" });
+  var matches = (datos && datos.matches) || [];
+  var mesa = datos && datos.mesa;
+  var mesaById = {};
+  if (mesa) mesa.integrantes.forEach(function(p) { mesaById[p.id] = p; });
 
   return (
     <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -808,24 +873,24 @@ function ResultadoAsistente(props) {
         <div>{yo.busca_skills.length ? yo.busca_skills.map(function(s) { return <SkillChip key={s} id={s} />; }) : <span style={{ fontSize: 12, color: T.textSub }}>{yo.busca.join(", ")}</span>}</div>
       </div>
 
-      {otros === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
+      {datos === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
 
-      {res && res.porPersona[res.perfiles[0].id].length > 0 && (
+      {matches.length > 0 && (
         <>
           <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>TUS MATCHES EN EL EVENTO</div>
-          {res.porPersona[res.perfiles[0].id].map(function(m) {
-            return <MatchCard key={m.id} yo={res.perfiles[0]} otro={byId[m.id]} match={m} />;
+          {matches.map(function(m) {
+            return <MatchCard key={m.otro.id} yo={yo} otro={m.otro} match={m} nombreEvento={props.nombreEvento} />;
           })}
         </>
       )}
 
-      {mesa && <MesaCard n={res.mesas.indexOf(mesa) + 1} mesa={mesa} byId={byId} />}
+      {mesa && <MesaCard n={mesa.numero} mesa={{ tema: mesa.tema, anfitrion: mesa.anfitrion, integrantes: mesa.integrantes.map(function(p) { return p.id; }) }} byId={mesaById} />}
 
-      {otros !== null && (!res || !res.porPersona[res.perfiles[0].id].length) && (
+      {datos !== null && !matches.length && (
         <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Todavía hay pocas personas registradas para darte un buen match. Volvé con tu link personal más cerca del evento: los matches aparecen solos a medida que se suman asistentes.</div>
       )}
 
-      {otros !== null && (
+      {datos !== null && (
         <button onClick={function() { setRecarga(recarga + 1); }} style={Object.assign({}, btnStyle(false), { alignSelf: "flex-start" })}>↻ Actualizar matches</button>
       )}
 
@@ -919,7 +984,7 @@ function PanelConClave(props) {
 
   useEffect(function() { if (claveUrl) verificar(claveUrl); }, []);
 
-  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} />;
+  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} />;
   if (estado === "verificando") return <PantallaCargando />;
 
   return (
@@ -1175,4 +1240,4 @@ function VistaAsistente(props) {
 }
 
 // Exportadas para tests o para usarlas desde otro componente
-export { calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
+export { claveIdentidad, limpiarWhatsapp, calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
