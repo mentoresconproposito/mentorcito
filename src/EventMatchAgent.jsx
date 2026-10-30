@@ -351,7 +351,7 @@ function buildSystemPrompt(nombreEvento) {
   + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento?' y mostrá las opciones en una lista con •: aprender de alguien con más experiencia, compartir experiencia o mentorear, contratar, buscar trabajo o proyecto, buscar inversión, invertir, conseguir clientes, encontrar proveedor o solución, encontrar socio o cofounder, ampliar red. Puede elegir hasta 2.\n"
   + "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
   + "PASO 7 — PREGUNTA 6 (consentimiento): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés, dejame también tu LinkedIn o email para que te contacten.'\n"
-  + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que se los mostramos apenas haya más asistentes registrados). Cerrá sin hacer más preguntas.\n\n"
+  + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
   + "⚠️ ANTI-LOOP: después de la pregunta 6 no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
   + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 8.\n"
   + "⚠️ Si la persona NO acepta compartir sus datos, igual emití el bloque con \"consentimiento\": false.\n\n"
@@ -703,19 +703,78 @@ function btnStyle(primary) {
 }
 
 // ─────────────────────────────────────────────
-// RESULTADO DEL ASISTENTE (debajo del bloque <PERFIL>)
+// LINK PERSONAL: el perfil viaja codificado en la URL (?yo=...) y además
+// queda guardado en el navegador, para que la persona vuelva a ver sus matches
+// ─────────────────────────────────────────────
+function codificarPerfil(p) {
+  var json = JSON.stringify(p);
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodificarPerfil(str) {
+  try {
+    var b64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch (e) { return null; }
+}
+
+function linkPersonal(eventoId, nombreEvento, p) {
+  var params = new URLSearchParams();
+  if (eventoId) params.set("evento", eventoId);
+  if (nombreEvento) params.set("nombre", nombreEvento);
+  params.set("yo", codificarPerfil(p));
+  return window.location.origin + window.location.pathname + "?" + params.toString();
+}
+
+function storageKey(eventoId) { return "mentorcito_evento_" + (eventoId || "sin_evento"); }
+
+function guardarPerfilLocal(eventoId, p) {
+  try { localStorage.setItem(storageKey(eventoId), JSON.stringify(p)); } catch (e) {}
+}
+
+function leerPerfilLocal(eventoId) {
+  try { return JSON.parse(localStorage.getItem(storageKey(eventoId)) || "null"); } catch (e) { return null; }
+}
+
+function borrarPerfilLocal(eventoId) {
+  try { localStorage.removeItem(storageKey(eventoId)); } catch (e) {}
+}
+
+function LinkPersonal(props) {
+  var [copiado, setCopiado] = useState(false);
+  var url = linkPersonal(props.eventoId, props.nombreEvento, props.perfil);
+  function copiar() {
+    try {
+      navigator.clipboard.writeText(url).then(function() { setCopiado(true); setTimeout(function() { setCopiado(false); }, 2000); });
+    } catch (e) {}
+  }
+  return (
+    <div style={{ background: T.primary + "14", border: "1px solid " + T.primary + "44", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>🔖 Guardá tu link personal. Tus matches se actualizan a medida que se suman personas al evento, así que volvé cuando quieras.</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button onClick={copiar} style={btnStyle(true)}>{copiado ? "¡Copiado!" : "Copiar mi link"}</button>
+        <a href={"https://wa.me/?text=" + encodeURIComponent("Mis matches para " + (props.nombreEvento || "el evento") + ": " + url)} target="_blank" rel="noopener noreferrer" style={Object.assign({}, btnStyle(false), { textDecoration: "none" })}>Enviármelo por WhatsApp</a>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// RESULTADO DEL ASISTENTE (debajo del bloque <PERFIL>, o al volver con su link)
 // ─────────────────────────────────────────────
 function ResultadoAsistente(props) {
   var perfil = props.perfil;
   var eventoId = props.eventoId;
   var [otros, setOtros] = useState(null);
+  var [recarga, setRecarga] = useState(0);
 
   useEffect(function() {
     if (!eventoId) { setOtros([]); return; }
+    setOtros(null);
     fetchPerfilesEvento(eventoId)
       .then(function(l) { setOtros(l); })
       .catch(function() { setOtros([]); });
-  }, [eventoId]);
+  }, [eventoId, recarga]);
 
   var yo = normalizarPerfil(perfil, 0);
   yo.id = "yo";
@@ -751,8 +810,14 @@ function ResultadoAsistente(props) {
       {mesa && <MesaCard n={res.mesas.indexOf(mesa) + 1} mesa={mesa} byId={byId} />}
 
       {otros !== null && (!res || !res.porPersona[res.perfiles[0].id].length) && (
-        <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Todavía hay pocas personas registradas para darte un buen match. Te los mostramos el día del evento.</div>
+        <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Todavía hay pocas personas registradas para darte un buen match. Volvé con tu link personal más cerca del evento: los matches aparecen solos a medida que se suman asistentes.</div>
       )}
+
+      {otros !== null && (
+        <button onClick={function() { setRecarga(recarga + 1); }} style={Object.assign({}, btnStyle(false), { alignSelf: "flex-start" })}>↻ Actualizar matches</button>
+      )}
+
+      <LinkPersonal perfil={perfil} eventoId={eventoId} nombreEvento={props.nombreEvento} />
     </div>
   );
 }
@@ -777,6 +842,13 @@ export default function EventMatchAgent(props) {
   var [input, setInput] = useState("");
   var [loading, setLoading] = useState(false);
   var [perfil, setPerfil] = useState(null);
+  // Perfil guardado: viene del link personal (?yo=) o del navegador
+  var [perfilGuardado, setPerfilGuardado] = useState(function() {
+    var yo = urlParams.get("yo");
+    var p = yo ? decodificarPerfil(yo) : leerPerfilLocal(eventoId);
+    if (p && yo) guardarPerfilLocal(eventoId, p);
+    return p;
+  });
   var bottomRef = useRef(null);
   var systemPrompt = useRef(buildSystemPrompt(nombreEvento)).current;
 
@@ -785,6 +857,26 @@ export default function EventMatchAgent(props) {
   }, [messages, loading]);
 
   if (esOrganizador) return <PanelOrganizador eventoId={eventoId} nombreEvento={nombreEvento} />;
+
+  if (perfilGuardado) {
+    return (
+      <>
+        <EstilosBase />
+        <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", padding: "20px 16px 40px" }}>
+          <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
+            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} />
+            <button onClick={function() {
+              borrarPerfilLocal(eventoId);
+              window.history.replaceState(null, "", window.location.pathname + "?" + new URLSearchParams({ evento: eventoId, nombre: nombreEvento }).toString());
+              setPerfilGuardado(null);
+            }} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>No soy {primerNombre(perfilGuardado)} / hacer el chat de nuevo</button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   function extractPerfil(text) {
     var m = text.match(/<PERFIL>([\s\S]*?)<\/PERFIL>/);
@@ -857,6 +949,7 @@ export default function EventMatchAgent(props) {
       var p = extractPerfil(fullText);
       if (p) {
         setPerfil(p);
+        guardarPerfilLocal(eventoId, p);
         if (p.consentimiento !== false && eventoId) {
           postToSheets({ action: "event_profile", evento: eventoId, ts: Date.now(), perfil: p });
         }
@@ -904,7 +997,7 @@ export default function EventMatchAgent(props) {
               <div key={i} style={{ display: "flex", justifyContent: esBot ? "flex-start" : "flex-end" }}>
                 <div style={{ maxWidth: "85%", padding: "13px 16px", borderRadius: esBot ? "4px 18px 18px 18px" : "18px 18px 4px 18px", background: esBot ? "rgba(255,255,255,0.05)" : "rgba(67,97,238,0.14)", border: "1px solid " + (esBot ? "rgba(255,255,255,0.08)" : "rgba(67,97,238,0.35)"), fontSize: 14 }}>
                   {formatMessage(msg.content)}
-                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} />}
+                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} />}
                 </div>
               </div>
             );
