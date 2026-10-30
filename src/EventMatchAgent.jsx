@@ -14,7 +14,8 @@ var MODEL = "claude-haiku-4-5-20251001";
 var SHEETS_URL = "https://script.google.com/macros/s/AKfycby_UmXK49W239AN1ZbmDIpdMpcbGqqlHIuT7DwmWoWQ7AXt8b-_g6PGIeLeIlKWgNng9Q/exec";
 
 var MAX_MATCHES = 3;      // matches 1 a 1 por persona
-var MIN_MATCH_PCT = 30;   // por debajo de esto no se sugiere
+var MIN_MATCH_PCT = 30;
+var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent   // por debajo de esto no se sugiere
 var MESA_MIN = 3;
 var MESA_MAX = 6;
 
@@ -846,6 +847,13 @@ function PortadaSinEvento() {
               placeholder="¿Tenés el código del evento?"
               style={{ flex: 1, minWidth: 0, background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 10, color: T.text, padding: "10px 12px", fontSize: 14, outline: "none" }} />
             <button onClick={ir} disabled={!codigo.trim()} style={Object.assign({}, btnStyle(true), { opacity: codigo.trim() ? 1 : 0.5 })}>Entrar</button>
+          </div>
+          <div style={{ marginTop: 18, paddingTop: 18, borderTop: "1px solid " + T.border, display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <div style={{ fontSize: 14, color: T.text, fontWeight: 700 }}>¿Organizás un evento?</div>
+            <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Escribinos y te armamos el link para que tus asistentes lleguen sabiendo con quién hablar.</div>
+            <a href={"https://wa.me/" + WHATSAPP_ORGANIZADORES + "?text=" + encodeURIComponent("Hola! Quiero crear un evento en Mentorcito para eventos. Nombre del evento: ... Fecha: ... Cantidad estimada de asistentes: ...")}
+              target="_blank" rel="noopener noreferrer"
+              style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>💬 Escribinos por WhatsApp</a>
           </div>
           <a href="https://mentorcito.vercel.app/" style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>
         </div>
