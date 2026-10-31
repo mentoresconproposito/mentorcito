@@ -841,6 +841,12 @@ function LinkPersonal(props) {
   );
 }
 
+var estiloLinkSutil = { background: "none", border: "none", padding: 0, color: T.textMuted, fontSize: 12, cursor: "pointer", textDecoration: "underline" };
+
+function LinkDiagnostico() {
+  return <a href="https://mentorcito.vercel.app/" target="_blank" rel="noopener noreferrer" style={estiloLinkSutil}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>;
+}
+
 // ─────────────────────────────────────────────
 // RESULTADO DEL ASISTENTE (debajo del bloque <PERFIL>, o al volver con su link)
 // ─────────────────────────────────────────────
@@ -895,6 +901,8 @@ function ResultadoAsistente(props) {
       )}
 
       <LinkPersonal perfil={perfil} eventoId={eventoId} nombreEvento={props.nombreEvento} />
+
+      {props.pie || <LinkDiagnostico />}
     </div>
   );
 }
@@ -1077,12 +1085,16 @@ function VistaAsistente(props) {
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
-            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} />
-            <button onClick={function() {
-              borrarPerfilLocal(eventoId);
-              window.history.replaceState(null, "", window.location.pathname + "?" + new URLSearchParams({ evento: eventoId, nombre: nombreEvento }).toString());
-              setPerfilGuardado(null);
-            }} style={{ marginTop: 16, background: "none", border: "none", color: T.textMuted, fontSize: 12, cursor: "pointer", textDecoration: "underline" }}>No soy {primerNombre(perfilGuardado)} / hacer el chat de nuevo</button>
+            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} pie={
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
+                <button onClick={function() {
+                  borrarPerfilLocal(eventoId);
+                  window.history.replaceState(null, "", window.location.pathname + "?" + new URLSearchParams({ evento: eventoId }).toString());
+                  setPerfilGuardado(null);
+                }} style={estiloLinkSutil}>No soy {primerNombre(perfilGuardado)} / hacer el chat de nuevo</button>
+                <LinkDiagnostico />
+              </div>
+            } />
           </div>
         </div>
       </>
