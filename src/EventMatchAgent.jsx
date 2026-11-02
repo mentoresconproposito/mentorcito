@@ -350,15 +350,18 @@ var OBJETIVOS_LIST = Object.keys(OBJETIVOS).map(function(id) {
   return "- " + id + ": " + OBJETIVOS[id].label;
 }).join("\n");
 
-function buildSystemPrompt(nombreEvento) {
+// conMesas = false: el evento no tiene mesas, se saltea la pregunta de formato (quedan 5)
+function buildSystemPrompt(nombreEvento, conMesas) {
+  if (conMesas === undefined) conMesas = true;
+  var nPreg = conMesas ? 6 : 5;
   return "Eres Mentorcito, el agente de Mentores con Propósito que conecta a las personas que van a un mismo evento"
   + (nombreEvento ? " (" + nombreEvento + ")" : "") + ".\n\n"
-  + "MISIÓN: En pocas preguntas entendés qué puede ofrecer cada asistente, qué está buscando y a qué viene al evento, para que el sistema le proponga con quién conversar (1 a 1) y en qué mesa temática sentarse.\n\n"
+  + "MISIÓN: En pocas preguntas entendés qué puede ofrecer cada asistente, qué está buscando y a qué viene al evento, para que el sistema le proponga con quién conversar (1 a 1)" + (conMesas ? " y en qué mesa temática sentarse" : "") + ".\n\n"
   + "NOMBRE Y GÉNERO:\n"
   + "- Lo primero es preguntar el nombre. Usalo en cada respuesta.\n"
   + "- Inferí el género por el nombre y adaptá las palabras (bienvenido/bienvenida). Si dudás, usá formas neutras.\n\n"
   + "REGLA DE ORO — UNA PREGUNTA A LA VEZ. Nunca dos preguntas en el mismo mensaje.\n\n"
-  + "LÍMITE DURO: EXACTAMENTE 6 preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento.\n\n"
+  + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento.\n\n"
   + "EXTENSIÓN: mensajes de máximo 3 líneas durante las preguntas.\n\n"
   + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá •.\n\n"
   + "CATÁLOGO DE SKILLS (usá solo estos ids en ofrece_skills y busca_skills):\n" + SKILLS_LIST + "\n\n"
@@ -369,10 +372,12 @@ function buildSystemPrompt(nombreEvento) {
   + "PASO 3 — PREGUNTA 2: '¿En qué temas te buscan los demás? Contame 2 o 3 cosas en las que podrías ayudar a alguien hoy mismo.' — esto es lo que OFRECE.\n"
   + "PASO 4 — PREGUNTA 3: '¿Qué desafío te gustaría destrabar con alguien que ya pasó por eso?' — esto es lo que BUSCA (sus gaps).\n"
   + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento?' y mostrá las opciones en una lista con •: aprender de alguien con más experiencia, compartir experiencia o mentorear, contratar, buscar trabajo o proyecto, buscar inversión, invertir, conseguir clientes, encontrar proveedor o solución, encontrar socio o cofounder, ampliar red. Puede elegir hasta 2.\n"
-  + "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
-  + "PASO 7 — PREGUNTA 6 (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés que te escriban para encontrarse en el evento, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo lo van a ver tus matches.'\n"
+  + (conMesas
+    ? "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
+    : "PASO 6 — (este evento no tiene mesas: NO preguntes cómo prefiere conectar, usá formato \"1a1\" y pasá directo al PASO 7)\n")
+  + "PASO 7 — PREGUNTA " + nPreg + " (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés que te escriban para encontrarse en el evento, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo lo van a ver tus matches.'\n"
   + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
-  + "⚠️ ANTI-LOOP: después de la pregunta 6 no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
+  + "⚠️ ANTI-LOOP: después de la pregunta " + nPreg + " no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
   + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 8.\n"
   + "⚠️ Si la persona NO acepta compartir sus datos, igual emití el bloque con \"consentimiento\": false.\n\n"
   + "CÓMO COMPLETAR EL PERFIL:\n"
@@ -458,6 +463,95 @@ async function fetchMisMatches(eventoId, perfil) {
   return d;
 }
 
+// ─────────────────────────────────────────────
+// FEEDBACK: "Ya hablamos", calificación por charla (1 a 5) y NPS del evento (0 a 10)
+// Se guarda en la hoja "feedback_eventos". Si alguien cambia de idea, vale lo último.
+// ─────────────────────────────────────────────
+function postFeedback(eventoId, yo, otro, tipo, valor, comentario) {
+  return postToSheets({
+    action: "event_feedback",
+    evento: eventoId,
+    ts: Date.now(),
+    de: yo ? claveIdentidad(yo) : "",
+    de_nombre: (yo && yo.nombre) || "",
+    con: otro ? claveIdentidad(otro) : "",
+    con_nombre: (otro && otro.nombre) || "",
+    tipo: tipo,
+    valor: valor,
+    comentario: comentario || "",
+  });
+}
+
+// Registros de feedback del evento: solo para el panel, requiere la clave de organizador
+async function fetchFeedbackEvento(eventoId, clave) {
+  var r = await fetch("/api/sheets?action=event_feedback&evento=" + encodeURIComponent(eventoId) + "&clave=" + encodeURIComponent(clave || ""));
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  var d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d.registros || [];
+}
+
+// Métricas del evento a partir de los perfiles, los matches calculados y el feedback
+function calcularMetricas(perfiles, res, registros) {
+  var claveDe = {};
+  perfiles.forEach(function(p, i) { claveDe[(res ? res.perfiles[i].id : i)] = claveIdentidad(p); });
+  var nombrePorClave = {};
+  var nombreDeRegistro = {};
+  registros.forEach(function(r) { if (r.de && r.de_nombre) nombreDeRegistro[r.de] = r.de_nombre; if (r.con && r.con_nombre) nombreDeRegistro[r.con] = r.con_nombre; });
+  perfiles.forEach(function(p) { nombrePorClave[claveIdentidad(p)] = p.nombre; });
+  var nombre = function(c) { return nombrePorClave[c] || nombreDeRegistro[c] || c.split("|")[0]; };
+  var par = function(a, b) { return [a, b].sort().join("§"); };
+
+  // Conversaciones: un par cuenta si alguno de los dos dijo "Ya hablamos" (y no lo deshizo)
+  var direccion = {};
+  registros.forEach(function(r) { if (r.tipo === "hablamos" && r.de && r.con) direccion[r.de + "→" + r.con] = Number(r.valor) === 1; });
+  var conversaciones = {};
+  Object.keys(direccion).forEach(function(k) {
+    var x = k.split("→");
+    var inversa = direccion[x[1] + "→" + x[0]];
+    if (direccion[k] || inversa) conversaciones[par(x[0], x[1])] = { a: x[0], b: x[1] };
+  });
+
+  // Calificaciones de cada charla (de 1 a 5)
+  var ratings = registros.filter(function(r) { return r.tipo === "rating" && Number(r.valor) >= 1; });
+  var ratingPorPar = {};
+  ratings.forEach(function(r) { var k = par(r.de, r.con); (ratingPorPar[k] = ratingPorPar[k] || []).push(Number(r.valor)); });
+  var prom = function(xs) { return xs.length ? xs.reduce(function(a, b) { return a + b; }, 0) / xs.length : null; };
+
+  // NPS: % promotores (9-10) menos % detractores (0-6)
+  var nps = registros.filter(function(r) { return r.tipo === "nps" && r.valor !== "" && r.valor != null; });
+  var promotores = nps.filter(function(r) { return Number(r.valor) >= 9; }).length;
+  var detractores = nps.filter(function(r) { return Number(r.valor) <= 6; }).length;
+
+  // Matches recomendados (pares únicos) que se concretaron
+  var recomendados = {};
+  if (res) res.perfiles.forEach(function(a) {
+    res.porPersona[a.id].forEach(function(m) { recomendados[par(claveDe[a.id], claveDe[m.id])] = true; });
+  });
+  var nRecomendados = Object.keys(recomendados).length;
+  var nConcretados = Object.keys(recomendados).filter(function(k) { return conversaciones[k]; }).length;
+
+  var conAlguna = {};
+  Object.keys(conversaciones).forEach(function(k) { conAlguna[conversaciones[k].a] = true; conAlguna[conversaciones[k].b] = true; });
+  var nAsistentesCon = Object.keys(conAlguna).filter(function(c) { return nombrePorClave[c]; }).length;
+
+  return {
+    conversaciones: Object.keys(conversaciones).map(function(k) {
+      var c = conversaciones[k];
+      return { a: nombre(c.a), b: nombre(c.b), rating: prom(ratingPorPar[k] || []), recomendado: !!recomendados[k] };
+    }),
+    nRecomendados: nRecomendados,
+    nConcretados: nConcretados,
+    pctAsistentesCon: perfiles.length ? Math.round(100 * nAsistentesCon / perfiles.length) : 0,
+    nAsistentesCon: nAsistentesCon,
+    ratingProm: prom(ratings.map(function(r) { return Number(r.valor); })),
+    nRatings: ratings.length,
+    nps: nps.length ? Math.round(100 * (promotores - detractores) / nps.length) : null,
+    nNps: nps.length, promotores: promotores, detractores: detractores, pasivos: nps.length - promotores - detractores,
+    comentarios: nps.filter(function(r) { return (r.comentario || "").trim(); }).map(function(r) { return { nombre: r.de_nombre || "Anónimo", valor: Number(r.valor), texto: r.comentario }; }),
+  };
+}
+
 // Acepta JSON (array de perfiles) o CSV con columnas: nombre,rol,empresa,nivel,ofrece,busca,objetivos,formato,whatsapp,linkedin
 // En CSV, las listas van separadas por "|"
 function parsearPerfiles(texto) {
@@ -482,7 +576,7 @@ function parsearPerfiles(texto) {
   });
 }
 
-function exportarCSV(res, nombreArchivo) {
+function exportarCSV(res, nombreArchivo, conMesas) {
   var byId = {};
   res.perfiles.forEach(function(p) { byId[p.id] = p; });
   var filas = [["persona", "match", "porcentaje", "por_que", "rompehielos", "whatsapp_match", "linkedin_match", "email_match"]];
@@ -492,11 +586,13 @@ function exportarCSV(res, nombreArchivo) {
       filas.push([a.nombre, b.nombre, m.pct + "%", porQueHablar(a, b, m.razones), rompehielos(a, b, m.razones), b.whatsapp || "", b.linkedin || "", b.contacto || ""]);
     });
   });
-  filas.push([]);
-  filas.push(["mesa", "tema", "anfitrion", "integrantes"]);
-  res.mesas.forEach(function(m, i) {
-    filas.push(["Mesa " + (i + 1), SKILL_BY_ID[m.tema].label, byId[m.anfitrion].nombre, m.integrantes.map(function(id) { return byId[id].nombre; }).join(" | ")]);
-  });
+  if (conMesas !== false) {
+    filas.push([]);
+    filas.push(["mesa", "tema", "anfitrion", "integrantes"]);
+    res.mesas.forEach(function(m, i) {
+      filas.push(["Mesa " + (i + 1), SKILL_BY_ID[m.tema].label, byId[m.anfitrion].nombre, m.integrantes.map(function(id) { return byId[id].nombre; }).join(" | ")]);
+    });
+  }
   var csv = filas.map(function(f) {
     return f.map(function(c) { return "\"" + String(c == null ? "" : c).replace(/"/g, "\"\"") + "\""; }).join(",");
   }).join("\n");
@@ -550,6 +646,81 @@ function MatchCard(props) {
       <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{porQueHablar(a, b, m.razones)}</div>
       <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5, background: T.highlightBg, borderRadius: 10, padding: "8px 10px" }}>💬 {rompehielos(a, b, m.razones)}</div>
       <BotonesContacto yo={a} otro={b} razones={m.razones} nombreEvento={props.nombreEvento} />
+      {props.feedback && <FeedbackMatch {...props.feedback} nombre={primerNombre(b)} />}
+    </div>
+  );
+}
+
+// Debajo de cada match del asistente: "Ya hablamos" y, después, cómo estuvo la charla
+function FeedbackMatch(props) {
+  if (!props.hablamos) {
+    return (
+      <div style={{ borderTop: "1px solid " + T.border, paddingTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12, color: T.textSub, flex: 1 }}>¿Ya conversaste con {props.nombre}?</span>
+        <button onClick={function() { props.onHablamos(true); }} style={Object.assign({}, btnStyle(false), { borderColor: T.green, color: T.green })}>✅ Ya hablamos</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ borderTop: "1px solid " + T.border, paddingTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 12, color: T.green, fontWeight: 700, flex: 1 }}>✅ Hablaron</span>
+        <button onClick={function() { props.onHablamos(false); }} style={Object.assign({}, estiloLinkSutil, { fontSize: 11 })}>deshacer</button>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12, color: T.textSub }}>¿Qué tal la charla?</span>
+        {[1, 2, 3, 4, 5].map(function(n) {
+          var on = props.rating >= n;
+          return <button key={n} aria-label={n + " de 5"} onClick={function() { props.onRating(n); }}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 2, color: on ? "#ffd166" : T.textDisabled }}>★</button>;
+        })}
+        {props.rating > 0 && <span style={{ fontSize: 11, color: T.textMuted }}>¡Gracias!</span>}
+      </div>
+    </div>
+  );
+}
+
+// Pregunta general del evento (NPS de 0 a 10) con comentario opcional
+function EncuestaEvento(props) {
+  var [valor, setValor] = useState(props.valorInicial != null ? props.valorInicial : null);
+  var [comentario, setComentario] = useState("");
+  var [nombre, setNombre] = useState("");
+  var [enviado, setEnviado] = useState(props.valorInicial != null);
+
+  function enviar() {
+    if (valor == null) return;
+    var yo = props.perfil || (nombre.trim() ? { nombre: nombre.trim() } : null);
+    postFeedback(props.eventoId, yo, null, "nps", valor, comentario.trim());
+    setEnviado(true);
+  }
+
+  if (enviado) {
+    return (
+      <div style={{ background: T.green + "14", border: "1px solid " + T.green + "44", borderRadius: 12, padding: 12, fontSize: 13, color: T.text, lineHeight: 1.5 }}>
+        🙌 ¡Gracias por contarnos cómo te fue en {props.nombreEvento || "el evento"}!
+        {props.perfil && <button onClick={function() { setEnviado(false); }} style={Object.assign({}, estiloLinkSutil, { marginLeft: 8, fontSize: 11 })}>cambiar respuesta</button>}
+      </div>
+    );
+  }
+  return (
+    <div style={{ background: T.violet + "14", border: "1px solid " + T.violet + "55", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontSize: 14, color: T.textWhite, fontWeight: 700 }}>¿Qué tal estuvo {props.nombreEvento || "el evento"}?</div>
+      <div style={{ fontSize: 12, color: T.textSub }}>Del 0 al 10, ¿qué tan probable es que recomiendes usar Mentorcito en otro evento?</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4 }}>
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function(n) {
+          var on = valor === n;
+          return <button key={n} onClick={function() { setValor(n); }}
+            style={{ padding: "8px 0", borderRadius: 8, border: "1px solid " + (on ? T.violet : T.border), background: on ? T.violet : "transparent", color: on ? "white" : T.text, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{n}</button>;
+        })}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.textMuted }}><span>Nada probable</span><span>Muy probable</span></div>
+      {!props.perfil && (
+        <input value={nombre} onChange={function(e) { setNombre(e.target.value); }} placeholder="Tu nombre (opcional)"
+          style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.text, padding: "8px 10px", fontSize: 13, outline: "none" }} />
+      )}
+      <textarea value={comentario} onChange={function(e) { setComentario(e.target.value); }} rows={2} placeholder="¿Algo que quieras contarnos? (opcional)"
+        style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.text, padding: "8px 10px", fontSize: 13 }} />
+      <button onClick={enviar} disabled={valor == null} style={Object.assign({}, btnStyle(true), { alignSelf: "flex-start", opacity: valor == null ? 0.5 : 1 })}>Enviar</button>
     </div>
   );
 }
@@ -637,15 +808,20 @@ function EstilosBase() {
 // ─────────────────────────────────────────────
 function PanelOrganizador(props) {
   var eventoId = props.eventoId;
+  var conMesas = props.conMesas !== false;
   var [texto, setTexto] = useState("");
   var [perfiles, setPerfiles] = useState([]);
   var [error, setError] = useState("");
   var [tab, setTab] = useState("matches");
   var [cargando, setCargando] = useState(false);
+  var [manual, setManual] = useState(false); // carga a mano (JSON/CSV), oculta por defecto
+  var [registros, setRegistros] = useState([]); // feedback de la hoja feedback_eventos
+  var [copiado, setCopiado] = useState(false);
 
   function cargarDesdeSheets() {
     if (!eventoId) return;
     setCargando(true); setError("");
+    fetchFeedbackEvento(eventoId, props.clave).then(setRegistros).catch(function() { setRegistros([]); });
     fetchPerfilesEvento(eventoId, props.clave)
       .then(function(l) { setPerfiles(l); })
       .catch(function(e) { setError("No pude leer los perfiles del evento (" + e.message + "). Podés pegarlos abajo."); })
@@ -655,6 +831,7 @@ function PanelOrganizador(props) {
   useEffect(cargarDesdeSheets, [eventoId]);
 
   function cargarTexto() {
+    if (!texto.trim()) { setError("Pegá primero la lista de asistentes."); return; }
     try { setPerfiles(parsearPerfiles(texto)); setError(""); }
     catch (e) { setError("No pude leer el texto: " + e.message); }
   }
@@ -671,12 +848,20 @@ function PanelOrganizador(props) {
   var byId = {};
   if (res) res.perfiles.forEach(function(p) { byId[p.id] = p; });
 
+  var metricas = perfiles.length ? calcularMetricas(perfiles, res, registros) : null;
+  var linkEncuesta = window.location.origin + window.location.pathname + "?" + new URLSearchParams({ evento: eventoId || "", encuesta: "1" }).toString();
+  var mensajeEncuesta = "¡Gracias por venir a " + (props.nombreEvento || "el evento") + "! 🙌 ¿Nos contás cómo te fue? Son 30 segundos: " + linkEncuesta;
+  function copiarEncuesta() {
+    try { navigator.clipboard.writeText(mensajeEncuesta).then(function() { setCopiado(true); setTimeout(function() { setCopiado(false); }, 2000); }); } catch (e) {}
+  }
+
   var tabs = [
+    { id: "resultados", label: "Resultados" },
     { id: "matches", label: "Matches 1 a 1" },
     { id: "ronda", label: "Ronda de pares" },
     { id: "mesas", label: "Mesas" },
     { id: "sin", label: "Sin match" },
-  ];
+  ].filter(function(t) { return conMesas || t.id !== "mesas"; });
 
   return (
     <>
@@ -687,20 +872,27 @@ function PanelOrganizador(props) {
           <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · PANEL DEL EVENTO</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>{props.nombreEvento || eventoId || "Evento"}</div>
           <div style={{ fontSize: 13, color: T.textSub, marginTop: 4 }}>
-            {perfiles.length} asistentes{res ? " · " + res.pares.length + " pares · " + res.mesas.length + " mesas" : ""}
+            {perfiles.length} asistentes{res ? " · " + res.pares.length + " pares" + (conMesas ? " · " + res.mesas.length + " mesas" : "") : ""}
           </div>
         </div>
 
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontSize: 13, color: T.textSub }}>Cargá los perfiles: se leen solos del Sheet del evento, o pegá un JSON / CSV (columnas: nombre, rol, empresa, nivel, ofrece, busca, objetivos, formato, whatsapp, linkedin; listas separadas por |).</div>
-          <textarea value={texto} onChange={function(e) { setTexto(e.target.value); }} rows={4} placeholder="Pegá acá el JSON o CSV de asistentes…"
-            style={{ width: "100%", background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.text, padding: 10, fontSize: 12, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={cargarTexto} style={btnStyle(true)}>Calcular matches</button>
-            <label style={btnStyle(false)}>Subir archivo<input type="file" accept=".json,.csv,.txt" onChange={cargarArchivo} style={{ display: "none" }} /></label>
-            {eventoId && <button onClick={cargarDesdeSheets} style={btnStyle(false)}>{cargando ? "Cargando…" : "Recargar del Sheet"}</button>}
-            {res && <button onClick={function() { exportarCSV(res, "matches-" + (eventoId || "evento") + ".csv"); }} style={btnStyle(false)}>Exportar CSV</button>}
+            {eventoId && <button onClick={cargarDesdeSheets} style={btnStyle(true)}>{cargando ? "Cargando…" : "↻ Actualizar asistentes"}</button>}
+            {res && <button onClick={function() { exportarCSV(res, "matches-" + (eventoId || "evento") + ".csv", conMesas); }} style={btnStyle(false)}>Exportar CSV</button>}
+            <button onClick={function() { setManual(!manual); }} style={Object.assign({}, btnStyle(false), { borderColor: "transparent", color: T.textMuted })}>{manual ? "Ocultar carga manual" : "Cargar lista a mano"}</button>
           </div>
+          {manual && (
+            <>
+              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>Para calcular matches con una lista que no viene del chat (por ejemplo, un Excel de inscripción). Pegá un JSON o CSV con columnas nombre, rol, empresa, nivel, ofrece, busca, objetivos, formato, whatsapp, linkedin (listas separadas por |). Reemplaza lo que ves abajo; para volver a los asistentes del evento tocá "Actualizar asistentes".</div>
+              <textarea value={texto} onChange={function(e) { setTexto(e.target.value); }} rows={4} placeholder="Pegá acá el JSON o CSV de asistentes…"
+                style={{ width: "100%", background: "transparent", border: "1px solid " + T.border, borderRadius: 10, color: T.text, padding: 10, fontSize: 12, fontFamily: "monospace" }} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={cargarTexto} disabled={!texto.trim()} style={Object.assign({}, btnStyle(false), { opacity: texto.trim() ? 1 : 0.5 })}>Calcular con esta lista</button>
+                <label style={btnStyle(false)}>Subir archivo<input type="file" accept=".json,.csv,.txt" onChange={cargarArchivo} style={{ display: "none" }} /></label>
+              </div>
+            </>
+          )}
           {error && <div style={{ fontSize: 12, color: T.pink }}>{error}</div>}
         </div>
 
@@ -712,6 +904,8 @@ function PanelOrganizador(props) {
                 return <button key={t.id} onClick={function() { setTab(t.id); }} style={{ padding: "6px 14px", borderRadius: 20, border: "1px solid " + (on ? T.primary : T.border), background: on ? T.primary + "22" : "transparent", color: on ? T.textWhite : T.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{t.label}</button>;
               })}
             </div>
+
+            {tab === "resultados" && metricas && <ResultadosEvento m={metricas} mensajeEncuesta={mensajeEncuesta} copiado={copiado} onCopiar={copiarEncuesta} />}
 
             {tab === "matches" && res.perfiles.map(function(a) {
               var ms = res.porPersona[a.id];
@@ -746,7 +940,7 @@ function PanelOrganizador(props) {
               </div>
             )}
 
-            {tab === "mesas" && (
+            {conMesas && tab === "mesas" && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
                 {res.mesas.map(function(m, i) { return <MesaCard key={i} n={i + 1} mesa={m} byId={byId} />; })}
                 {!res.mesas.length && <div style={{ fontSize: 13, color: T.textSub }}>Todavía no hay temas con suficientes personas para armar una mesa (mínimo {MESA_MIN}, con alguien que lo ofrezca).</div>}
@@ -755,8 +949,8 @@ function PanelOrganizador(props) {
 
             {tab === "sin" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ fontSize: 12, color: T.textSub }}>Personas sin un match 1 a 1 de al menos {MIN_MATCH_PCT}% o sin mesa. Son buenas candidatas para presentar en persona o para invitar perfiles que les falten.</div>
-                {unique(res.sinMatch.concat(res.sinMesa)).map(function(id) {
+                <div style={{ fontSize: 12, color: T.textSub }}>Personas sin un match 1 a 1 de al menos {MIN_MATCH_PCT}%{conMesas ? " o sin mesa" : ""}. Son buenas candidatas para presentar en persona o para invitar perfiles que les falten.</div>
+                {unique(conMesas ? res.sinMatch.concat(res.sinMesa) : res.sinMatch).map(function(id) {
                   var p = byId[id];
                   return (
                     <div key={id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 12 }}>
@@ -772,6 +966,73 @@ function PanelOrganizador(props) {
       </div>
     </div>
     </>
+  );
+}
+
+function Metrica(props) {
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 14 }}>
+      <div style={{ fontSize: 26, fontWeight: 800, color: props.color || T.textWhite }}>{props.valor}</div>
+      <div style={{ fontSize: 12, color: T.text, fontWeight: 600, marginTop: 2 }}>{props.titulo}</div>
+      {props.detalle && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4, lineHeight: 1.4 }}>{props.detalle}</div>}
+    </div>
+  );
+}
+
+// Pestaña "Resultados" del panel: si los matches se hicieron reales y cómo les fue
+function ResultadosEvento(props) {
+  var m = props.m;
+  var estrellas = function(x) { return x == null ? "—" : x.toFixed(1) + " ★"; };
+  var npsColor = m.nps == null ? T.textWhite : m.nps >= 30 ? T.green : m.nps >= 0 ? "#ffd166" : T.pink;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+        <Metrica valor={m.conversaciones.length} titulo="Conversaciones confirmadas" detalle={m.nAsistentesCon + " asistentes (" + m.pctAsistentesCon + "%) hablaron con al menos un match"} />
+        <Metrica valor={m.nRecomendados ? Math.round(100 * m.nConcretados / m.nRecomendados) + "%" : "—"} titulo="Matches que se concretaron" detalle={m.nConcretados + " de " + m.nRecomendados + " matches recomendados"} />
+        <Metrica valor={estrellas(m.ratingProm)} titulo="Satisfacción con las charlas" detalle={m.nRatings + " calificaciones de 1 a 5"} color="#ffd166" />
+        <Metrica valor={m.nps == null ? "—" : m.nps} titulo="NPS del evento" color={npsColor}
+          detalle={m.nNps ? m.nNps + " respuestas · " + m.promotores + " promotores, " + m.pasivos + " pasivos, " + m.detractores + " detractores" : "Todavía no hay respuestas a la encuesta"} />
+      </div>
+
+      <div style={{ background: T.violet + "14", border: "1px solid " + T.violet + "44", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 13, color: T.text, fontWeight: 700 }}>📨 Encuesta para después del evento</div>
+        <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>Mandá este mensaje al grupo o por mail al día siguiente. Quien hizo el chat en ese celular ve sus matches para marcar con quién habló y calificar cada charla; el resto responde la encuesta igual.</div>
+        <div style={{ fontSize: 12, color: T.text, background: T.highlightBg, borderRadius: 8, padding: "8px 10px", wordBreak: "break-word" }}>{props.mensajeEncuesta}</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={props.onCopiar} style={btnStyle(true)}>{props.copiado ? "¡Copiado!" : "Copiar mensaje"}</button>
+          <a href={"https://wa.me/?text=" + encodeURIComponent(props.mensajeEncuesta)} target="_blank" rel="noopener noreferrer" style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>Compartir por WhatsApp</a>
+        </div>
+      </div>
+
+      {m.conversaciones.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>CONVERSACIONES</div>
+          {m.conversaciones.map(function(c, i) {
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "10px 12px" }}>
+                <span style={{ flex: 1, fontSize: 13, color: T.text }}>{c.a} ↔ {c.b}</span>
+                {!c.recomendado && <span style={{ fontSize: 10, color: T.textMuted }}>fuera de sus matches actuales</span>}
+                <span style={{ fontSize: 12, color: c.rating == null ? T.textMuted : "#ffd166", fontWeight: 700 }}>{c.rating == null ? "sin calificar" : c.rating.toFixed(1) + " ★"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {m.comentarios.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>COMENTARIOS</div>
+          {m.comentarios.map(function(c, i) {
+            return (
+              <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "10px 12px" }}>
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>{c.nombre} · {c.valor}/10</div>
+                <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{c.texto}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -853,20 +1114,38 @@ function LinkDiagnostico() {
 function ResultadoAsistente(props) {
   var perfil = props.perfil;
   var eventoId = props.eventoId;
-  var [datos, setDatos] = useState(null); // null = cargando; { matches, mesa }
+  var [datos, setDatos] = useState(null); // null = cargando; { matches, mesa, mi_nps }
   var [recarga, setRecarga] = useState(0);
+  var [fb, setFb] = useState({}); // feedback local por match: { [id]: { hablamos, rating } }
 
   useEffect(function() {
     if (!eventoId) { setDatos({ matches: [], mesa: null }); return; }
     setDatos(null);
     fetchMisMatches(eventoId, perfil)
-      .then(function(d) { setDatos(d); })
+      .then(function(d) {
+        setDatos(d);
+        var ini = {};
+        (d.matches || []).forEach(function(m) { ini[m.otro.id] = { hablamos: !!m.hablamos, rating: m.mi_rating || 0 }; });
+        setFb(ini);
+      })
       .catch(function() { setDatos({ matches: [], mesa: null }); });
   }, [eventoId, recarga]);
 
+  function feedbackDe(m) {
+    var f = fb[m.otro.id] || { hablamos: false, rating: 0 };
+    function set(cambios) { var n = Object.assign({}, fb); n[m.otro.id] = Object.assign({}, f, cambios); setFb(n); }
+    return {
+      hablamos: f.hablamos, rating: f.rating,
+      onHablamos: function(v) { set({ hablamos: v }); postFeedback(eventoId, perfil, m.otro, "hablamos", v ? 1 : 0); },
+      onRating: function(n) { set({ rating: n }); postFeedback(eventoId, perfil, m.otro, "rating", n); },
+    };
+  }
+  var algunaCharla = Object.keys(fb).some(function(k) { return fb[k].hablamos; });
+  var mostrarEncuesta = datos !== null && (props.encuesta || algunaCharla || (datos && datos.mi_nps != null));
+
   var yo = Object.assign(normalizarPerfil(perfil, 0), { id: "yo" });
   var matches = (datos && datos.matches) || [];
-  var mesa = datos && datos.mesa;
+  var mesa = props.conMesas !== false && datos && datos.mesa;
   var mesaById = {};
   if (mesa) mesa.integrantes.forEach(function(p) { mesaById[p.id] = p; });
 
@@ -881,11 +1160,13 @@ function ResultadoAsistente(props) {
 
       {datos === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
 
+      {mostrarEncuesta && props.encuesta && <EncuestaEvento eventoId={eventoId} perfil={perfil} nombreEvento={props.nombreEvento} valorInicial={datos.mi_nps} />}
+
       {matches.length > 0 && (
         <>
           <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>TUS MATCHES EN EL EVENTO</div>
           {matches.map(function(m) {
-            return <MatchCard key={m.otro.id} yo={yo} otro={m.otro} match={m} nombreEvento={props.nombreEvento} />;
+            return <MatchCard key={m.otro.id} yo={yo} otro={m.otro} match={m} nombreEvento={props.nombreEvento} feedback={eventoId ? feedbackDe(m) : null} />;
           })}
         </>
       )}
@@ -895,6 +1176,8 @@ function ResultadoAsistente(props) {
       {datos !== null && !matches.length && (
         <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Todavía hay pocas personas registradas para darte un buen match. Volvé con tu link personal más cerca del evento: los matches aparecen solos a medida que se suman asistentes.</div>
       )}
+
+      {mostrarEncuesta && !props.encuesta && <EncuestaEvento eventoId={eventoId} perfil={perfil} nombreEvento={props.nombreEvento} valorInicial={datos.mi_nps} />}
 
       {datos !== null && (
         <button onClick={function() { setRecarga(recarga + 1); }} style={Object.assign({}, btnStyle(false), { alignSelf: "flex-start" })}>↻ Actualizar matches</button>
@@ -992,7 +1275,7 @@ function PanelConClave(props) {
 
   useEffect(function() { if (claveUrl) verificar(claveUrl); }, []);
 
-  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} />;
+  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} conMesas={props.conMesas} />;
   if (estado === "verificando") return <PantallaCargando />;
 
   return (
@@ -1039,8 +1322,11 @@ export default function EventMatchAgent(props) {
   // Prioridad del nombre: &nombre= del link, el del registro, o uno armado desde el código
   var nombreEvento = props.nombreEvento || urlParams.get("nombre") || info.nombre || nombreDesdeCodigo(eventoId);
 
-  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} />;
-  return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} />;
+  // Columna "mesas" del registro: NO apaga las mesas en todo el evento (vacío = SI)
+  var conMesas = info.mesas !== false;
+
+  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />;
+  return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />;
 }
 
 // ─────────────────────────────────────────────
@@ -1050,12 +1336,13 @@ function VistaAsistente(props) {
   var urlParams = new URLSearchParams(window.location.search);
   var eventoId = props.eventoId;
   var nombreEvento = props.nombreEvento;
+  var conMesas = props.conMesas !== false;
 
   var INITIAL_MSG = {
     role: "assistant",
     content: "Hola, soy Mentorcito 💠\n\n"
       + (nombreEvento ? "Te ayudo a aprovechar " + nombreEvento + " al máximo." : "Te ayudo a aprovechar el evento al máximo.")
-      + " Con 6 preguntas rápidas voy a entender qué podés aportar y qué estás buscando, y te digo con quién te conviene conversar y en qué mesa sentarte.\n\n¿Cómo te llamás?",
+      + " Con " + (conMesas ? 6 : 5) + " preguntas rápidas voy a entender qué podés aportar y qué estás buscando, y te digo con quién te conviene conversar" + (conMesas ? " y en qué mesa sentarte" : "") + ".\n\n¿Cómo te llamás?",
   };
 
   var [messages, setMessages] = useState([INITIAL_MSG]);
@@ -1069,8 +1356,10 @@ function VistaAsistente(props) {
     if (p && yo) guardarPerfilLocal(eventoId, p);
     return p;
   });
+  // &encuesta=1: el link que se manda después del evento para medir satisfacción
+  var [encuesta, setEncuesta] = useState(urlParams.get("encuesta") === "1");
   var bottomRef = useRef(null);
-  var systemPrompt = useRef(buildSystemPrompt(nombreEvento)).current;
+  var systemPrompt = useRef(buildSystemPrompt(nombreEvento, conMesas)).current;
 
   useEffect(function() {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
@@ -1085,7 +1374,7 @@ function VistaAsistente(props) {
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
-            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} pie={
+            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} encuesta={encuesta} pie={
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
                 <button onClick={function() {
                   borrarPerfilLocal(eventoId);
@@ -1095,6 +1384,24 @@ function VistaAsistente(props) {
                 <LinkDiagnostico />
               </div>
             } />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Encuesta sin perfil en este navegador: se responde igual (anónima o con nombre)
+  if (encuesta) {
+    return (
+      <>
+        <EstilosBase />
+        <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", padding: "20px 16px 40px" }}>
+          <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite }}>¡Gracias por venir! 🙌</div>
+            <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Si hiciste el chat de Mentorcito, abrí tu link personal para marcar con quién hablaste y calificar cada charla.</div>
+            <EncuestaEvento eventoId={eventoId} perfil={null} nombreEvento={nombreEvento} />
+            <button onClick={function() { setEncuesta(false); }} style={Object.assign({}, estiloLinkSutil, { alignSelf: "flex-start" })}>No hice el chat: quiero ver con quién conectar</button>
           </div>
         </div>
       </>
@@ -1220,7 +1527,7 @@ function VistaAsistente(props) {
               <div key={i} style={{ display: "flex", justifyContent: esBot ? "flex-start" : "flex-end" }}>
                 <div style={{ maxWidth: "85%", padding: "13px 16px", borderRadius: esBot ? "4px 18px 18px 18px" : "18px 18px 4px 18px", background: esBot ? "rgba(255,255,255,0.05)" : "rgba(67,97,238,0.14)", border: "1px solid " + (esBot ? "rgba(255,255,255,0.08)" : "rgba(67,97,238,0.35)"), fontSize: 14 }}>
                   {formatMessage(msg.content)}
-                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} />}
+                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />}
                 </div>
               </div>
             );
@@ -1252,4 +1559,4 @@ function VistaAsistente(props) {
 }
 
 // Exportadas para tests o para usarlas desde otro componente
-export { claveIdentidad, limpiarWhatsapp, calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
+export { calcularMetricas, claveIdentidad, limpiarWhatsapp, calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
