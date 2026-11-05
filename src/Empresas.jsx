@@ -168,7 +168,7 @@ export default function Empresas() {
         </div>
 
         <h1 className="hero-title" style={{
-          fontFamily: "'DM Serif Display', serif",
+          fontFamily: 'Space Grotesk', sans-serif,
           fontSize: "clamp(36px, 6.5vw, 68px)",
           fontWeight: 400,
           lineHeight: 1.1,
