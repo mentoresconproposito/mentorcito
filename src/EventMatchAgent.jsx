@@ -13,14 +13,15 @@ import { useState, useEffect, useRef } from "react";
 var MODEL = "claude-haiku-4-5-20251001";
 var SHEETS_URL = "https://script.google.com/macros/s/AKfycby_UmXK49W239AN1ZbmDIpdMpcbGqqlHIuT7DwmWoWQ7AXt8b-_g6PGIeLeIlKWgNng9Q/exec";
 
-var MAX_MATCHES = 3;      // matches 1 a 1 por persona
+var MAX_MATCHES = 5;      // matches 1 a 1 por persona (por defecto; cada evento puede cambiarlo con la columna max_matches)
+var EXTRA_RECIBIDOS = 2;  // a quien ya tiene todos sus matches se le pueden sumar hasta 2 más, solo para que nadie quede sin match
 var MIN_MATCH_PCT = 30;   // por debajo de esto no se sugiere
 var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent
 var MESA_MIN = 3;
 var MESA_MAX = 6;
 
 // ─────────────────────────────────────────────
-// CATÁLOGO DE SKILLS (mismo que MentorAgent)
+// CATÁLOGO DE SKILLS (el de MentorAgent + "emprendimiento", para eventos de emprendedores)
 // ─────────────────────────────────────────────
 var SKILLS_CATALOG = {
   tech: [
@@ -43,6 +44,15 @@ var SKILLS_CATALOG = {
     { id: "influencia_liderazgo",label: "Influencia y liderazgo",  keywords: ["influencia","autoridad","manage up","liderazgo","stakeholders","alineamiento","sin autoridad formal","política","equipo"] },
     { id: "modelo_negocio",      label: "Modelo de negocio",       keywords: ["pricing","revenue","monetización","unit economics","margen","facturación","modelo de ingreso","runway","burn"] },
     { id: "marca_personal",      label: "Marca personal y carrera",keywords: ["marca personal","linkedin","portfolio","posicionamiento","entrevistas","job search","narrativa de carrera","visibilidad","transición"] },
+  ],
+  emprendimiento: [
+    { id: "financiamiento",      label: "Financiamiento e inversión", keywords: ["inversión","inversor","inversores","financiamiento","financiación","fondeo","levantar capital","ronda","seed","pre-seed","angel","venture capital","vc","pitch","deck","valuación","subsidio","crédito","préstamo","aceleradora","incubadora","crowdfunding","capital semilla"] },
+    { id: "marketing",           label: "Marketing y crecimiento",    keywords: ["marketing","redes sociales","instagram","tiktok","contenido","comunidad","branding","publicidad","ads","meta ads","google ads","seo","performance","growth","difusión","email marketing","influencers"] },
+    { id: "finanzas",            label: "Finanzas y administración",  keywords: ["finanzas","flujo de caja","cash flow","costos","presupuesto","contabilidad","administración","facturar","cobranza","rentabilidad","proyecciones","punto de equilibrio","precios"] },
+    { id: "legal_impuestos",     label: "Legal e impuestos",          keywords: ["legal","abogado","contrato","contratos","sociedad","sas","srl","monotributo","impuestos","afip","arca","contador","marca registrada","registrar la marca","propiedad intelectual","patente","habilitación","términos y condiciones"] },
+    { id: "equipo_talento",      label: "Equipo y talento",           keywords: ["contratar","contratación","talento","armar equipo","armar el equipo","primeras contrataciones","reclutamiento","rrhh","recursos humanos","cultura","socio","socios","cofounder","co-founder","delegar","freelancers"] },
+    { id: "operaciones",         label: "Operaciones y logística",    keywords: ["operaciones","logística","procesos","proveedores","proveedor","producción","fabricación","stock","inventario","distribución","envíos","importar","e-commerce","ecommerce","tienda online","calidad","automatizar"] },
+    { id: "expansion",           label: "Expansión e internacionalización", keywords: ["exportar","exportación","internacionalización","internacional","otros mercados","otro país","expansión","expandir","latam","estados unidos","europa","franquicia","franquicias","comercio exterior"] },
   ],
 };
 
@@ -124,6 +134,8 @@ function normalizarPerfil(p, idx) {
     objetivos: (p.objetivos || []).filter(function(o) { return OBJETIVOS[o]; }),
     nivel: NIVELES.indexOf(p.nivel) !== -1 ? p.nivel : "mid",
     formato: p.formato || "ambos",
+    palabras_ofrece: palabrasClave(ofrece),
+    palabras_busca: palabrasClave(busca),
   });
 }
 
@@ -137,8 +149,8 @@ function palabrasClave(textos) {
 // Qué ofrece A que B busca (una dirección)
 function cobertura(a, b) {
   var skills = a.ofrece_skills.filter(function(s) { return b.busca_skills.indexOf(s) !== -1; });
-  var bWords = palabrasClave(b.busca);
-  var palabras = palabrasClave(a.ofrece).filter(function(w) { return bWords.indexOf(w) !== -1; });
+  var bWords = b.palabras_busca || palabrasClave(b.busca);
+  var palabras = (a.palabras_ofrece || palabrasClave(a.ofrece)).filter(function(w) { return bWords.indexOf(w) !== -1; });
   return { skills: skills, palabras: palabras };
 }
 
@@ -203,18 +215,41 @@ function construirMatriz(perfiles) {
   return m;
 }
 
-// Top N matches de cada persona
-function matchesPorPersona(perfiles, matriz) {
-  var out = {};
-  perfiles.forEach(function(a) {
-    if (a.formato === "grupo") { out[a.id] = []; return; }
-    out[a.id] = perfiles
-      .filter(function(b) { return b.id !== a.id && b.formato !== "grupo"; })
-      .map(function(b) { return { id: b.id, pct: matriz[a.id][b.id].pct, razones: matriz[a.id][b.id].razones }; })
-      .filter(function(x) { return x.pct >= MIN_MATCH_PCT; })
-      .sort(function(x, y) { return y.pct - x.pct; })
-      .slice(0, MAX_MATCHES);
+// Matches 1 a 1, mutuos: si A ve a B, B ve a A. Se reparten de mayor a menor afinidad
+// y nadie recibe más de maxMatches, así no se concentran en las mismas personas
+// (con 500 asistentes, sin este tope, una persona aparecía en 44 listas y la mitad en ninguna).
+// Segunda pasada: quien quedó con menos matches puede sumar a alguien que ya está completo,
+// hasta EXTRA_RECIBIDOS por encima del máximo.
+function matchesPorPersona(perfiles, matriz, maxMatches) {
+  var max = maxMatches || MAX_MATCHES;
+  var out = {}, grado = {};
+  perfiles.forEach(function(p) { out[p.id] = []; grado[p.id] = 0; });
+  var aristas = [];
+  for (var i = 0; i < perfiles.length; i++) {
+    for (var j = i + 1; j < perfiles.length; j++) {
+      var a = perfiles[i], b = perfiles[j];
+      if (a.formato === "grupo" || b.formato === "grupo") continue;
+      var pct = matriz[a.id][b.id].pct;
+      if (pct >= MIN_MATCH_PCT) aristas.push({ a: a.id, b: b.id, pct: pct });
+    }
+  }
+  aristas.sort(function(x, y) { return y.pct - x.pct; });
+  var usada = [];
+  function agregar(e, k) {
+    usada[k] = true;
+    out[e.a].push({ id: e.b, pct: e.pct, razones: matriz[e.a][e.b].razones });
+    out[e.b].push({ id: e.a, pct: e.pct, razones: matriz[e.b][e.a].razones });
+    grado[e.a]++; grado[e.b]++;
+  }
+  aristas.forEach(function(e, k) {
+    if (grado[e.a] < max && grado[e.b] < max) agregar(e, k);
   });
+  var tope = max + EXTRA_RECIBIDOS;
+  aristas.forEach(function(e, k) {
+    if (usada[k]) return;
+    if ((grado[e.a] < max && grado[e.b] < tope) || (grado[e.b] < max && grado[e.a] < tope)) agregar(e, k);
+  });
+  perfiles.forEach(function(p) { out[p.id].sort(function(x, y) { return y.pct - x.pct; }); });
   return out;
 }
 
@@ -283,12 +318,16 @@ function armarMesas(perfiles, matriz) {
   return { mesas: mesas, sinMesa: sinMesa };
 }
 
-function calcularEvento(perfilesCrudos) {
+// opciones: { maxMatches, sinRonda (el servidor no la usa), sinMesas }
+// El orden de perfilesCrudos importa: el panel y el Apps Script usan el mismo (el de la hoja),
+// así todos ven el mismo armado de matches y de mesas.
+function calcularEvento(perfilesCrudos, opciones) {
+  var op = opciones || {};
   var perfiles = perfilesCrudos.map(normalizarPerfil);
   var matriz = construirMatriz(perfiles);
-  var porPersona = matchesPorPersona(perfiles, matriz);
-  var pares = rondaDePares(perfiles, matriz);
-  var mesas = armarMesas(perfiles, matriz);
+  var porPersona = matchesPorPersona(perfiles, matriz, op.maxMatches);
+  var pares = op.sinRonda ? [] : rondaDePares(perfiles, matriz);
+  var mesas = op.sinMesas ? { mesas: [], sinMesa: [] } : armarMesas(perfiles, matriz);
   var sinMatch = perfiles.filter(function(p) { return p.formato !== "grupo" && !porPersona[p.id].length; }).map(function(p) { return p.id; });
   return { perfiles: perfiles, matriz: matriz, porPersona: porPersona, pares: pares, mesas: mesas.mesas, sinMesa: mesas.sinMesa, sinMatch: sinMatch };
 }
@@ -414,7 +453,7 @@ var T = {
   pink:         "#f72585",
   green:        "#06d6a0",
 };
-var AREA_COLOR = { tech: "#3a86ff", producto: "#9b5fff", negocio: "#f72585" };
+var AREA_COLOR = { tech: "#3a86ff", producto: "#9b5fff", negocio: "#f72585", emprendimiento: "#ffb703" };
 
 function pctColor(pct) {
   return pct >= 70 ? T.green : pct >= 50 ? T.primary : T.textSub;
@@ -844,7 +883,7 @@ function PanelOrganizador(props) {
     r.readAsText(f);
   }
 
-  var res = perfiles.length >= 2 ? calcularEvento(perfiles) : null;
+  var res = perfiles.length >= 2 ? calcularEvento(perfiles, { maxMatches: props.maxMatches, sinMesas: !conMesas }) : null;
   var byId = {};
   if (res) res.perfiles.forEach(function(p) { byId[p.id] = p; });
 
@@ -1275,7 +1314,7 @@ function PanelConClave(props) {
 
   useEffect(function() { if (claveUrl) verificar(claveUrl); }, []);
 
-  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} conMesas={props.conMesas} />;
+  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} conMesas={props.conMesas} maxMatches={props.maxMatches} />;
   if (estado === "verificando") return <PantallaCargando />;
 
   return (
@@ -1324,8 +1363,10 @@ export default function EventMatchAgent(props) {
 
   // Columna "mesas" del registro: NO apaga las mesas en todo el evento (vacío = SI)
   var conMesas = info.mesas !== false;
+  // Columna "max_matches" del registro: cuántos matches 1 a 1 recibe cada persona (vacío = MAX_MATCHES)
+  var maxMatches = Number(info.max_matches) > 0 ? Number(info.max_matches) : MAX_MATCHES;
 
-  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />;
+  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} maxMatches={maxMatches} />;
   return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />;
 }
 
