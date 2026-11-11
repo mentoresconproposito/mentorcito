@@ -1148,6 +1148,83 @@ function LinkDiagnostico() {
 }
 
 // ─────────────────────────────────────────────
+// COMPARTIR EL EVENTO: QR en pantalla para que alguien al lado lo escanee,
+// o el link por WhatsApp / menú de compartir del celular. Es el link del EVENTO
+// (no el personal), así cada uno hace su propio perfil.
+// ─────────────────────────────────────────────
+var QR_LIB_URL = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+var qrLibPromesa = null;
+function cargarQrLib() {
+  if (window.qrcode) return Promise.resolve(window.qrcode);
+  if (!qrLibPromesa) {
+    qrLibPromesa = new Promise(function(resolve, reject) {
+      var s = document.createElement("script");
+      s.src = QR_LIB_URL; s.async = true;
+      s.onload = function() { window.qrcode ? resolve(window.qrcode) : reject(new Error("sin qrcode")); };
+      s.onerror = function() { qrLibPromesa = null; reject(new Error("no cargó")); };
+      document.head.appendChild(s);
+    });
+  }
+  return qrLibPromesa;
+}
+
+function linkEvento(eventoId, nombreEvento) {
+  var params = new URLSearchParams();
+  if (eventoId) params.set("evento", eventoId);
+  if (nombreEvento) params.set("nombre", nombreEvento);
+  return window.location.origin + window.location.pathname + "?" + params.toString();
+}
+
+function CompartirEvento(props) {
+  var [abierto, setAbierto] = useState(false);
+  var [svg, setSvg] = useState("");
+  var [error, setError] = useState(false);
+  var [copiado, setCopiado] = useState(false);
+  var url = linkEvento(props.eventoId, props.nombreEvento);
+  var texto = "Estoy usando Mentorcito en " + (props.nombreEvento || "el evento") + " para saber con quién hablar. Hacé tu perfil y te dice tus matches: " + url;
+
+  useEffect(function() {
+    if (!abierto || svg) return;
+    cargarQrLib()
+      .then(function(qrcode) {
+        var qr = qrcode(0, "M"); qr.addData(url); qr.make();
+        setSvg(qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true }));
+      })
+      .catch(function() { setError(true); });
+  }, [abierto]);
+
+  function compartir() {
+    if (navigator.share) {
+      navigator.share({ title: "Mentorcito para eventos", text: texto }).catch(function() {});
+    } else {
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+    }
+  }
+  function copiar() {
+    try { navigator.clipboard.writeText(url).then(function() { setCopiado(true); setTimeout(function() { setCopiado(false); }, 2000); }); } catch (e) {}
+  }
+
+  return (
+    <div style={{ background: T.highlightBg, border: "1px solid " + T.border, borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>👥 ¿Alguien de tu grupo también quiere sus matches? Mostrale el QR o mandale el link.</div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button onClick={function() { setAbierto(!abierto); }} style={btnStyle(!abierto)}>{abierto ? "Ocultar QR" : "Mostrar QR"}</button>
+        <button onClick={compartir} style={btnStyle(false)}>Compartir link</button>
+      </div>
+      {abierto && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "6px 0" }}>
+          {svg && <div aria-label="Código QR del evento" role="img" style={{ width: "min(260px, 80vw)", background: "white", borderRadius: 14, padding: 10, boxSizing: "border-box" }} dangerouslySetInnerHTML={{ __html: svg }} />}
+          {!svg && !error && <div style={{ fontSize: 12, color: T.textSub }}>Generando QR…</div>}
+          {error && <div style={{ fontSize: 12, color: T.textSub }}>No se pudo generar el QR. Usá "Compartir link".</div>}
+          <div style={{ fontSize: 12, color: T.textSub, textAlign: "center" }}>Que lo escanee con la cámara del celular</div>
+          <button onClick={copiar} style={Object.assign({}, estiloLinkSutil, { wordBreak: "break-all" })}>{copiado ? "¡Link copiado!" : url.replace(/^https?:\/\//, "")}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // RESULTADO DEL ASISTENTE (debajo del bloque <PERFIL>, o al volver con su link)
 // ─────────────────────────────────────────────
 function ResultadoAsistente(props) {
@@ -1223,6 +1300,8 @@ function ResultadoAsistente(props) {
       )}
 
       <LinkPersonal perfil={perfil} eventoId={eventoId} nombreEvento={props.nombreEvento} />
+
+      {eventoId && <CompartirEvento eventoId={eventoId} nombreEvento={props.nombreEvento} />}
 
       {props.pie || <LinkDiagnostico />}
     </div>
