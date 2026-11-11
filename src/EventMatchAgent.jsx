@@ -944,7 +944,7 @@ function PanelOrganizador(props) {
               })}
             </div>
 
-            {tab === "resultados" && metricas && <ResultadosEvento m={metricas} mensajeEncuesta={mensajeEncuesta} copiado={copiado} onCopiar={copiarEncuesta} />}
+            {tab === "resultados" && metricas && <ResultadosEvento m={metricas} sponsor={props.sponsor} nPerfiles={perfiles.length} mensajeEncuesta={mensajeEncuesta} copiado={copiado} onCopiar={copiarEncuesta} />}
 
             {tab === "matches" && res.perfiles.map(function(a) {
               var ms = res.porPersona[a.id];
@@ -1032,6 +1032,15 @@ function ResultadosEvento(props) {
         <Metrica valor={m.nps == null ? "—" : m.nps} titulo="NPS del evento" color={npsColor}
           detalle={m.nNps ? m.nNps + " respuestas · " + m.promotores + " promotores, " + m.pasivos + " pasivos, " + m.detractores + " detractores" : "Todavía no hay respuestas a la encuesta"} />
       </div>
+
+      {props.sponsor && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <SponsorBanda sponsor={props.sponsor} />
+          <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>
+            {props.nPerfiles} {props.nPerfiles === 1 ? "persona vio" : "personas vieron"} la marca en su pantalla de matches{m.conversaciones.length ? ", y el networking generó " + m.conversaciones.length + (m.conversaciones.length === 1 ? " conversación confirmada" : " conversaciones confirmadas") : ""}.
+          </div>
+        </div>
+      )}
 
       <div style={{ background: T.violet + "14", border: "1px solid " + T.violet + "44", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontSize: 13, color: T.text, fontWeight: 700 }}>📨 Encuesta para después del evento</div>
@@ -1225,6 +1234,39 @@ function CompartirEvento(props) {
 }
 
 // ─────────────────────────────────────────────
+// SPONSOR DEL NETWORKING (columnas sponsor, sponsor_logo y sponsor_link de registro_eventos)
+// ─────────────────────────────────────────────
+// Un link de Google Drive ("drive.google.com/file/d/ID/...") se pasa a uno que sirve como imagen
+function urlImagen(u) {
+  var s = (u || "").trim();
+  var m = s.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+  if (m) return "https://lh3.googleusercontent.com/d/" + m[1];
+  return s;
+}
+function urlLink(u) {
+  var s = (u || "").trim();
+  if (!s) return "";
+  return /^https?:\/\//i.test(s) ? s : "https://" + s;
+}
+
+function SponsorBanda(props) {
+  var sp = props.sponsor;
+  var [logoOk, setLogoOk] = useState(true);
+  if (!sp || !sp.nombre) return null;
+  var logo = sp.logo && logoOk ? urlImagen(sp.logo) : "";
+  var marca = logo
+    ? <img src={logo} alt={sp.nombre} onError={function() { setLogoOk(false); }} style={{ maxHeight: 28, maxWidth: 130, objectFit: "contain", background: "white", borderRadius: 6, padding: "3px 6px" }} />
+    : <span style={{ fontSize: 14, fontWeight: 800, color: T.textWhite }}>{sp.nombre}</span>;
+  var link = urlLink(sp.link);
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", border: "1px dashed " + T.borderStrong, borderRadius: 12, padding: "8px 12px" }}>
+      <span style={{ fontSize: 11, color: T.textSub, letterSpacing: 0.5 }}>{props.texto || "Networking presentado por"}</span>
+      {link ? <a href={link} target="_blank" rel="noopener noreferrer" style={{ display: "flex", textDecoration: "none" }}>{marca}</a> : marca}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // RESULTADO DEL ASISTENTE (debajo del bloque <PERFIL>, o al volver con su link)
 // ─────────────────────────────────────────────
 function ResultadoAsistente(props) {
@@ -1277,6 +1319,8 @@ function ResultadoAsistente(props) {
       {datos === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
 
       {mostrarEncuesta && props.encuesta && <EncuestaEvento eventoId={eventoId} perfil={perfil} nombreEvento={props.nombreEvento} valorInicial={datos.mi_nps} />}
+
+      {datos !== null && <SponsorBanda sponsor={props.sponsor} />}
 
       {matches.length > 0 && (
         <>
@@ -1393,7 +1437,7 @@ function PanelConClave(props) {
 
   useEffect(function() { if (claveUrl) verificar(claveUrl); }, []);
 
-  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} conMesas={props.conMesas} maxMatches={props.maxMatches} />;
+  if (estado === "ok") return <PanelOrganizador eventoId={props.eventoId} nombreEvento={props.nombreEvento} clave={clave.trim()} conMesas={props.conMesas} maxMatches={props.maxMatches} sponsor={props.sponsor} />;
   if (estado === "verificando") return <PantallaCargando />;
 
   return (
@@ -1445,8 +1489,11 @@ export default function EventMatchAgent(props) {
   // Columna "max_matches" del registro: cuántos matches 1 a 1 recibe cada persona (vacío = MAX_MATCHES)
   var maxMatches = Number(info.max_matches) > 0 ? Number(info.max_matches) : MAX_MATCHES;
 
-  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} maxMatches={maxMatches} />;
-  return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />;
+  // Columnas sponsor del registro: null si el evento no tiene sponsor
+  var sponsor = info.sponsor && info.sponsor.nombre ? info.sponsor : null;
+
+  if (esOrganizador) return <PanelConClave eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} maxMatches={maxMatches} sponsor={sponsor} />;
+  return <VistaAsistente eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={sponsor} />;
 }
 
 // ─────────────────────────────────────────────
@@ -1494,7 +1541,7 @@ function VistaAsistente(props) {
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
-            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} encuesta={encuesta} pie={
+            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} encuesta={encuesta} pie={
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
                 <button onClick={function() {
                   borrarPerfilLocal(eventoId);
@@ -1647,7 +1694,7 @@ function VistaAsistente(props) {
               <div key={i} style={{ display: "flex", justifyContent: esBot ? "flex-start" : "flex-end" }}>
                 <div style={{ maxWidth: "85%", padding: "13px 16px", borderRadius: esBot ? "4px 18px 18px 18px" : "18px 18px 4px 18px", background: esBot ? "rgba(255,255,255,0.05)" : "rgba(67,97,238,0.14)", border: "1px solid " + (esBot ? "rgba(255,255,255,0.08)" : "rgba(67,97,238,0.35)"), fontSize: 14 }}>
                   {formatMessage(msg.content)}
-                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} />}
+                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} />}
                 </div>
               </div>
             );
