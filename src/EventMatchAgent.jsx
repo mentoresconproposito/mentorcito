@@ -833,6 +833,9 @@ function EstilosBase() {
         "body { background: #0d0d1a; overscroll-behavior: none; }",
         "@keyframes pulse { 0%,100% { opacity:0.3; transform:scale(0.8); } 50% { opacity:1; transform:scale(1.2); } }",
         "textarea:focus { outline: none; }",
+        "@keyframes mc-cinta { from { transform: translateX(0); } to { transform: translateX(-50%); } }",
+        ".mc-cinta:hover { animation-play-state: paused !important; }",
+        "@media (prefers-reduced-motion: reduce) { .mc-cinta { animation: none !important; } }",
         "textarea { resize: none; }",
         "textarea, button, input { font-family: inherit; }",
         "::placeholder { color: rgba(255,255,255,0.25); }",
@@ -1035,9 +1038,9 @@ function ResultadosEvento(props) {
 
       {props.sponsor && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <SponsorBanda sponsor={props.sponsor} />
+          <SponsorCinta sponsor={props.sponsor} style={{ borderRadius: 12, border: "1px solid " + T.border }} />
           <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>
-            {props.nPerfiles} {props.nPerfiles === 1 ? "persona vio" : "personas vieron"} la marca en su pantalla de matches{m.conversaciones.length ? ", y el networking generó " + m.conversaciones.length + (m.conversaciones.length === 1 ? " conversación confirmada" : " conversaciones confirmadas") : ""}.
+            {props.nPerfiles} {props.nPerfiles === 1 ? "persona vio" : "personas vieron"} {listaSponsors(props.sponsor).length > 1 ? "los sponsors" : "la marca"} mientras usaban Mentorcito{m.conversaciones.length ? ", y el networking generó " + m.conversaciones.length + (m.conversaciones.length === 1 ? " conversación confirmada" : " conversaciones confirmadas") : ""}.
           </div>
         </div>
       )}
@@ -1249,19 +1252,48 @@ function urlLink(u) {
   return /^https?:\/\//i.test(s) ? s : "https://" + s;
 }
 
-function SponsorBanda(props) {
-  var sp = props.sponsor;
+// Varios sponsors: en cada columna, separados por coma y en el mismo orden
+// (ej. sponsor "Banco Ejemplo, Café Sur" y sponsor_logo "link1, link2")
+function listaSponsors(sp) {
+  if (!sp || !sp.nombre) return [];
+  var partes = function(v) { return (v || "").split(",").map(function(x) { return x.trim(); }); };
+  var logos = partes(sp.logo), links = partes(sp.link);
+  return partes(sp.nombre).filter(Boolean).map(function(nombre, i) {
+    return { nombre: nombre, logo: logos[i] || "", link: links[i] || "" };
+  });
+}
+
+function SponsorItem(props) {
+  var sp = props.sp;
   var [logoOk, setLogoOk] = useState(true);
-  if (!sp || !sp.nombre) return null;
   var logo = sp.logo && logoOk ? urlImagen(sp.logo) : "";
   var marca = logo
-    ? <img src={logo} alt={sp.nombre} onError={function() { setLogoOk(false); }} style={{ maxHeight: 28, maxWidth: 130, objectFit: "contain", background: "white", borderRadius: 6, padding: "3px 6px" }} />
-    : <span style={{ fontSize: 14, fontWeight: 800, color: T.textWhite }}>{sp.nombre}</span>;
+    ? <img src={logo} alt={sp.nombre} onError={function() { setLogoOk(false); }} style={{ height: 24, maxWidth: 120, objectFit: "contain", background: "white", borderRadius: 6, padding: "2px 6px", display: "block" }} />
+    : <span style={{ fontSize: 13, fontWeight: 800, color: T.textWhite, whiteSpace: "nowrap" }}>{sp.nombre}</span>;
   var link = urlLink(sp.link);
+  var estilo = { display: "flex", alignItems: "center", padding: "0 18px", textDecoration: "none", flexShrink: 0 };
+  return link
+    ? <a href={link} target="_blank" rel="noopener noreferrer" style={estilo} tabIndex={props.oculto ? -1 : 0} aria-hidden={props.oculto || undefined}>{marca}</a>
+    : <span style={estilo} aria-hidden={props.oculto || undefined}>{marca}</span>;
+}
+
+// Cinta al pie: "Presentado por" fijo a la izquierda y los sponsors pasando de derecha a izquierda, sin fin.
+// Con "reducir movimiento" activado en el celular, queda quieta.
+function SponsorCinta(props) {
+  var lista = listaSponsors(props.sponsor);
+  if (!lista.length) return null;
+  // La mitad de la pista tiene que ser más ancha que la pantalla: se repite la lista hasta tener 6 o más
+  var mitad = [];
+  while (mitad.length < 6) mitad = mitad.concat(lista);
+  var segundos = Math.max(14, mitad.length * 3);
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", border: "1px dashed " + T.borderStrong, borderRadius: 12, padding: "8px 12px" }}>
-      <span style={{ fontSize: 11, color: T.textSub, letterSpacing: 0.5 }}>{props.texto || "Networking presentado por"}</span>
-      {link ? <a href={link} target="_blank" rel="noopener noreferrer" style={{ display: "flex", textDecoration: "none" }}>{marca}</a> : marca}
+    <div style={Object.assign({ display: "flex", alignItems: "center", height: 40, overflow: "hidden", fontFamily: "'Plus Jakarta Sans', sans-serif", background: T.header, borderTop: "1px solid " + T.border }, props.style || {})}>
+      <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: T.textMuted, padding: "0 10px 0 12px", textTransform: "uppercase", background: T.header, zIndex: 1, boxShadow: "8px 0 10px " + T.bg }}>Presentado por</span>
+      <div style={{ flex: 1, overflow: "hidden", minWidth: 0 }} aria-label={"Sponsors: " + lista.map(function(x) { return x.nombre; }).join(", ")}>
+        <div className="mc-cinta" style={{ display: "flex", width: "max-content", animation: "mc-cinta " + segundos + "s linear infinite" }}>
+          {mitad.concat(mitad).map(function(sp, k) { return <SponsorItem key={k} sp={sp} oculto={k >= lista.length} />; })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1319,8 +1351,6 @@ function ResultadoAsistente(props) {
       {datos === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
 
       {mostrarEncuesta && props.encuesta && <EncuestaEvento eventoId={eventoId} perfil={perfil} nombreEvento={props.nombreEvento} valorInicial={datos.mi_nps} />}
-
-      {datos !== null && <SponsorBanda sponsor={props.sponsor} />}
 
       {matches.length > 0 && (
         <>
@@ -1537,7 +1567,7 @@ function VistaAsistente(props) {
     return (
       <>
         <EstilosBase />
-        <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", padding: "20px 16px 40px" }}>
+        <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", padding: "20px 16px " + (props.sponsor ? 88 : 40) + "px" }}>
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
@@ -1553,6 +1583,7 @@ function VistaAsistente(props) {
             } />
           </div>
         </div>
+        {props.sponsor && <SponsorCinta sponsor={props.sponsor} style={{ position: "fixed", left: 0, right: 0, bottom: 0, paddingBottom: "env(safe-area-inset-bottom)", boxSizing: "content-box" }} />}
       </>
     );
   }
@@ -1720,6 +1751,7 @@ function VistaAsistente(props) {
             </button>
           </div>
         </div>
+        <SponsorCinta sponsor={props.sponsor} style={{ flexShrink: 0 }} />
       </div>
     </>
   );
