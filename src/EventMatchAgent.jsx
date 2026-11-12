@@ -414,7 +414,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + (conMesas
     ? "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
     : "PASO 6 — (este evento no tiene mesas: NO preguntes cómo prefiere conectar, usá formato \"1a1\" y pasá directo al PASO 7)\n")
-  + "PASO 7 — PREGUNTA " + nPreg + " (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol y lo que ofrecés con las personas con las que hagas match? Si querés que te escriban para encontrarse en el evento, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo lo van a ver tus matches.'\n"
+  + "PASO 7 — PREGUNTA " + nPreg + " (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol, tu empresa y lo que ofrecés con tus matches, y tu perfil completo con el organizador del evento? Si querés que tus matches te escriban, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo los van a ver tus matches y el organizador.'\n"
   + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
   + "⚠️ ANTI-LOOP: después de la pregunta " + nPreg + " no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
   + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 8.\n"
@@ -1389,6 +1389,9 @@ function nombreDesdeCodigo(codigo) {
 }
 
 // ─────────────────────────────────────────────
+// LINK A LA POLÍTICA DE PRIVACIDAD: abajo a la derecha del chat y al pie de la portada
+var URL_PRIVACIDAD = "https://mentorcito.vercel.app/privacidad#eventos";
+
 // PORTADA: /eventos sin ?evento= (no hay a qué evento sumar a la persona)
 // ─────────────────────────────────────────────
 function PortadaSinEvento(props) {
@@ -1424,6 +1427,7 @@ function PortadaSinEvento(props) {
               style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>💬 Escribinos por WhatsApp</a>
           </div>
           <a href="https://mentorcito.vercel.app/" style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>
+          <a href={URL_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.textMuted }}>Política de privacidad</a>
         </div>
       </div>
     </>
@@ -1749,6 +1753,9 @@ function VistaAsistente(props) {
               style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() && !loading) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", border: "none", cursor: (input.trim() && !loading) ? "pointer" : "not-allowed", color: (input.trim() && !loading) ? "white" : "rgba(255,255,255,0.25)", fontSize: 15 }}>
               ➤
             </button>
+          </div>
+          <div style={{ textAlign: "right", marginTop: 6 }}>
+            <a href={URL_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: T.textMuted }}>Política de privacidad</a>
           </div>
         </div>
         <SponsorCinta sponsor={props.sponsor} style={{ flexShrink: 0 }} />
