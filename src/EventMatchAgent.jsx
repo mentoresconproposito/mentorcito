@@ -564,8 +564,18 @@ function calcularMetricas(perfiles, res, registros) {
 
   // Matches recomendados (pares únicos) que se concretaron
   var recomendados = {};
+  var todosLosMatches = []; // cada match 1 a 1 una sola vez, con su % y si se concretó
+  var personasConMatch = {};
+  var nombreDeId = {};
+  if (res) res.perfiles.forEach(function(p) { nombreDeId[p.id] = p.nombre; });
   if (res) res.perfiles.forEach(function(a) {
-    res.porPersona[a.id].forEach(function(m) { recomendados[par(claveDe[a.id], claveDe[m.id])] = true; });
+    res.porPersona[a.id].forEach(function(m) {
+      var k = par(claveDe[a.id], claveDe[m.id]);
+      personasConMatch[a.id] = true; personasConMatch[m.id] = true;
+      if (recomendados[k]) return;
+      recomendados[k] = true;
+      todosLosMatches.push({ k: k, a: a.nombre, b: nombreDeId[m.id], pct: m.pct });
+    });
   });
   var nRecomendados = Object.keys(recomendados).length;
   var nConcretados = Object.keys(recomendados).filter(function(k) { return conversaciones[k]; }).length;
@@ -581,6 +591,11 @@ function calcularMetricas(perfiles, res, registros) {
     }),
     nRecomendados: nRecomendados,
     nConcretados: nConcretados,
+    nPersonasConMatch: Object.keys(personasConMatch).length,
+    promMatchesPorPersona: Object.keys(personasConMatch).length ? 2 * nRecomendados / Object.keys(personasConMatch).length : 0,
+    todosLosMatches: todosLosMatches.map(function(x) {
+      return { a: x.a, b: x.b, pct: x.pct, hablaron: !!conversaciones[x.k], rating: prom(ratingPorPar[x.k] || []) };
+    }).sort(function(x, y) { return (y.hablaron - x.hablaron) || (y.pct - x.pct); }),
     pctAsistentesCon: perfiles.length ? Math.round(100 * nAsistentesCon / perfiles.length) : 0,
     nAsistentesCon: nAsistentesCon,
     ratingProm: prom(ratings.map(function(r) { return Number(r.valor); })),
@@ -1021,6 +1036,50 @@ function Metrica(props) {
   );
 }
 
+// Lista de todos los matches 1 a 1 del evento (cada par una vez), plegada por defecto
+function ListaMatchesTotales(props) {
+  var m = props.m;
+  var [abierta, setAbierta] = useState(false);
+  var [filtro, setFiltro] = useState("todos");
+  var [cuantos, setCuantos] = useState(100);
+  var lista = m.todosLosMatches.filter(function(x) { return filtro === "todos" || (filtro === "si" ? x.hablaron : !x.hablaron); });
+  var filtros = [
+    { id: "todos", label: "Todos (" + m.todosLosMatches.length + ")" },
+    { id: "si", label: "Hablaron (" + m.nConcretados + ")" },
+    { id: "no", label: "Sin confirmar (" + (m.nRecomendados - m.nConcretados) + ")" },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <button onClick={function() { setAbierta(!abierta); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", padding: 0, cursor: "pointer", fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1, textAlign: "left" }}>
+        {abierta ? "▾" : "▸"} TODOS LOS MATCHES 1 A 1 ({m.nRecomendados})
+      </button>
+      {abierta && (
+        <>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {filtros.map(function(f) {
+              var on = filtro === f.id;
+              return <button key={f.id} onClick={function() { setFiltro(f.id); setCuantos(100); }} style={{ padding: "4px 12px", borderRadius: 20, border: "1px solid " + (on ? T.primary : T.border), background: on ? T.primary + "22" : "transparent", color: on ? T.textWhite : T.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{f.label}</button>;
+            })}
+          </div>
+          {lista.slice(0, cuantos).map(function(x, i) {
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "8px 12px" }}>
+                <span style={{ flex: 1, fontSize: 13, color: T.text }}>{x.a} ↔ {x.b}</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>{x.pct}%</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: x.hablaron ? T.green : T.textMuted, minWidth: 92, textAlign: "right" }}>
+                  {x.hablaron ? "✅ hablaron" + (x.rating != null ? " · " + x.rating.toFixed(1) + " ★" : "") : "sin confirmar"}
+                </span>
+              </div>
+            );
+          })}
+          {lista.length > cuantos && <button onClick={function() { setCuantos(cuantos + 200); }} style={btnStyle(false)}>Ver más ({lista.length - cuantos} restantes)</button>}
+          {!lista.length && <div style={{ fontSize: 12, color: T.textMuted }}>No hay matches en este filtro.</div>}
+        </>
+      )}
+    </div>
+  );
+}
+
 // Pestaña "Resultados" del panel: si los matches se hicieron reales y cómo les fue
 function ResultadosEvento(props) {
   var m = props.m;
@@ -1029,8 +1088,9 @@ function ResultadosEvento(props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+        <Metrica valor={m.nRecomendados} titulo="Matches 1 a 1 en total" detalle={m.nPersonasConMatch + " asistentes con al menos un match · " + m.promMatchesPorPersona.toFixed(1).replace(".", ",") + " matches por persona en promedio"} />
         <Metrica valor={m.conversaciones.length} titulo="Conversaciones confirmadas" detalle={m.nAsistentesCon + " asistentes (" + m.pctAsistentesCon + "%) hablaron con al menos un match"} />
-        <Metrica valor={m.nRecomendados ? Math.round(100 * m.nConcretados / m.nRecomendados) + "%" : "—"} titulo="Matches que se concretaron" detalle={m.nConcretados + " de " + m.nRecomendados + " matches recomendados"} />
+        <Metrica valor={m.nRecomendados ? Math.round(100 * m.nConcretados / m.nRecomendados) + "%" : "—"} titulo="Matches que se concretaron" detalle={m.nConcretados + " de " + m.nRecomendados + " matches 1 a 1 marcaron \"Ya hablamos\""} />
         <Metrica valor={estrellas(m.ratingProm)} titulo="Satisfacción con las charlas" detalle={m.nRatings + " calificaciones de 1 a 5"} color="#ffd166" />
         <Metrica valor={m.nps == null ? "—" : m.nps} titulo="NPS del evento" color={npsColor}
           detalle={m.nNps ? m.nNps + " respuestas · " + m.promotores + " promotores, " + m.pasivos + " pasivos, " + m.detractores + " detractores" : "Todavía no hay respuestas a la encuesta"} />
@@ -1054,6 +1114,8 @@ function ResultadosEvento(props) {
           <a href={"https://wa.me/?text=" + encodeURIComponent(props.mensajeEncuesta)} target="_blank" rel="noopener noreferrer" style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>Compartir por WhatsApp</a>
         </div>
       </div>
+
+      {m.todosLosMatches.length > 0 && <ListaMatchesTotales m={m} />}
 
       {m.conversaciones.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
