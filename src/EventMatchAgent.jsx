@@ -39,7 +39,7 @@ var SKILLS_CATALOG = {
     { id: "comunicacion_pm",     label: "Comunicación de producto",keywords: ["narrativa","storytelling","presentar","defender","comunicar","stakeholders","spec","PRD","comunicación ejecutiva"] },
   ],
   negocio: [
-    { id: "gtm",                 label: "GTM y primeros clientes", keywords: ["gtm","go-to-market","ventas","b2b","primeros clientes","adquisición","canales","propuesta de valor","icp","sales"] },
+    { id: "gtm",                 label: "GTM y primeros clientes", keywords: ["gtm","go-to-market","ventas","b2b","primeros clientes","adquisición","canales","propuesta de valor","icp","sales","leads","prospección","proceso comercial","cartera de clientes","nuevos clientes","conseguir clientes","vender","ventas b2b"] },
     { id: "criterio_estrategico",label: "Criterio estratégico",    keywords: ["criterio","decisiones","ambigüedad","business sense","estrategia de negocio","modelo de negocio","escalabilidad","crecimiento"] },
     { id: "influencia_liderazgo",label: "Influencia y liderazgo",  keywords: ["influencia","autoridad","manage up","liderazgo","stakeholders","alineamiento","sin autoridad formal","política","equipo"] },
     { id: "modelo_negocio",      label: "Modelo de negocio",       keywords: ["pricing","revenue","monetización","unit economics","margen","facturación","modelo de ingreso","runway","burn"] },
@@ -48,11 +48,21 @@ var SKILLS_CATALOG = {
   emprendimiento: [
     { id: "financiamiento",      label: "Financiamiento e inversión", keywords: ["inversión","inversor","inversores","financiamiento","financiación","fondeo","levantar capital","ronda","seed","pre-seed","angel","venture capital","vc","pitch","deck","valuación","subsidio","crédito","préstamo","aceleradora","incubadora","crowdfunding","capital semilla"] },
     { id: "marketing",           label: "Marketing y crecimiento",    keywords: ["marketing","redes sociales","instagram","tiktok","contenido","comunidad","branding","publicidad","ads","meta ads","google ads","seo","performance","growth","difusión","email marketing","influencers"] },
-    { id: "finanzas",            label: "Finanzas y administración",  keywords: ["finanzas","flujo de caja","cash flow","costos","presupuesto","contabilidad","administración","facturar","cobranza","rentabilidad","proyecciones","punto de equilibrio","precios"] },
+    { id: "finanzas",            label: "Finanzas y administración",  keywords: ["finanzas","flujo de caja","cash flow","costos","presupuesto","contabilidad","administración","facturar","cobranza","rentabilidad","proyecciones","punto de equilibrio","precios","balances","contable"] },
     { id: "legal_impuestos",     label: "Legal e impuestos",          keywords: ["legal","abogado","contrato","contratos","sociedad","sas","srl","monotributo","impuestos","afip","arca","contador","marca registrada","registrar la marca","propiedad intelectual","patente","habilitación","términos y condiciones"] },
     { id: "equipo_talento",      label: "Equipo y talento",           keywords: ["contratar","contratación","talento","armar equipo","armar el equipo","primeras contrataciones","reclutamiento","rrhh","recursos humanos","cultura","socio","socios","cofounder","co-founder","delegar","freelancers"] },
-    { id: "operaciones",         label: "Operaciones y logística",    keywords: ["operaciones","logística","procesos","proveedores","proveedor","producción","fabricación","stock","inventario","distribución","envíos","importar","e-commerce","ecommerce","tienda online","calidad","automatizar"] },
+    { id: "operaciones",         label: "Operaciones y logística",    keywords: ["operaciones","logística","procesos","proveedores","proveedor","producción","fabricación","stock","inventario","distribución","envíos","e-commerce","ecommerce","tienda online","automatizar","logistica","transporte"] },
     { id: "expansion",           label: "Expansión e internacionalización", keywords: ["exportar","exportación","internacionalización","internacional","otros mercados","otro país","expansión","expandir","latam","estados unidos","europa","franquicia","franquicias","comercio exterior"] },
+  ],
+  // Rubros y temas que aparecieron en eventos de empresas y pymes (SWITCHEAR 26) y no tenían dónde caer
+  empresa: [
+    { id: "pagos_fintech",       label: "Pagos y fintech",            keywords: ["pagos","pago","medios de pago","cobros","billetera","billeteras","psp","psav","procesador de pagos","pasarela de pago","fintech","cripto","criptomonedas","stablecoin","stablecoins","transferencias"] },
+    { id: "comercio_exterior",   label: "Comercio exterior",          keywords: ["importación","importaciones","importar","importador","exportación","exportaciones","exportar","exportador","comercio exterior","aduana","despachante","divisas","pagos al exterior","pago al exterior","plata de afuera","traer plata","giro de divisas"] },
+    { id: "inversiones",         label: "Inversiones y patrimonio",   keywords: ["inversiones","invertir","activos financieros","gestión patrimonial","patrimonio","patrimonial","cartera de inversión","mercado de capitales","bonos","acciones","fondos comunes","asesor financiero","asesoría financiera","wealth","echeq","cheques","descontar"] },
+    { id: "tecnologia_it",       label: "Tecnología e infraestructura IT", keywords: ["nube","cloud","ciberseguridad","seguridad informática","conectividad","datacenter","data center","servidores","internet corporativo","telecomunicaciones","soporte it","infraestructura tecnológica","transformación digital","software a medida","erp","crm","desarrollo web","sitio web","sitios web"] },
+    { id: "calidad_procesos",    label: "Calidad y mejora continua",  keywords: ["iso","iso 9001","calidad","sistema de calidad","auditoría","auditora","auditor","mejora continua","normas","norma","certificación","certificaciones","lean","six sigma","gestión del cambio","mejora de procesos","optimización de procesos","eficiencia"] },
+    { id: "sustentabilidad",     label: "Sustentabilidad e impacto",  keywords: ["sustentabilidad","sostenibilidad","sustentable","sostenible","ambiental","medio ambiente","esg","rse","impacto ambiental","residuos","reciclaje","huella de carbono","economía circular","triple impacto","energía renovable","renovables","biodiversidad"] },
+    { id: "sector_publico",      label: "Sector público y regulaciones", keywords: ["sector público","gobierno","licitaciones","licitación","regulaciones","regulación","regulatorio","políticas públicas","asuntos públicos","municipio","municipios","ministerio","organismos públicos","mundo público"] },
   ],
 };
 
@@ -113,12 +123,28 @@ function urlLinkedin(s) {
   if (!t) return "";
   if (/^https?:\/\//i.test(t)) return t;
   if (/linkedin\.com/i.test(t)) return "https://" + t.replace(/^\/+/, "");
+  // "Florencia Altamirano" es un nombre, no un usuario de LinkedIn: no se arma un link roto
+  if (/\s/.test(t) || /^https?:/i.test(t)) return "";
   return "https://www.linkedin.com/in/" + t.replace(/^@/, "");
 }
 
 // Identifica a una persona dentro del evento (para no duplicarla ni matchearla consigo misma)
 function claveIdentidad(p) {
   return (p.nombre || "").toString().trim().toLowerCase() + "|" + (limpiarWhatsapp(p.whatsapp) || (p.linkedin || p.contacto || "").toString().trim().toLowerCase());
+}
+
+// Misma persona aunque haya escrito el nombre distinto (hizo el chat dos veces o editó su perfil):
+// primero el WhatsApp, después el LinkedIn y, si no dejó contacto, el nombre.
+function clavePersona(p) {
+  var wa = limpiarWhatsapp(p.whatsapp);
+  if (wa) return "wa:" + wa;
+  var m = (p.linkedin || "").toString().toLowerCase().match(/linkedin\.com\/in\/([^/?#\s]+)/);
+  if (m) return "li:" + decodeURIComponentSeguro(m[1]);
+  return "n:" + (p.nombre || "").toString().trim().toLowerCase();
+}
+
+function decodeURIComponentSeguro(s) {
+  try { return decodeURIComponent(s); } catch (e) { return s; }
 }
 
 // Normaliza un perfil: une las skills que tipificó el LLM con las que detecta el clasificador por keywords
@@ -129,17 +155,25 @@ function normalizarPerfil(p, idx) {
     id: p.id || ("p" + idx + "_" + (p.nombre || "anon").toLowerCase().replace(/\W+/g, "")),
     ofrece: ofrece,
     busca: busca,
-    ofrece_skills: unique((p.ofrece_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(clasificarEnSkills(ofrece))),
-    busca_skills: unique((p.busca_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(clasificarEnSkills(busca))),
+    // Si la persona eligió sus etiquetas a mano (editar perfil), se respetan tal cual
+    ofrece_skills: unique((p.ofrece_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(ofrece))),
+    busca_skills: unique((p.busca_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(busca))),
     objetivos: (p.objetivos || []).filter(function(o) { return OBJETIVOS[o]; }),
     nivel: NIVELES.indexOf(p.nivel) !== -1 ? p.nivel : "mid",
     formato: p.formato || "ambos",
     palabras_ofrece: palabrasClave(ofrece),
     palabras_busca: palabrasClave(busca),
+    // "Doble clic" de la pregunta de objetivos (ej. su cliente ideal) y con qué palabras se describe cada uno
+    palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return STOPWORDS_DETALLE.indexOf(w) === -1; }),
+    palabras_perfil: palabrasClave([p.rol || "", p.empresa || "", p.resumen || ""].concat(ofrece)),
+    clave_persona: clavePersona(p),
   });
 }
 
 var STOPWORDS = ["sobre","desde","hasta","entre","cómo","como","quiero","busco","necesito","tengo","puedo","ayudar","mejorar","aprender","personas","equipo","equipos","trabajo","temas","cosas","otros","otras","mucho","poder","hacer"];
+
+// Palabras que aparecen en casi cualquier descripción de cliente ideal y no ayudan a distinguir
+var STOPWORDS_DETALLE = ["empresa","empresas","clientes","cliente","buscar","persona","proyecto","proyectos","negocio","negocios","tamaño","grandes","chicas","medianas","zona","argentina","perfil","alguien","tipo"];
 
 function palabrasClave(textos) {
   var t = (textos || []).join(" ").toLowerCase().replace(/[^a-záéíóúñü0-9\s]/g, " ");
@@ -158,6 +192,9 @@ function cobertura(a, b) {
 function scorePar(a, b) {
   var razones = [];
   var score = 0;
+
+  // La misma persona cargada dos veces nunca es match de sí misma
+  if (a.clave_persona && a.clave_persona === b.clave_persona) return { pct: 0, razones: [{ tipo: "misma_persona" }] };
 
   // 1. Complementariedad de skills, en las dos direcciones (hasta 30 pts cada una)
   var ab = cobertura(a, b);
@@ -188,6 +225,16 @@ function scorePar(a, b) {
     if (compartidos.length) { objPts = 8; razones.push({ tipo: "objetivo_comun", obj: compartidos[0] }); }
   }
   score += objPts;
+
+  // 3b. Encaje con el "doble clic": B se parece a lo que A describió (su cliente ideal, el proveedor que busca…) y viceversa (hasta 10 pts cada uno)
+  [[a, b], [b, a]].forEach(function(x) {
+    var quien = x[0], otro = x[1];
+    var det = quien.palabras_detalle || [];
+    if (!det.length) return;
+    var perf = otro.palabras_perfil || [];
+    var n = det.filter(function(w) { return perf.indexOf(w) !== -1; }).length;
+    if (n) { score += Math.min(10, n * 5); razones.push({ tipo: "detalle", quien: quien.id, otro: otro.id }); }
+  });
 
   // 4. Nivel: un escalón de diferencia es ideal para que uno aprenda del otro (10 pts)
   var dif = Math.abs(NIVELES.indexOf(a.nivel) - NIVELES.indexOf(b.nivel));
@@ -356,6 +403,11 @@ function porQueHablar(a, b, razones) {
   if (recibe.length) frases.push(primerNombre(b) + " puede ayudarte con " + listaNatural(recibe));
   if (aporta.length) frases.push((recibe.length ? "vos" : "Vos") + " podés aportarle en " + listaNatural(aporta));
   razones.forEach(function(r) {
+    if (r.tipo !== "detalle") return;
+    if (r.quien === a.id) frases.push(frases.length ? "además encaja con el perfil que contaste que buscás" : primerNombre(b) + " encaja con el perfil que contaste que buscás");
+    else frases.push("tu perfil encaja con lo que " + primerNombre(b) + " está buscando");
+  });
+  razones.forEach(function(r) {
     if (r.tipo === "objetivo" && r.obj === r.objOtro) frases.push("los dos vienen a " + enMinuscula(OBJETIVOS[r.obj].label));
     else if (r.tipo === "objetivo") {
       var miObj = r.quien === a.id ? r.obj : r.objOtro;
@@ -370,12 +422,50 @@ function porQueHablar(a, b, razones) {
   return t.charAt(0).toUpperCase() + t.slice(1) + ".";
 }
 
+// Número estable a partir de dos nombres: el mismo par ve siempre la misma frase, pero cada par ve una distinta
+function semillaPar(a, b) {
+  var t = (a.nombre || "") + "|" + (b.nombre || "");
+  var h = 0;
+  for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+var ROMPEHIELOS_AYUDA = [
+  function(n, t) { return "Preguntale a " + n + ": “¿Cuál fue el error más útil que cometiste con " + t + "?”"; },
+  function(n, t) { return "Preguntale a " + n + ": “Si arrancaras hoy de cero con " + t + ", ¿qué harías distinto?”"; },
+  function(n, t) { return "Preguntale a " + n + ": “¿Qué es lo primero que mirás cuando alguien te consulta por " + t + "?”"; },
+  function(n, t) { return "Preguntale a " + n + ": “¿Qué consejo sobre " + t + " te hubiera gustado escuchar antes?”"; },
+  function(n, t) { return "Contale a " + n + " en qué estás con " + t + " y preguntale cuál sería tu próximo paso."; },
+];
+var ROMPEHIELOS_APORTE = [
+  function(n, t) { return "Preguntale a " + n + " qué está intentando resolver hoy con " + t + "."; },
+  function(n, t) { return "Preguntale a " + n + " qué es lo que más le está costando con " + t + "."; },
+  function(n, t) { return "Preguntale a " + n + " qué ya probó con " + t + " y qué no le funcionó."; },
+];
+var ROMPEHIELOS_OBJETIVO = {
+  buscar_clientes:  function(n) { return "Preguntale a " + n + " quién es su cliente ideal: capaz se pueden pasar contactos."; },
+  buscar_proveedor: function(n) { return "Preguntale a " + n + " qué solución está buscando y para cuándo la necesita."; },
+  buscar_inversion: function(n) { return "Preguntale a " + n + " en qué etapa está y qué tipo de inversión le serviría."; },
+  invertir:         function(n) { return "Preguntale a " + n + " qué mira antes de invertir en un proyecto."; },
+  contratar:        function(n) { return "Preguntale a " + n + " qué perfil le falta sumar al equipo."; },
+  buscar_trabajo:   function(n) { return "Preguntale a " + n + " qué tipo de proyecto le entusiasmaría."; },
+  buscar_socio:     function(n) { return "Preguntale a " + n + " qué perfil de socio/a le sumaría."; },
+  aprender:         function(n) { return "Preguntale a " + n + " qué tema le gustaría destrabar hoy."; },
+  mentorear:        function(n) { return "Preguntale a " + n + " cuál fue el aprendizaje que más le cambió la forma de trabajar."; },
+  networking:       function(n) { return "Preguntale a " + n + " qué vino a buscar al evento y qué tendría que pasar para que le valga la pena."; },
+};
+
 function rompehielos(a, b, razones) {
+  var n = primerNombre(b);
+  var k = semillaPar(a, b);
   var ayuda = razones.filter(function(r) { return r.tipo === "skill" && r.de === b.id; })[0];
-  if (ayuda) return "Preguntale a " + primerNombre(b) + ": “¿Cuál fue el error más útil que cometiste con " + enMinuscula(SKILL_BY_ID[ayuda.skill].label) + "?”";
   var aporte = razones.filter(function(r) { return r.tipo === "skill" && r.de === a.id; })[0];
-  if (aporte) return "Preguntale a " + primerNombre(b) + " qué está intentando resolver hoy con " + enMinuscula(SKILL_BY_ID[aporte.skill].label) + ".";
-  return "Preguntale a " + primerNombre(b) + " qué vino a buscar al evento y qué tendría que pasar para que le valga la pena.";
+  var objB = (b.objetivos || []).filter(function(o) { return ROMPEHIELOS_OBJETIVO[o]; })[0];
+  // Se alterna entre la pregunta por el tema y la pregunta por lo que vino a buscar, para que no sean todas iguales
+  if (ayuda && (k % 3 !== 2 || !objB)) return ROMPEHIELOS_AYUDA[k % ROMPEHIELOS_AYUDA.length](n, enMinuscula(SKILL_BY_ID[ayuda.skill].label));
+  if (aporte && (k % 2 === 0 || !objB)) return ROMPEHIELOS_APORTE[k % ROMPEHIELOS_APORTE.length](n, enMinuscula(SKILL_BY_ID[aporte.skill].label));
+  if (objB) return ROMPEHIELOS_OBJETIVO[objB](n);
+  return ROMPEHIELOS_OBJETIVO.networking(n);
 }
 
 // ─────────────────────────────────────────────
@@ -392,32 +482,44 @@ var OBJETIVOS_LIST = Object.keys(OBJETIVOS).map(function(id) {
 // conMesas = false: el evento no tiene mesas, se saltea la pregunta de formato (quedan 5)
 function buildSystemPrompt(nombreEvento, conMesas) {
   if (conMesas === undefined) conMesas = true;
-  var nPreg = conMesas ? 6 : 5;
+  var nPreg = conMesas ? 7 : 6;
   return "Eres Mentorcito, el agente de Mentores con Propósito que conecta a las personas que van a un mismo evento"
   + (nombreEvento ? " (" + nombreEvento + ")" : "") + ".\n\n"
   + "MISIÓN: En pocas preguntas entendés qué puede ofrecer cada asistente, qué está buscando y a qué viene al evento, para que el sistema le proponga con quién conversar (1 a 1)" + (conMesas ? " y en qué mesa temática sentarse" : "") + ".\n\n"
   + "NOMBRE Y GÉNERO:\n"
-  + "- Lo primero es preguntar el nombre. Usalo en cada respuesta.\n"
+  + "- Lo primero es preguntar nombre y apellido (así sus matches lo encuentran en el evento). Si da solo el nombre, seguí igual sin repreguntar. Usá el nombre de pila en cada respuesta.\n"
   + "- Inferí el género por el nombre y adaptá las palabras (bienvenido/bienvenida). Si dudás, usá formas neutras.\n\n"
   + "REGLA DE ORO — UNA PREGUNTA A LA VEZ. Nunca dos preguntas en el mismo mensaje.\n\n"
   + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento.\n\n"
   + "EXTENSIÓN: mensajes de máximo 3 líneas durante las preguntas.\n\n"
-  + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá •.\n\n"
+  + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá • (salvo en la pregunta de objetivos, que va numerada).\n\n"
   + "CATÁLOGO DE SKILLS (usá solo estos ids en ofrece_skills y busca_skills):\n" + SKILLS_LIST + "\n\n"
   + "OBJETIVOS POSIBLES (usá solo estos ids en objetivos):\n" + OBJETIVOS_LIST + "\n\n"
   + "FLUJO — EN ORDEN, SIN SALTEAR:\n"
-  + "PASO 1 — APERTURA: ya se mostró el saludo. Recibís el nombre.\n"
+  + "PASO 1 — APERTURA: ya se mostró el saludo. Recibís el nombre y apellido.\n"
   + "PASO 2 — PREGUNTA 1: '¿A qué te dedicás hoy y en qué empresa o proyecto?' — inferís rol, empresa y nivel.\n"
   + "PASO 3 — PREGUNTA 2: '¿En qué temas te buscan los demás? Contame 2 o 3 cosas en las que podrías ayudar a alguien hoy mismo.' — esto es lo que OFRECE.\n"
-  + "PASO 4 — PREGUNTA 3: '¿Qué desafío te gustaría destrabar con alguien que ya pasó por eso?' — esto es lo que BUSCA (sus gaps).\n"
-  + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento?' y mostrá las opciones en una lista con •: aprender de alguien con más experiencia, compartir experiencia o mentorear, contratar, buscar trabajo o proyecto, buscar inversión, invertir, conseguir clientes, encontrar proveedor o solución, encontrar socio o cofounder, ampliar red. Puede elegir hasta 2.\n"
+  + "PASO 4 — PREGUNTA 3: '¿En qué tema te vendría bien una mano hoy? Por ejemplo: conseguir clientes, ordenar las finanzas, exportar o armar equipo.' — esto es lo que BUSCA (sus gaps).\n"
+  + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento? Respondé con hasta 2 números (por ejemplo: 7 y 10)' y mostrá las opciones numeradas, una por línea, EXACTAMENTE así:\n"
+  + "1. Aprender de alguien con más experiencia\n2. Compartir experiencia o mentorear\n3. Contratar\n4. Buscar trabajo o proyecto\n5. Buscar inversión\n6. Invertir\n7. Conseguir clientes\n8. Encontrar proveedor o solución\n9. Encontrar socio o cofounder\n10. Ampliar red\n"
+  + "Los números corresponden a: 1 aprender, 2 mentorear, 3 contratar, 4 buscar_trabajo, 5 buscar_inversion, 6 invertir, 7 buscar_clientes, 8 buscar_proveedor, 9 buscar_socio, 10 networking. Aceptá números, palabras o una mezcla.\n"
+  + "PASO 6 — PREGUNTA 5 (doble clic): una sola pregunta para afinar el PRIMER objetivo que eligió:\n"
+  + "• 7 conseguir clientes: '¿Quién es tu cliente ideal? Contame rubro, tamaño o tipo de empresa o persona, y zona.'\n"
+  + "• 8 proveedor: '¿Qué solución o proveedor estás buscando y para qué?'\n"
+  + "• 5 buscar inversión: '¿En qué etapa está tu proyecto y qué tipo de inversión buscás?'\n"
+  + "• 6 invertir: '¿En qué tipo de proyectos te interesa invertir? Rubro, etapa y ticket aproximado.'\n"
+  + "• 3 contratar: '¿Qué perfil necesitás sumar?'\n"
+  + "• 4 buscar trabajo: '¿Qué tipo de rol o proyecto estás buscando?'\n"
+  + "• 9 socio: '¿Qué perfil de socio o socia te complementaría?'\n"
+  + "• 1, 2 o 10: '¿Con qué tipo de persona te gustaría cruzarte? Rubro, rol o etapa.'\n"
+  + "La respuesta va en detalle_objetivo, con las palabras de la persona.\n"
   + (conMesas
-    ? "PASO 6 — PREGUNTA 5: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
-    : "PASO 6 — (este evento no tiene mesas: NO preguntes cómo prefiere conectar, usá formato \"1a1\" y pasá directo al PASO 7)\n")
-  + "PASO 7 — PREGUNTA " + nPreg + " (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol, tu empresa y lo que ofrecés con tus matches, y tu perfil completo con el organizador del evento? Si querés que tus matches te escriban, dejame tu WhatsApp (con código de país) y, si querés, tu LinkedIn. Solo los van a ver tus matches y el organizador.'\n"
-  + "PASO 8 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
-  + "⚠️ ANTI-LOOP: después de la pregunta " + nPreg + " no hagas más preguntas. Pasá al PASO 8 aunque falte información.\n"
-  + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 8.\n"
+    ? "PASO 7 — PREGUNTA 6: '¿Cómo preferís conectar? A) Conversaciones 1 a 1 B) Mesas temáticas en grupo chico C) Las dos'\n"
+    : "PASO 7 — (este evento no tiene mesas: NO preguntes cómo prefiere conectar, usá formato \"1a1\" y pasá directo al PASO 8)\n")
+  + "PASO 8 — PREGUNTA " + nPreg + " (consentimiento y contacto): '¿Aceptás que compartamos tu nombre, tu rol, tu empresa y lo que ofrecés con tus matches, y tu perfil completo con el organizador del evento? Si querés que tus matches te escriban, dejame tu WhatsApp (con código de país) y, si querés, el link de tu LinkedIn. Solo los van a ver tus matches y el organizador.'\n"
+  + "PASO 9 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
+  + "⚠️ ANTI-LOOP: después de la pregunta " + nPreg + " no hagas más preguntas. Pasá al PASO 9 aunque falte información.\n"
+  + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 9.\n"
   + "⚠️ Si la persona NO acepta compartir sus datos, igual emití el bloque con \"consentimiento\": false.\n\n"
   + "CÓMO COMPLETAR EL PERFIL:\n"
   + "- ofrece / busca: frases cortas con las palabras de la persona (2 a 4 cada una).\n"
@@ -425,35 +527,88 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "- nivel: junior (menos de 2 años), mid (2 a 5), senior (más de 5 o lidera equipos), senior-ejecutivo (C-level, founder con tracción, director).\n"
   + "- formato: 1a1, grupo o ambos.\n"
   + "- whatsapp: solo dígitos con código de país, sin + ni espacios (ej: 5491123456789). Si es un número argentino sin código, agregá 549 y sacá el 0 y el 15. Si no lo dio, dejalo vacío.\n"
-  + "- linkedin: la URL o el usuario de LinkedIn si lo dio; si no, vacío. contacto: un email si lo dio; si no, vacío.\n"
+  + "- linkedin: SOLO si es un link de LinkedIn (contiene linkedin.com) o un usuario sin espacios. Si escribió su nombre en lugar del link, dejalo vacío. contacto: un email si lo dio; si no, vacío.\n"
+  + "- nombre: nombre y apellido tal como lo dio.\n"
+  + "- detalle_objetivo: la respuesta a la pregunta 5, en una frase corta.\n"
   + "- resumen: una línea en tercera persona para que otros asistentes entiendan quién es.\n\n"
   + "FORMATO DEL BLOQUE (reemplazá con datos reales):\n"
   + "<PERFIL>\n"
-  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"formato\":\"ambos\",\"consentimiento\":true,\"whatsapp\":\"\",\"linkedin\":\"\",\"contacto\":\"\",\"resumen\":\"\"}\n"
+  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"detalle_objetivo\":\"\",\"formato\":\"ambos\",\"consentimiento\":true,\"whatsapp\":\"\",\"linkedin\":\"\",\"contacto\":\"\",\"resumen\":\"\"}\n"
   + "</PERFIL>";
 }
 
 // ─────────────────────────────────────────────
-// TOKENS (mismos que MentorAgent, dark mode fijo)
+// TOKENS: modo claro (por defecto) y oscuro. T se actualiza en el lugar al cambiar
+// de modo, así todos los estilos inline toman los colores nuevos en el próximo render.
 // ─────────────────────────────────────────────
-var T = {
-  bg:           "#0d0d1a",
-  header:       "rgba(13,13,26,0.97)",
-  card:         "rgba(255,255,255,0.04)",
-  border:       "rgba(255,255,255,0.08)",
-  borderStrong: "rgba(255,255,255,0.15)",
-  highlightBg:  "rgba(255,255,255,0.06)",
-  text:         "rgba(255,255,255,0.88)",
-  textSub:      "rgba(255,255,255,0.55)",
-  textMuted:    "rgba(255,255,255,0.45)",
-  textDisabled: "rgba(255,255,255,0.25)",
-  textWhite:    "white",
-  primary:      "#4361ee",
-  violet:       "#7b2ff7",
-  pink:         "#f72585",
-  green:        "#06d6a0",
+var PALETAS = {
+  claro: {
+    bg:           "#f5f6fb",
+    header:       "rgba(255,255,255,0.97)",
+    card:         "#ffffff",
+    border:       "rgba(20,24,48,0.10)",
+    borderStrong: "rgba(20,24,48,0.20)",
+    highlightBg:  "rgba(20,24,48,0.045)",
+    text:         "#1d2136",
+    textSub:      "rgba(29,33,54,0.70)",
+    textMuted:    "rgba(29,33,54,0.56)",
+    textDisabled: "rgba(29,33,54,0.28)",
+    textWhite:    "#111427",
+    primary:      "#3d5af1",
+    violet:       "#7b2ff7",
+    pink:         "#d0186b",
+    green:        "#05916d",
+    yellow:       "#c27c0e",
+    whatsapp:     "#128c4a",
+    linkedin:     "#0a66c2",
+    burbujaBot:   "#ffffff",
+    burbujaYo:    "rgba(61,90,241,0.10)",
+    bordeBot:     "rgba(20,24,48,0.10)",
+    bordeYo:      "rgba(61,90,241,0.28)",
+    sombra:       "0 1px 3px rgba(20,24,48,0.06)",
+    areas: { tech: "#2563eb", producto: "#7c3aed", negocio: "#c2185b", emprendimiento: "#a85d00", empresa: "#0f766e" },
+  },
+  oscuro: {
+    bg:           "#0d0d1a",
+    header:       "rgba(13,13,26,0.97)",
+    card:         "rgba(255,255,255,0.04)",
+    border:       "rgba(255,255,255,0.08)",
+    borderStrong: "rgba(255,255,255,0.15)",
+    highlightBg:  "rgba(255,255,255,0.06)",
+    text:         "rgba(255,255,255,0.88)",
+    textSub:      "rgba(255,255,255,0.55)",
+    textMuted:    "rgba(255,255,255,0.45)",
+    textDisabled: "rgba(255,255,255,0.25)",
+    textWhite:    "white",
+    primary:      "#4361ee",
+    violet:       "#7b2ff7",
+    pink:         "#f72585",
+    green:        "#06d6a0",
+    yellow:       "#ffd166",
+    whatsapp:     "#25D366",
+    linkedin:     "#5b9ee8",
+    burbujaBot:   "rgba(255,255,255,0.05)",
+    burbujaYo:    "rgba(67,97,238,0.14)",
+    bordeBot:     "rgba(255,255,255,0.08)",
+    bordeYo:      "rgba(67,97,238,0.3)",
+    sombra:       "none",
+    areas: { tech: "#3a86ff", producto: "#9b5fff", negocio: "#f72585", emprendimiento: "#ffb703", empresa: "#2ec4b6" },
+  },
 };
-var AREA_COLOR = { tech: "#3a86ff", producto: "#9b5fff", negocio: "#f72585", emprendimiento: "#ffb703" };
+var TEMA_KEY = "mentorcito_tema";
+function leerTema() {
+  try { var t = localStorage.getItem(TEMA_KEY); if (t === "oscuro" || t === "claro") return t; } catch (e) {}
+  return "claro";
+}
+var T = {};
+var AREA_COLOR = {};
+function aplicarTema(tema) {
+  var pal = PALETAS[tema] || PALETAS.claro;
+  Object.keys(pal).forEach(function(k) { if (k !== "areas") T[k] = pal[k]; });
+  Object.assign(AREA_COLOR, pal.areas);
+  T.tema = tema;
+}
+aplicarTema(leerTema());
 
 function pctColor(pct) {
   return pct >= 70 ? T.green : pct >= 50 ? T.primary : T.textSub;
@@ -726,7 +881,7 @@ function FeedbackMatch(props) {
         {[1, 2, 3, 4, 5].map(function(n) {
           var on = props.rating >= n;
           return <button key={n} aria-label={n + " de 5"} onClick={function() { props.onRating(n); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 2, color: on ? "#ffd166" : T.textDisabled }}>★</button>;
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 2, color: on ? T.yellow : T.textDisabled }}>★</button>;
         })}
         {props.rating > 0 && <span style={{ fontSize: 11, color: T.textMuted }}>¡Gracias!</span>}
       </div>
@@ -805,11 +960,11 @@ function BotonesContacto(props) {
       {wa && (
         <a href={"https://wa.me/" + wa + "?text=" + encodeURIComponent(mensajeWhatsapp(a, b, props.razones, props.nombreEvento))}
           target="_blank" rel="noopener noreferrer"
-          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>💬 Escribile por WhatsApp</a>
+          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: T.whatsapp, color: T.whatsapp })}>💬 Escribile por WhatsApp</a>
       )}
       {li && (
         <a href={li} target="_blank" rel="noopener noreferrer"
-          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#0a66c2", color: "#5b9ee8" })}>in Ver su LinkedIn</a>
+          style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: T.linkedin, color: T.linkedin })}>in Ver su LinkedIn</a>
       )}
       {!wa && !li && b.contacto && <div style={{ fontSize: 11, color: T.textMuted }}>Contacto: {b.contacto}</div>}
     </div>
@@ -845,7 +1000,7 @@ function EstilosBase() {
         "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');",
         "* { box-sizing: border-box; margin: 0; padding: 0; }",
         "html,body,#root { height: 100%; }",
-        "body { background: #0d0d1a; overscroll-behavior: none; }",
+        "body { background: " + T.bg + "; overscroll-behavior: none; }",
         "@keyframes pulse { 0%,100% { opacity:0.3; transform:scale(0.8); } 50% { opacity:1; transform:scale(1.2); } }",
         "textarea:focus { outline: none; }",
         "@keyframes mc-cinta { from { transform: translateX(0); } to { transform: translateX(-50%); } }",
@@ -853,7 +1008,7 @@ function EstilosBase() {
         "@media (prefers-reduced-motion: reduce) { .mc-cinta { animation: none !important; } }",
         "textarea { resize: none; }",
         "textarea, button, input { font-family: inherit; }",
-        "::placeholder { color: rgba(255,255,255,0.25); }",
+        "::placeholder { color: " + T.textDisabled + "; }",
         "@media(max-width:640px){textarea,input{font-size:16px!important}}",
       ].join("\n")}
     </style>
@@ -1084,14 +1239,14 @@ function ListaMatchesTotales(props) {
 function ResultadosEvento(props) {
   var m = props.m;
   var estrellas = function(x) { return x == null ? "—" : x.toFixed(1) + " ★"; };
-  var npsColor = m.nps == null ? T.textWhite : m.nps >= 30 ? T.green : m.nps >= 0 ? "#ffd166" : T.pink;
+  var npsColor = m.nps == null ? T.textWhite : m.nps >= 30 ? T.green : m.nps >= 0 ? T.yellow : T.pink;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
         <Metrica valor={m.nRecomendados} titulo="Matches 1 a 1 en total" detalle={m.nPersonasConMatch + " asistentes con al menos un match · " + m.promMatchesPorPersona.toFixed(1).replace(".", ",") + " matches por persona en promedio"} />
         <Metrica valor={m.conversaciones.length} titulo="Conversaciones confirmadas" detalle={m.nAsistentesCon + " asistentes (" + m.pctAsistentesCon + "%) hablaron con al menos un match"} />
         <Metrica valor={m.nRecomendados ? Math.round(100 * m.nConcretados / m.nRecomendados) + "%" : "—"} titulo="Matches que se concretaron" detalle={m.nConcretados + " de " + m.nRecomendados + " matches 1 a 1 marcaron \"Ya hablamos\""} />
-        <Metrica valor={estrellas(m.ratingProm)} titulo="Satisfacción con las charlas" detalle={m.nRatings + " calificaciones de 1 a 5"} color="#ffd166" />
+        <Metrica valor={estrellas(m.ratingProm)} titulo="Satisfacción con las charlas" detalle={m.nRatings + " calificaciones de 1 a 5"} color={T.yellow} />
         <Metrica valor={m.nps == null ? "—" : m.nps} titulo="NPS del evento" color={npsColor}
           detalle={m.nNps ? m.nNps + " respuestas · " + m.promotores + " promotores, " + m.pasivos + " pasivos, " + m.detractores + " detractores" : "Todavía no hay respuestas a la encuesta"} />
       </div>
@@ -1111,7 +1266,7 @@ function ResultadosEvento(props) {
         <div style={{ fontSize: 12, color: T.text, background: T.highlightBg, borderRadius: 8, padding: "8px 10px", wordBreak: "break-word" }}>{props.mensajeEncuesta}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={props.onCopiar} style={btnStyle(true)}>{props.copiado ? "¡Copiado!" : "Copiar mensaje"}</button>
-          <a href={"https://wa.me/?text=" + encodeURIComponent(props.mensajeEncuesta)} target="_blank" rel="noopener noreferrer" style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>Compartir por WhatsApp</a>
+          <a href={"https://wa.me/?text=" + encodeURIComponent(props.mensajeEncuesta)} target="_blank" rel="noopener noreferrer" style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: T.whatsapp, color: T.whatsapp })}>Compartir por WhatsApp</a>
         </div>
       </div>
 
@@ -1125,7 +1280,7 @@ function ResultadosEvento(props) {
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "10px 12px" }}>
                 <span style={{ flex: 1, fontSize: 13, color: T.text }}>{c.a} ↔ {c.b}</span>
                 {!c.recomendado && <span style={{ fontSize: 10, color: T.textMuted }}>fuera de sus matches actuales</span>}
-                <span style={{ fontSize: 12, color: c.rating == null ? T.textMuted : "#ffd166", fontWeight: 700 }}>{c.rating == null ? "sin calificar" : c.rating.toFixed(1) + " ★"}</span>
+                <span style={{ fontSize: 12, color: c.rating == null ? T.textMuted : T.yellow, fontWeight: 700 }}>{c.rating == null ? "sin calificar" : c.rating.toFixed(1) + " ★"}</span>
               </div>
             );
           })}
@@ -1215,7 +1370,9 @@ function LinkPersonal(props) {
   );
 }
 
-var estiloLinkSutil = { background: "none", border: "none", padding: 0, color: T.textMuted, fontSize: 12, cursor: "pointer", textDecoration: "underline" };
+// Con getter para que tome el color del modo actual (claro u oscuro)
+var estiloLinkSutil = { background: "none", border: "none", padding: 0, fontSize: 12, cursor: "pointer", textDecoration: "underline" };
+Object.defineProperty(estiloLinkSutil, "color", { enumerable: true, get: function() { return T.textMuted; } });
 
 function LinkDiagnostico() {
   return <a href="https://mentorcito.vercel.app/" target="_blank" rel="noopener noreferrer" style={estiloLinkSutil}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>;
@@ -1369,6 +1526,8 @@ function ResultadoAsistente(props) {
   var [datos, setDatos] = useState(null); // null = cargando; { matches, mesa, mi_nps }
   var [recarga, setRecarga] = useState(0);
   var [fb, setFb] = useState({}); // feedback local por match: { [id]: { hablamos, rating } }
+  var [editando, setEditando] = useState(false);
+  var perfilKey = codificarPerfil(perfil);
 
   useEffect(function() {
     if (!eventoId) { setDatos({ matches: [], mesa: null }); return; }
@@ -1381,7 +1540,7 @@ function ResultadoAsistente(props) {
         setFb(ini);
       })
       .catch(function() { setDatos({ matches: [], mesa: null }); });
-  }, [eventoId, recarga]);
+  }, [eventoId, recarga, perfilKey]);
 
   function feedbackDe(m) {
     var f = fb[m.otro.id] || { hablamos: false, rating: 0 };
@@ -1401,6 +1560,16 @@ function ResultadoAsistente(props) {
   var mesaById = {};
   if (mesa) mesa.integrantes.forEach(function(p) { mesaById[p.id] = p; });
 
+  if (editando) {
+    return (
+      <div style={{ marginTop: 14 }}>
+        <EditorPerfil perfil={perfil} eventoId={eventoId}
+          onGuardar={function(nuevo) { setEditando(false); if (props.onPerfilCambiado) props.onPerfilCambiado(nuevo); }}
+          onCancelar={function() { setEditando(false); }} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ background: T.highlightBg, borderRadius: 12, padding: 12 }}>
@@ -1408,6 +1577,9 @@ function ResultadoAsistente(props) {
         <div>{yo.ofrece_skills.length ? yo.ofrece_skills.map(function(s) { return <SkillChip key={s} id={s} />; }) : <span style={{ fontSize: 12, color: T.textSub }}>{yo.ofrece.join(", ")}</span>}</div>
         <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, margin: "10px 0 4px" }}>BUSCÁS</div>
         <div>{yo.busca_skills.length ? yo.busca_skills.map(function(s) { return <SkillChip key={s} id={s} />; }) : <span style={{ fontSize: 12, color: T.textSub }}>{yo.busca.join(", ")}</span>}</div>
+        {props.onPerfilCambiado && (
+          <button onClick={function() { setEditando(true); }} style={Object.assign({}, btnStyle(false), { marginTop: 10, fontSize: 12 })}>✏️ ¿No es así? Editar mi perfil</button>
+        )}
       </div>
 
       {datos === null && <div style={{ fontSize: 12, color: T.textSub }}>Buscando con quién conectarte…</div>}
@@ -1486,7 +1658,7 @@ function PortadaSinEvento(props) {
             <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Escribinos y te armamos el link para que tus asistentes lleguen sabiendo con quién hablar.</div>
             <a href={"https://wa.me/" + WHATSAPP_ORGANIZADORES + "?text=" + encodeURIComponent("Hola! Quiero crear un evento en Mentorcito para eventos. Nombre del evento: ... Fecha: ... Cantidad estimada de asistentes: ...")}
               target="_blank" rel="noopener noreferrer"
-              style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: "#25D366", color: "#25D366" })}>💬 Escribinos por WhatsApp</a>
+              style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: T.whatsapp, color: T.whatsapp })}>💬 Escribinos por WhatsApp</a>
           </div>
           <a href="https://mentorcito.vercel.app/" style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>
           <a href={URL_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.textMuted }}>Política de privacidad</a>
@@ -1558,7 +1730,7 @@ function PanelConClave(props) {
 // ─────────────────────────────────────────────
 // COMPONENTE RAÍZ: valida el código contra el registro de eventos y decide qué mostrar
 // ─────────────────────────────────────────────
-export default function EventMatchAgent(props) {
+function EventMatchAgentContenido(props) {
   var urlParams = new URLSearchParams(window.location.search);
   var eventoId = (props.eventoId || urlParams.get("evento") || "").trim().toLowerCase();
   var esOrganizador = urlParams.get("organizador") === "1";
@@ -1605,7 +1777,7 @@ function VistaAsistente(props) {
     role: "assistant",
     content: "Hola, soy Mentorcito 💠\n\n"
       + (nombreEvento ? "Te ayudo a aprovechar " + nombreEvento + " al máximo." : "Te ayudo a aprovechar el evento al máximo.")
-      + " Con " + (conMesas ? 6 : 5) + " preguntas rápidas voy a entender qué podés aportar y qué estás buscando, y te digo con quién te conviene conversar" + (conMesas ? " y en qué mesa sentarte" : "") + ".\n\n¿Cómo te llamás?",
+      + " Con " + (conMesas ? 7 : 6) + " preguntas rápidas voy a entender qué podés aportar y qué estás buscando, y te digo con quién te conviene conversar" + (conMesas ? " y en qué mesa sentarte" : "") + ".\n\n¿Cómo te llamás? Nombre y apellido, así tus matches te encuentran en el evento.",
   };
 
   var [messages, setMessages] = useState([INITIAL_MSG]);
@@ -1637,7 +1809,7 @@ function VistaAsistente(props) {
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>💠 MENTORCITO · {(nombreEvento || "EVENTO").toUpperCase()}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: T.textWhite, marginTop: 4 }}>Hola de nuevo, {primerNombre(perfilGuardado)} 👋</div>
-            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} encuesta={encuesta} pie={
+            <ResultadoAsistente perfil={perfilGuardado} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} encuesta={encuesta} onPerfilCambiado={setPerfilGuardado} pie={
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
                 <button onClick={function() {
                   borrarPerfilLocal(eventoId);
@@ -1767,7 +1939,7 @@ function VistaAsistente(props) {
   function formatMessage(text) {
     return text.split("\n").map(function(line, i) {
       if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
-      return <p key={i} style={{ margin: "3px 0", lineHeight: "1.6", color: "rgba(255,255,255,0.82)" }}>{line.replace(/^[\s]*[-*]\s+/, "• ").replace(/\*\*/g, "")}</p>;
+      return <p key={i} style={{ margin: "3px 0", lineHeight: "1.6", color: T.text }}>{line.replace(/^[\s]*[-*]\s+/, "• ").replace(/\*\*/g, "")}</p>;
     });
   }
 
@@ -1780,7 +1952,7 @@ function VistaAsistente(props) {
           <span style={{ fontSize: 20 }}>💠</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite, lineHeight: 1.2 }}>{nombreEvento || "Mentores con Propósito"}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>Match entre asistentes · Mentorcito</div>
+            <div style={{ fontSize: 10, color: T.textMuted }}>Match entre asistentes · Mentorcito</div>
           </div>
         </div>
 
@@ -1789,9 +1961,9 @@ function VistaAsistente(props) {
             var esBot = msg.role === "assistant";
             return (
               <div key={i} style={{ display: "flex", justifyContent: esBot ? "flex-start" : "flex-end" }}>
-                <div style={{ maxWidth: "85%", padding: "13px 16px", borderRadius: esBot ? "4px 18px 18px 18px" : "18px 18px 4px 18px", background: esBot ? "rgba(255,255,255,0.05)" : "rgba(67,97,238,0.14)", border: "1px solid " + (esBot ? "rgba(255,255,255,0.08)" : "rgba(67,97,238,0.35)"), fontSize: 14 }}>
+                <div style={{ maxWidth: "85%", padding: "13px 16px", borderRadius: esBot ? "4px 18px 18px 18px" : "18px 18px 4px 18px", background: esBot ? T.burbujaBot : T.burbujaYo, boxShadow: esBot ? T.sombra : "none", border: "1px solid " + (esBot ? T.bordeBot : T.bordeYo), fontSize: 14 }}>
                   {formatMessage(msg.content)}
-                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} />}
+                  {esBot && perfil && i === messages.length - 1 && !loading && <ResultadoAsistente perfil={perfil} eventoId={eventoId} nombreEvento={nombreEvento} conMesas={conMesas} sponsor={props.sponsor} onPerfilCambiado={setPerfil} />}
                 </div>
               </div>
             );
@@ -1807,12 +1979,12 @@ function VistaAsistente(props) {
         </div>
 
         <div style={{ padding: "8px 12px 16px", borderTop: "1px solid " + T.border, background: T.header, flexShrink: 0 }}>
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: T.card, border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "10px 14px" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: T.card, border: "1.5px solid " + T.borderStrong, borderRadius: 14, padding: "10px 14px" }}>
             <textarea value={input} onChange={function(e) { setInput(e.target.value); }} onKeyDown={handleKey}
               placeholder="Escribí tu respuesta…" rows={2}
               style={{ flex: 1, background: "transparent", border: "none", color: T.text, fontSize: 14, lineHeight: "1.5", caretColor: T.primary }} />
             <button onClick={sendMessage} disabled={loading || !input.trim()}
-              style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() && !loading) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : "rgba(255,255,255,0.07)", border: "none", cursor: (input.trim() && !loading) ? "pointer" : "not-allowed", color: (input.trim() && !loading) ? "white" : "rgba(255,255,255,0.25)", fontSize: 15 }}>
+              style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() && !loading) ? "linear-gradient(135deg, #4361ee, #7b2ff7)" : T.highlightBg, border: "none", cursor: (input.trim() && !loading) ? "pointer" : "not-allowed", color: (input.trim() && !loading) ? "white" : T.textDisabled, fontSize: 15 }}>
               ➤
             </button>
           </div>
@@ -1827,4 +1999,181 @@ function VistaAsistente(props) {
 }
 
 // Exportadas para tests o para usarlas desde otro componente
-export { calcularMetricas, claveIdentidad, limpiarWhatsapp, calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
+export { calcularMetricas, claveIdentidad, clavePersona, limpiarWhatsapp, calcularEvento, scorePar, normalizarPerfil, parsearPerfiles, porQueHablar, rompehielos, buildSystemPrompt };
+
+// ─────────────────────────────────────────────
+// RAÍZ: modo claro / oscuro (se recuerda en el navegador) + la app
+// ─────────────────────────────────────────────
+export default function EventMatchAgent(props) {
+  var [tema, setTema] = useState(T.tema);
+  if (T.tema !== tema) aplicarTema(tema);
+  function cambiar() {
+    var t = tema === "claro" ? "oscuro" : "claro";
+    try { localStorage.setItem(TEMA_KEY, t); } catch (e) {}
+    aplicarTema(t);
+    setTema(t);
+  }
+  return (
+    <>
+      <EventMatchAgentContenido {...props} />
+      <BotonTema tema={tema} onCambiar={cambiar} />
+    </>
+  );
+}
+
+function BotonTema(props) {
+  var oscuro = props.tema === "oscuro";
+  return (
+    <button onClick={props.onCambiar} aria-label={oscuro ? "Pasar a modo claro" : "Pasar a modo oscuro"} title={oscuro ? "Modo claro" : "Modo oscuro"}
+      style={{ position: "fixed", top: 11, right: 12, zIndex: 50, width: 34, height: 34, borderRadius: "50%", border: "1px solid " + T.borderStrong, background: T.card, boxShadow: T.sombra, cursor: "pointer", fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+      {oscuro ? "☀️" : "🌙"}
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────
+// EDITAR MI PERFIL: corregir lo que se entendió en el chat, sin repetirlo.
+// Se guarda como una fila nueva en la hoja (vale la última) y se actualiza el link personal.
+// ─────────────────────────────────────────────
+var AREA_LABEL = { tech: "Tecnología", producto: "Producto", negocio: "Negocio", emprendimiento: "Emprendimiento", empresa: "Empresa y rubros" };
+
+function estiloCampo() {
+  return { width: "100%", background: T.card, border: "1px solid " + T.borderStrong, borderRadius: 10, color: T.text, padding: "9px 11px", fontSize: 14, outline: "none", fontFamily: "inherit" };
+}
+
+function CampoEditor(props) {
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5 }}>{props.titulo}</span>
+      {props.children}
+      {props.ayuda && <span style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>{props.ayuda}</span>}
+    </label>
+  );
+}
+
+function SelectorSkills(props) {
+  var [abierto, setAbierto] = useState(false);
+  var sel = props.valor;
+  function toggle(id) {
+    props.onCambio(sel.indexOf(id) !== -1 ? sel.filter(function(x) { return x !== id; }) : sel.concat([id]));
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div>
+        {sel.length ? sel.map(function(id) { return <SkillChip key={id} id={id} />; }) : <span style={{ fontSize: 12, color: T.textMuted }}>Sin etiquetas</span>}
+      </div>
+      <button type="button" onClick={function() { setAbierto(!abierto); }} style={Object.assign({}, estiloLinkSutil, { alignSelf: "flex-start", color: T.primary, textDecoration: "none", fontWeight: 700 })}>{abierto ? "Listo" : "＋ Cambiar etiquetas"}</button>
+      {abierto && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, background: T.highlightBg, borderRadius: 10, padding: 10 }}>
+          {Object.keys(SKILLS_CATALOG).map(function(area) {
+            var c = AREA_COLOR[area];
+            return (
+              <div key={area}>
+                <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" }}>{AREA_LABEL[area] || area}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {SKILLS_CATALOG[area].map(function(sk) {
+                    var on = sel.indexOf(sk.id) !== -1;
+                    return (
+                      <button type="button" key={sk.id} onClick={function() { toggle(sk.id); }} aria-pressed={on}
+                        style={{ fontSize: 12, fontWeight: 600, borderRadius: 20, padding: "4px 10px", cursor: "pointer", border: "1px solid " + c + (on ? "" : "55"), background: on ? c : "transparent", color: on ? "white" : c }}>
+                        {on ? "✓ " : ""}{sk.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EditorPerfil(props) {
+  var original = props.perfil;
+  var norm = normalizarPerfil(original, 0);
+  var [f, setF] = useState({
+    nombre: original.nombre || "", rol: original.rol || "", empresa: original.empresa || "",
+    ofrece: (original.ofrece || []).join("\n"), busca: (original.busca || []).join("\n"),
+    ofrece_skills: norm.ofrece_skills, busca_skills: norm.busca_skills,
+    objetivos: norm.objetivos.slice(0, 2), detalle_objetivo: original.detalle_objetivo || "",
+    whatsapp: original.whatsapp || "", linkedin: original.linkedin || "",
+  });
+  var [error, setError] = useState("");
+  function set(k, v) { var n = Object.assign({}, f); n[k] = v; setF(n); }
+  function lineas(t) { return t.split(/\n+/).map(function(x) { return x.trim(); }).filter(Boolean); }
+  function toggleObjetivo(o) {
+    if (f.objetivos.indexOf(o) !== -1) set("objetivos", f.objetivos.filter(function(x) { return x !== o; }));
+    else if (f.objetivos.length < 2) set("objetivos", f.objetivos.concat([o]));
+  }
+  function guardar() {
+    if (!f.nombre.trim()) { setError("Falta tu nombre."); return; }
+    if (f.linkedin.trim() && !urlLinkedin(f.linkedin)) { setError("En LinkedIn pegá el link de tu perfil (linkedin.com/in/…), no tu nombre."); return; }
+    var nuevo = Object.assign({}, original, {
+      nombre: f.nombre.trim(), rol: f.rol.trim(), empresa: f.empresa.trim(),
+      ofrece: lineas(f.ofrece), busca: lineas(f.busca),
+      ofrece_skills: f.ofrece_skills, busca_skills: f.busca_skills, skills_editadas: true,
+      objetivos: f.objetivos, detalle_objetivo: f.detalle_objetivo.trim(),
+      whatsapp: limpiarWhatsapp(f.whatsapp), linkedin: f.linkedin.trim(),
+      reemplaza: clavePersona(original), editado: Date.now(),
+    });
+    if (nuevo.consentimiento !== false && props.eventoId) {
+      postToSheets({ action: "event_profile", evento: props.eventoId, ts: Date.now(), perfil: nuevo });
+    }
+    guardarPerfilLocal(props.eventoId, nuevo);
+    // Si entró con su link personal, la URL pasa a llevar el perfil nuevo
+    var params = new URLSearchParams(window.location.search);
+    if (params.get("yo")) {
+      params.set("yo", codificarPerfil(nuevo));
+      window.history.replaceState(null, "", window.location.pathname + "?" + params.toString());
+    }
+    props.onGuardar(nuevo);
+  }
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border, boxShadow: T.sombra, borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: T.textWhite }}>✏️ Editar mi perfil</div>
+      <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>Corregí lo que no quedó como querías. Al guardar se recalculan tus matches.</div>
+      <CampoEditor titulo="NOMBRE Y APELLIDO"><input value={f.nombre} onChange={function(e) { set("nombre", e.target.value); }} style={estiloCampo()} /></CampoEditor>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+        <CampoEditor titulo="ROL"><input value={f.rol} onChange={function(e) { set("rol", e.target.value); }} style={estiloCampo()} /></CampoEditor>
+        <CampoEditor titulo="EMPRESA O PROYECTO"><input value={f.empresa} onChange={function(e) { set("empresa", e.target.value); }} style={estiloCampo()} /></CampoEditor>
+      </div>
+      <CampoEditor titulo="QUÉ OFRECÉS" ayuda="Una idea por línea.">
+        <textarea rows={3} value={f.ofrece} onChange={function(e) { set("ofrece", e.target.value); }} style={estiloCampo()} />
+      </CampoEditor>
+      <SelectorSkills valor={f.ofrece_skills} onCambio={function(v) { set("ofrece_skills", v); }} />
+      <CampoEditor titulo="QUÉ BUSCÁS" ayuda="Una idea por línea.">
+        <textarea rows={3} value={f.busca} onChange={function(e) { set("busca", e.target.value); }} style={estiloCampo()} />
+      </CampoEditor>
+      <SelectorSkills valor={f.busca_skills} onCambio={function(v) { set("busca_skills", v); }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: 0.5 }}>A QUÉ VENÍS (HASTA 2)</span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {Object.keys(OBJETIVOS).map(function(o, i) {
+            var on = f.objetivos.indexOf(o) !== -1;
+            var lleno = !on && f.objetivos.length >= 2;
+            return (
+              <button type="button" key={o} onClick={function() { toggleObjetivo(o); }} aria-pressed={on} disabled={lleno}
+                style={{ fontSize: 12, fontWeight: 600, borderRadius: 20, padding: "5px 11px", cursor: lleno ? "not-allowed" : "pointer", opacity: lleno ? 0.45 : 1, border: "1px solid " + (on ? T.primary : T.borderStrong), background: on ? T.primary : "transparent", color: on ? "white" : T.text }}>
+                {i + 1}. {OBJETIVOS[o].label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <CampoEditor titulo="CONTANOS MÁS" ayuda="Por ejemplo, tu cliente ideal: rubro, tamaño y zona.">
+        <input value={f.detalle_objetivo} onChange={function(e) { set("detalle_objetivo", e.target.value); }} style={estiloCampo()} />
+      </CampoEditor>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+        <CampoEditor titulo="WHATSAPP (CON CÓDIGO DE PAÍS)"><input inputMode="tel" value={f.whatsapp} onChange={function(e) { set("whatsapp", e.target.value); }} placeholder="5491123456789" style={estiloCampo()} /></CampoEditor>
+        <CampoEditor titulo="LINK DE LINKEDIN"><input value={f.linkedin} onChange={function(e) { set("linkedin", e.target.value); }} placeholder="linkedin.com/in/tu-usuario" style={estiloCampo()} /></CampoEditor>
+      </div>
+      {error && <div style={{ fontSize: 12, color: T.pink }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" onClick={guardar} style={btnStyle(true)}>Guardar cambios</button>
+        <button type="button" onClick={props.onCancelar} style={btnStyle(false)}>Cancelar</button>
+      </div>
+    </div>
+  );
+}
