@@ -139,6 +139,7 @@ export default function Privacidad() {
               </thead>
               <tbody>
                 <tr><td style={TD}>Tus matches 1 a 1</td><td style={TD}>Tu nombre, rol, empresa, lo que ofrecés y buscás, y el contacto que dejaste</td></tr>
+                <tr><td style={TD}>Personas con mucha afinidad que no quedaron entre tus matches ("Ver más")</td><td style={TD}>Tu nombre, rol, empresa y lo que ofrecés y buscás, sin tu contacto. Tu contacto lo ven solo si tocás "Quiero conectar" con esa persona.</td></tr>
                 <tr><td style={TD}>Las personas de tu mesa</td><td style={TD}>Tu nombre</td></tr>
                 <tr><td style={TD}>El organizador del evento</td><td style={TD}>Tu perfil completo con contacto, los matches, tus calificaciones de las charlas y tu respuesta a la encuesta. Puede descargarlos en una planilla.</td></tr>
                 <tr><td style={TD}>Sponsors del evento</td><td style={TD}>Ningún dato personal. Solo pueden recibir métricas agregadas, como cuántas personas usaron Mentorcito.</td></tr>
