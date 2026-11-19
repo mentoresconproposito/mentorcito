@@ -11,7 +11,9 @@ import { useState, useEffect, useRef } from "react";
 // ─────────────────────────────────────────────
 
 var MODEL = "claude-haiku-4-5-20251001";
-var SHEETS_URL = "https://script.google.com/macros/s/AKfycby_UmXK49W239AN1ZbmDIpdMpcbGqqlHIuT7DwmWoWQ7AXt8b-_g6PGIeLeIlKWgNng9Q/exec";
+// Todo pasa por el proxy /api/sheets (Vercel), que agrega el secreto que pide el Apps Script.
+// La URL del Apps Script ya no va en el navegador.
+var SHEETS_URL = "/api/sheets";
 
 var MAX_MATCHES = 5;      // matches 1 a 1 por persona (por defecto; cada evento puede cambiarlo con la columna max_matches)
 var EXTRA_RECIBIDOS = 2;  // a quien ya tiene todos sus matches se le pueden sumar hasta 2 más, solo para que nadie quede sin match
@@ -41,7 +43,7 @@ var SKILLS_CATALOG = {
   negocio: [
     { id: "gtm",                 label: "GTM y primeros clientes", keywords: ["gtm","go-to-market","ventas","b2b","primeros clientes","adquisición","canales","propuesta de valor","icp","sales","leads","prospección","proceso comercial","cartera de clientes","nuevos clientes","conseguir clientes","vender","ventas b2b"] },
     { id: "criterio_estrategico",label: "Criterio estratégico",    keywords: ["criterio","decisiones","ambigüedad","business sense","estrategia de negocio","modelo de negocio","escalabilidad","crecimiento"] },
-    { id: "influencia_liderazgo",label: "Influencia y liderazgo",  keywords: ["influencia","autoridad","manage up","liderazgo","stakeholders","alineamiento","sin autoridad formal","política","equipo"] },
+    { id: "influencia_liderazgo",label: "Influencia y liderazgo",  keywords: ["influencia","autoridad","manage up","liderazgo","stakeholders","alineamiento","sin autoridad formal","política"] },
     { id: "modelo_negocio",      label: "Modelo de negocio",       keywords: ["pricing","revenue","monetización","unit economics","margen","facturación","modelo de ingreso","runway","burn"] },
     { id: "marca_personal",      label: "Marca personal y carrera",keywords: ["marca personal","linkedin","portfolio","posicionamiento","entrevistas","job search","narrativa de carrera","visibilidad","transición"] },
   ],
@@ -164,20 +166,31 @@ function normalizarPerfil(p, idx) {
     palabras_ofrece: palabrasClave(ofrece),
     palabras_busca: palabrasClave(busca),
     // "Doble clic" de la pregunta de objetivos (ej. su cliente ideal) y con qué palabras se describe cada uno
-    palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return STOPWORDS_DETALLE.indexOf(w) === -1; }),
+    palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return RAICES_GENERICAS.indexOf(raiz(w)) === -1; }),
     palabras_perfil: palabrasClave([p.rol || "", p.empresa || "", p.resumen || ""].concat(ofrece)),
     clave_persona: clavePersona(p),
   });
 }
 
-var STOPWORDS = ["sobre","desde","hasta","entre","cómo","como","quiero","busco","necesito","tengo","puedo","ayudar","mejorar","aprender","personas","equipo","equipos","trabajo","temas","cosas","otros","otras","mucho","poder","hacer"];
+var STOPWORDS = ["sobre","desde","hasta","entre","cómo","como","quiero","busco","necesito","tengo","puedo","ayudar","mejorar","aprender","personas","equipo","equipos","trabajo","temas","cosas","otros","otras","mucho","poder","hacer",
+    // verbos y palabras que aparecen en casi todos los perfiles: si sumaran, "Conseguir personas" encajaría con "Conseguir clientes"
+    "conseguir","clientes","cliente","nuevos","nuevas","armar","armado","validar","escalar","crecer","buscar","encontrar","conectar"];
 
 // Palabras que aparecen en casi cualquier descripción de cliente ideal y no ayudan a distinguir
-var STOPWORDS_DETALLE = ["empresa","empresas","clientes","cliente","buscar","persona","proyecto","proyectos","negocio","negocios","tamaño","grandes","chicas","medianas","zona","argentina","perfil","alguien","tipo"];
+var STOPWORDS_DETALLE = ["empresa","empresas","clientes","cliente","buscar","persona","proyecto","proyectos","negocio","negocios","tamaño","grandes","chicas","medianas","zona","argentina","perfil","alguien","tipo",
+  // en un evento de emprendedores casi todos se describen así: no distingue
+  "emprendedor","emprendedores","emprendedora","emprendimiento","emprendimientos","emprender","experiencia","responsable","responsables","propio","propia","gente","ideas","especialistas","productos","servicios","soluciones","personalizados"];
+
+// Siglas y palabras cortas que sí distinguen a una persona (las demás de 4 letras o menos se descartan)
+var PALABRAS_CORTAS = ["rrhh","pyme","pymes","b2b","b2c","saas","ia","ong","erp","crm","ux","ui"];
+
+// Raíz de una palabra, para que "reclutadores" encaje con "reclutamiento" y "pymes" con "pyme"
+function raiz(w) { return w.length > 7 ? w.slice(0, 7) : w.replace(/s$/, ""); }
+var RAICES_GENERICAS = STOPWORDS_DETALLE.map(raiz);
 
 function palabrasClave(textos) {
   var t = (textos || []).join(" ").toLowerCase().replace(/[^a-záéíóúñü0-9\s]/g, " ");
-  return unique(t.split(/\s+/).filter(function(w) { return w.length > 4 && STOPWORDS.indexOf(w) === -1; }));
+  return unique(t.split(/\s+/).filter(function(w) { return (w.length > 4 || PALABRAS_CORTAS.indexOf(w) !== -1) && STOPWORDS.indexOf(w) === -1; }));
 }
 
 // Qué ofrece A que B busca (una dirección)
@@ -232,8 +245,10 @@ function scorePar(a, b) {
     var det = quien.palabras_detalle || [];
     if (!det.length) return;
     var perf = otro.palabras_perfil || [];
-    var n = det.filter(function(w) { return perf.indexOf(w) !== -1; }).length;
-    if (n) { score += Math.min(10, n * 5); razones.push({ tipo: "detalle", quien: quien.id, otro: otro.id }); }
+    var raicesPerfil = perf.map(raiz);
+      var n = det.filter(function(w) { return raicesPerfil.indexOf(raiz(w)) !== -1; }).length;
+    // Es la señal más valiosa para quien vende: "vos sos el cliente que describí" (12 pts el primero, +4 cada coincidencia más, hasta 20)
+      if (n) { score += Math.min(20, 12 + (n - 1) * 4); razones.push({ tipo: "detalle", quien: quien.id, otro: otro.id }); }
   });
 
   // 4. Nivel: un escalón de diferencia es ideal para que uno aprenda del otro (10 pts)
@@ -298,6 +313,74 @@ function matchesPorPersona(perfiles, matriz, maxMatches) {
   });
   perfiles.forEach(function(p) { out[p.id].sort(function(x, y) { return y.pct - x.pct; }); });
   return out;
+}
+
+// "Ver más": las personas con más afinidad que NO quedaron entre tus matches (casi siempre porque
+// alguno de los dos ya tenía el cupo lleno). Se muestran sin contacto; la persona elige si quiere conectar.
+var MAX_CANDIDATOS = 8;
+function candidatosPorPersona(perfiles, matriz, porPersona) {
+  var out = {};
+  perfiles.forEach(function(a) {
+    var ya = {};
+    (porPersona[a.id] || []).forEach(function(m) { ya[m.id] = true; });
+    var lista = [];
+    if (a.formato !== "grupo") perfiles.forEach(function(b) {
+      if (b.id === a.id || ya[b.id] || b.formato === "grupo") return;
+      var pct = matriz[a.id][b.id].pct;
+      if (pct >= MIN_MATCH_PCT) lista.push({ id: b.id, pct: pct });
+    });
+    lista.sort(function(x, y) { return y.pct - x.pct; });
+    out[a.id] = lista.slice(0, MAX_CANDIDATOS);
+  });
+  return out;
+}
+
+// Lo que eligieron los asistentes, aplicado sobre el armado (todo en posiciones de la lista de perfiles).
+//  m: matches de cada posición [[pos, pct], ...]; c: candidatos de "Ver más" [[pos, pct], ...]
+//  descartes: [[de, con], ...] en el orden en que pasaron; pedidos: [[de, con], ...] ("Quiero conectar")
+// Reglas:
+//  - Si cualquiera de los dos descarta al otro, el par desaparece para los dos y no vuelve a aparecer.
+//  - Cada uno de los dos suma a su siguiente candidato con mejor %, si el otro todavía tiene lugar
+//    (hasta maxMatches + EXTRA_RECIBIDOS), y los dos se ven: el match sigue siendo mutuo.
+//  - "Quiero conectar" solo vale hacia alguien de tus candidatos. Si los dos lo piden, es un match nuevo
+//    (más allá del cupo, porque los dos lo eligieron). Si lo pide uno solo, el otro lo ve como pedido,
+//    con el contacto de quien lo pidió.
+// Devuelve { m: [[pos, pct, marca]], pedidos: [[pos, pct]] por posición }  (marca: "" | "reemplazo" | "elegido")
+function aplicarElecciones(m, c, descartes, pedidos, maxMatches) {
+  var max = maxMatches || MAX_MATCHES, tope = max + EXTRA_RECIBIDOS;
+  var adj = m.map(function(lista) { var o = {}; lista.forEach(function(x) { o[x[0]] = [x[1], ""]; }); return o; });
+  var bloq = {};
+  var parK = function(a, b) { return a < b ? a + "|" + b : b + "|" + a; };
+  var grado = function(a) { return Object.keys(adj[a]).length; };
+  var pctCand = function(a, b) { var x = (c[a] || []).filter(function(y) { return y[0] === b; })[0]; return x ? x[1] : null; };
+  function rellenar(a) {
+    if (grado(a) >= max) return;
+    var cand = (c[a] || []).filter(function(y) { return !adj[a][y[0]] && !bloq[parK(a, y[0])] && grado(y[0]) < tope; })[0];
+    if (cand) { adj[a][cand[0]] = [cand[1], "reemplazo"]; adj[cand[0]][a] = [cand[1], "reemplazo"]; }
+  }
+  descartes.forEach(function(d) {
+    var a = d[0], b = d[1];
+    if (a == null || b == null || a === b || !adj[a] || !adj[b] || bloq[parK(a, b)]) return;
+    bloq[parK(a, b)] = true;
+    if (adj[a][b]) { delete adj[a][b]; delete adj[b][a]; rellenar(a); rellenar(b); }
+  });
+  var pide = {};
+  pedidos.forEach(function(p) { if (p[0] !== p[1] && adj[p[0]] && adj[p[1]] && pctCand(p[0], p[1]) != null) pide[p[0] + ">" + p[1]] = true; });
+  var recibidos = m.map(function() { return []; });
+  Object.keys(pide).forEach(function(k) {
+    var x = k.split(">"), a = Number(x[0]), b = Number(x[1]);
+    if (bloq[parK(a, b)] || adj[a][b]) return;
+    var pct = pctCand(a, b);
+    if (pide[b + ">" + a]) { adj[a][b] = [pct, "elegido"]; adj[b][a] = [pct, "elegido"]; }
+    else recibidos[b].push([a, pct]);
+  });
+  return {
+    m: adj.map(function(o) {
+      return Object.keys(o).map(function(k) { return [Number(k), o[k][0], o[k][1]]; }).sort(function(x, y) { return y[1] - x[1]; });
+    }),
+    pedidos: recibidos.map(function(l) { return l.sort(function(x, y) { return y[1] - x[1]; }); }),
+    bloqueados: bloq,
+  };
 }
 
 // Ronda de pares: cada persona con una sola otra (greedy por mayor score)
@@ -375,8 +458,9 @@ function calcularEvento(perfilesCrudos, opciones) {
   var porPersona = matchesPorPersona(perfiles, matriz, op.maxMatches);
   var pares = op.sinRonda ? [] : rondaDePares(perfiles, matriz);
   var mesas = op.sinMesas ? { mesas: [], sinMesa: [] } : armarMesas(perfiles, matriz);
+  var candidatos = candidatosPorPersona(perfiles, matriz, porPersona);
   var sinMatch = perfiles.filter(function(p) { return p.formato !== "grupo" && !porPersona[p.id].length; }).map(function(p) { return p.id; });
-  return { perfiles: perfiles, matriz: matriz, porPersona: porPersona, pares: pares, mesas: mesas.mesas, sinMesa: mesas.sinMesa, sinMatch: sinMatch };
+  return { perfiles: perfiles, matriz: matriz, porPersona: porPersona, candidatos: candidatos, pares: pares, mesas: mesas.mesas, sinMesa: mesas.sinMesa, sinMatch: sinMatch };
 }
 
 // ─────────────────────────────────────────────
@@ -616,13 +700,21 @@ function pctColor(pct) {
 
 // ─────────────────────────────────────────────
 // PERSISTENCIA
-// Escribe en el mismo Apps Script que MentorAgent (action: "event_profile")
-// y lee con /api/sheets?action=event_profiles&evento=ID
+// Escribe y lee a través de /api/sheets (el proxy de Vercel agrega el secreto)
 // ─────────────────────────────────────────────
 async function postToSheets(payload) {
   try {
-    await fetch(SHEETS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
-  } catch (e) {}
+    var r = await fetch(SHEETS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    return await r.json();
+  } catch (e) { return { error: e.message }; }
+}
+
+// Token personal al azar: identifica a la persona ante el Apps Script sin exponer sus datos.
+// Va en su perfil (y en su link personal), nunca se le muestra a nadie más.
+function nuevoToken() {
+  var bytes = new Uint8Array(24);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  return btoa(String.fromCharCode.apply(null, bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 // Consulta el registro de eventos del Sheet. Con clave, además dice si es la del organizador.
@@ -649,10 +741,17 @@ async function fetchPerfilesEvento(eventoId, clave) {
 
 // Matches de una persona: el Apps Script calcula con todo el evento y devuelve solo
 // sus matches (con contacto) y su mesa (solo nombres). Ver MatchEventos.gs.
-async function fetchMisMatches(eventoId, perfil) {
-  var r = await fetch("/api/sheets?action=event_matches&evento=" + encodeURIComponent(eventoId) + "&perfil=" + encodeURIComponent(codificarPerfil(perfil)));
+// Se pide con el token personal (los links de antes del 16-nov, sin token, mandan el perfil entero).
+async function fetchMisMatches(eventoId, perfil, intento) {
+  var id = perfil.token ? "&token=" + encodeURIComponent(perfil.token) : "&perfil=" + encodeURIComponent(codificarPerfil(perfil));
+  var r = await fetch("/api/sheets?action=event_matches&evento=" + encodeURIComponent(eventoId) + id);
   if (!r.ok) throw new Error("HTTP " + r.status);
   var d = await r.json();
+  // Recién guardado y la hoja todavía no lo muestra: reintenta un par de veces
+  if (d.pendiente && (intento || 0) < 3) {
+    await new Promise(function(ok) { setTimeout(ok, 1500); });
+    return fetchMisMatches(eventoId, perfil, (intento || 0) + 1);
+  }
   if (d.error) throw new Error(d.error);
   return d;
 }
@@ -666,13 +765,28 @@ function postFeedback(eventoId, yo, otro, tipo, valor, comentario) {
     action: "event_feedback",
     evento: eventoId,
     ts: Date.now(),
-    de: yo ? claveIdentidad(yo) : "",
+    token: (yo && yo.token) || "", // quién da el feedback lo deduce el Apps Script a partir del token
     de_nombre: (yo && yo.nombre) || "",
     con: otro ? claveIdentidad(otro) : "",
     con_nombre: (otro && otro.nombre) || "",
     tipo: tipo,
     valor: valor,
     comentario: comentario || "",
+  });
+}
+
+// "No me interesa" y "Quiero conectar": se manda la referencia de la otra persona
+// (en "Ver más" el navegador no tiene su contacto); el Apps Script averigua quién es
+function postEleccion(eventoId, yo, otro, tipo) {
+  return postToSheets({
+    action: "event_feedback",
+    evento: eventoId,
+    ts: Date.now(),
+    token: (yo && yo.token) || "",
+    con_ref: otro.ref,
+    con_nombre: otro.nombre || "",
+    tipo: tipo,
+    valor: 1,
   });
 }
 
@@ -746,6 +860,14 @@ function calcularMetricas(perfiles, res, registros) {
     }),
     nRecomendados: nRecomendados,
     nConcretados: nConcretados,
+    // "No me interesa" y "Quiero conectar" (un pedido es "aceptado" si el otro también lo pidió)
+    nDescartes: registros.filter(function(r) { return r.tipo === "descarte" && Number(r.valor) === 1; }).length,
+    nPedidos: registros.filter(function(r) { return r.tipo === "conectar" && Number(r.valor) === 1; }).length,
+    nElegidos: (function() {
+      var p = {};
+      registros.forEach(function(r) { if (r.tipo === "conectar" && Number(r.valor) === 1) p[r.de + "→" + r.con] = true; });
+      return Object.keys(p).filter(function(k) { var x = k.split("→"); return x[0] < x[1] && p[x[1] + "→" + x[0]]; }).length;
+    })(),
     nPersonasConMatch: Object.keys(personasConMatch).length,
     promMatchesPorPersona: Object.keys(personasConMatch).length ? 2 * nRecomendados / Object.keys(personasConMatch).length : 0,
     todosLosMatches: todosLosMatches.map(function(x) {
@@ -852,10 +974,82 @@ function MatchCard(props) {
         </div>
         <PctBadge pct={m.pct} />
       </div>
+      {m.marca && <MarcaMatch marca={m.marca} />}
       <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{porQueHablar(a, b, m.razones)}</div>
       <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5, background: T.highlightBg, borderRadius: 10, padding: "8px 10px" }}>💬 {rompehielos(a, b, m.razones)}</div>
       <BotonesContacto yo={a} otro={b} razones={m.razones} nombreEvento={props.nombreEvento} />
       {props.feedback && <FeedbackMatch {...props.feedback} nombre={primerNombre(b)} />}
+      {props.onDescartar && !(props.feedback && props.feedback.hablamos) && <DescartarMatch nombre={primerNombre(b)} onDescartar={props.onDescartar} />}
+    </div>
+  );
+}
+
+// Por qué un match apareció después del armado inicial
+function MarcaMatch(props) {
+  var txt = props.marca === "elegido" ? "🤝 Los dos eligieron conectar" : "✨ Nuevo: entró en lugar de un match descartado";
+  return <div style={{ alignSelf: "flex-start", fontSize: 11, fontWeight: 700, color: T.green, background: T.green + "14", border: "1px solid " + T.green + "44", borderRadius: 20, padding: "2px 10px" }}>{txt}</div>;
+}
+
+// "No me interesa": pide confirmar, porque el match desaparece para los dos
+function DescartarMatch(props) {
+  var [confirmar, setConfirmar] = useState(false);
+  if (!confirmar) {
+    return (
+      <div style={{ textAlign: "right" }}>
+        <button onClick={function() { setConfirmar(true); }} style={Object.assign({}, estiloLinkSutil, { fontSize: 11 })}>No me interesa</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ borderTop: "1px solid " + T.border, paddingTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <span style={{ fontSize: 12, color: T.textSub, flex: 1, minWidth: 180 }}>{props.nombre} deja de estar en tus matches (y vos en los suyos), y entra la siguiente persona con más afinidad.</span>
+      <button onClick={props.onDescartar} style={Object.assign({}, btnStyle(false), { borderColor: T.pink, color: T.pink })}>Sí, descartar</button>
+      <button onClick={function() { setConfirmar(false); }} style={Object.assign({}, estiloLinkSutil, { fontSize: 11 })}>cancelar</button>
+    </div>
+  );
+}
+
+// Alguien de tu "Ver más" quiere conectar: ves su contacto (lo compartió al pedirlo)
+function PedidoCard(props) {
+  var a = props.yo, b = props.pedido.otro, m = props.pedido;
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.violet + "66", borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Avatar nombre={b.nombre} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.textWhite }}>{b.nombre}</div>
+          <div style={{ fontSize: 11, color: T.textSub }}>{[b.rol, b.empresa].filter(Boolean).join(" · ")}</div>
+        </div>
+        <PctBadge pct={m.pct} />
+      </div>
+      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{porQueHablar(a, b, m.razones)}</div>
+      <BotonesContacto yo={a} otro={b} razones={m.razones} nombreEvento={props.nombreEvento} />
+      <div style={{ borderTop: "1px solid " + T.border, paddingTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12, color: T.textSub, flex: 1, minWidth: 160 }}>Si también querés, compartimos tu contacto y queda en tus matches.</span>
+        <button onClick={props.onAceptar} style={btnStyle(true)}>🤝 Quiero conectar</button>
+        <button onClick={props.onDescartar} style={Object.assign({}, estiloLinkSutil, { fontSize: 11 })}>No me interesa</button>
+      </div>
+    </div>
+  );
+}
+
+// "Ver más": afinidad alta pero no entraron en tus matches. Sin contacto hasta que los dos quieran.
+function VerMasCard(props) {
+  var a = props.yo, b = props.item.otro, m = props.item;
+  return (
+    <div style={{ background: T.card, border: "1px dashed " + T.border, borderRadius: 14, padding: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Avatar nombre={b.nombre} size={30} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.textWhite }}>{b.nombre}</div>
+          <div style={{ fontSize: 11, color: T.textSub }}>{[b.rol, b.empresa].filter(Boolean).join(" · ")}</div>
+        </div>
+        <PctBadge pct={m.pct} />
+      </div>
+      <div style={{ fontSize: 12, color: T.text, lineHeight: 1.5 }}>{porQueHablar(a, b, m.razones)}</div>
+      {m.pedido
+        ? <div style={{ fontSize: 12, color: T.green, lineHeight: 1.5 }}>✓ Le avisamos a {primerNombre(b)} y le pasamos tu contacto. Si también quiere conectar, aparece en tus matches con su contacto.</div>
+        : <button onClick={props.onConectar} style={Object.assign({}, btnStyle(false), { alignSelf: "flex-start", borderColor: T.violet, color: T.violet })}>🤝 Quiero conectar</button>}
     </div>
   );
 }
@@ -1249,6 +1443,8 @@ function ResultadosEvento(props) {
         <Metrica valor={estrellas(m.ratingProm)} titulo="Satisfacción con las charlas" detalle={m.nRatings + " calificaciones de 1 a 5"} color={T.yellow} />
         <Metrica valor={m.nps == null ? "—" : m.nps} titulo="NPS del evento" color={npsColor}
           detalle={m.nNps ? m.nNps + " respuestas · " + m.promotores + " promotores, " + m.pasivos + " pasivos, " + m.detractores + " detractores" : "Todavía no hay respuestas a la encuesta"} />
+        <Metrica valor={m.nPedidos} titulo="Pedidos de conexión" color={T.violet}
+          detalle={m.nElegidos + (m.nElegidos === 1 ? " par eligió" : " pares eligieron") + " conectar desde \"Ver más\" · " + m.nDescartes + (m.nDescartes === 1 ? " match descartado" : " matches descartados") + ". La lista de matches muestra el armado original."} />
       </div>
 
       {props.sponsor && (
@@ -1527,6 +1723,9 @@ function ResultadoAsistente(props) {
   var [recarga, setRecarga] = useState(0);
   var [fb, setFb] = useState({}); // feedback local por match: { [id]: { hablamos, rating } }
   var [editando, setEditando] = useState(false);
+  var [verMas, setVerMas] = useState(false);
+  var [ocultos, setOcultos] = useState({}); // descartados en esta sesión, hasta que llegue el armado nuevo
+  var [pedidosHechos, setPedidosHechos] = useState({});
   var perfilKey = codificarPerfil(perfil);
 
   useEffect(function() {
@@ -1552,10 +1751,32 @@ function ResultadoAsistente(props) {
     };
   }
   var algunaCharla = Object.keys(fb).some(function(k) { return fb[k].hablamos; });
+
+  // Después de elegir, se vuelve a pedir el armado: entra el reemplazo o el match nuevo
+  function elegir(otro, tipo) {
+    if (tipo === "descarte") { var o = Object.assign({}, ocultos); o[otro.ref] = true; setOcultos(o); }
+    else { var p = Object.assign({}, pedidosHechos); p[otro.ref] = true; setPedidosHechos(p); }
+    // Se vuelve a pedir sin vaciar la pantalla, para que no "salte" mientras llega el armado nuevo
+    postEleccion(eventoId, perfil, otro, tipo)
+      .then(function() { return fetchMisMatches(eventoId, perfil); })
+      .then(function(d) {
+        setDatos(d);
+        var ini = Object.assign({}, fb);
+        (d.matches || []).forEach(function(m) { if (!ini[m.otro.id]) ini[m.otro.id] = { hablamos: !!m.hablamos, rating: m.mi_rating || 0 }; });
+        setFb(ini);
+      })
+      .catch(function() {});
+  }
+  var puedeElegir = !!(eventoId && perfil.token);
   var mostrarEncuesta = datos !== null && (props.encuesta || algunaCharla || (datos && datos.mi_nps != null));
 
   var yo = Object.assign(normalizarPerfil(perfil, 0), { id: "yo" });
-  var matches = (datos && datos.matches) || [];
+  var visible = function(x) { return !(x.otro.ref && ocultos[x.otro.ref]); };
+  var matches = ((datos && datos.matches) || []).filter(visible);
+  var pedidos = ((datos && datos.pedidos) || []).filter(visible);
+  var otros = ((datos && datos.otros) || []).filter(visible).map(function(x) {
+    return x.pedido || !pedidosHechos[x.otro.ref] ? x : Object.assign({}, x, { pedido: true });
+  });
   var mesa = props.conMesas !== false && datos && datos.mesa;
   var mesaById = {};
   if (mesa) mesa.integrantes.forEach(function(p) { mesaById[p.id] = p; });
@@ -1590,9 +1811,35 @@ function ResultadoAsistente(props) {
         <>
           <div style={{ fontSize: 11, color: T.primary, fontWeight: 700, letterSpacing: 1 }}>TUS MATCHES EN EL EVENTO</div>
           {matches.map(function(m) {
-            return <MatchCard key={m.otro.id} yo={yo} otro={m.otro} match={m} nombreEvento={props.nombreEvento} feedback={eventoId ? feedbackDe(m) : null} />;
+            return <MatchCard key={m.otro.id} yo={yo} otro={m.otro} match={m} nombreEvento={props.nombreEvento} feedback={eventoId ? feedbackDe(m) : null}
+              onDescartar={puedeElegir && m.otro.ref ? function() { elegir(m.otro, "descarte"); } : null} />;
           })}
         </>
+      )}
+
+      {pedidos.length > 0 && (
+        <>
+          <div style={{ fontSize: 11, color: T.violet, fontWeight: 700, letterSpacing: 1 }}>QUIEREN CONECTAR CON VOS</div>
+          {pedidos.map(function(p) {
+            return <PedidoCard key={p.otro.id} yo={yo} pedido={p} nombreEvento={props.nombreEvento}
+              onAceptar={function() { elegir(p.otro, "conectar"); }} onDescartar={function() { elegir(p.otro, "descarte"); }} />;
+          })}
+        </>
+      )}
+
+      {puedeElegir && otros.length > 0 && (
+        verMas ? (
+          <>
+            <div style={{ fontSize: 11, color: T.textMuted, fontWeight: 700, letterSpacing: 1 }}>TAMBIÉN TIENEN AFINIDAD CON VOS</div>
+            <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>No entraron en tus matches porque alguno de los dos ya tenía el cupo lleno. Si querés conectar, le avisamos y le pasamos tu contacto; si también quiere, aparece en tus matches.</div>
+            {otros.map(function(x) {
+              return <VerMasCard key={x.otro.id} yo={yo} item={x} onConectar={function() { elegir(x.otro, "conectar"); }} />;
+            })}
+            <button onClick={function() { setVerMas(false); }} style={Object.assign({}, estiloLinkSutil, { alignSelf: "flex-start" })}>Ver menos</button>
+          </>
+        ) : (
+          <button onClick={function() { setVerMas(true); }} style={Object.assign({}, btnStyle(false), { alignSelf: "flex-start" })}>👀 Ver más personas con afinidad ({otros.length})</button>
+        )
       )}
 
       {mesa && <MesaCard n={mesa.numero} mesa={{ tema: mesa.tema, anfitrion: mesa.anfitrion, integrantes: mesa.integrantes.map(function(p) { return p.id; }) }} byId={mesaById} />}
@@ -1688,7 +1935,13 @@ function PantallaCargando() {
 // PANEL CON CLAVE: el organizador entra con &clave= en el link o la escribe acá
 // ─────────────────────────────────────────────
 function PanelConClave(props) {
-  var claveUrl = new URLSearchParams(window.location.search).get("clave") || "";
+  var claveUrl = useState(function() {
+    var params = new URLSearchParams(window.location.search);
+    var c = params.get("clave") || "";
+    // La clave no queda en la barra de direcciones ni en el historial
+    if (c) { params.delete("clave"); try { window.history.replaceState(null, "", window.location.pathname + "?" + params.toString()); } catch (e) {} }
+    return c;
+  })[0];
   var [estado, setEstado] = useState(claveUrl ? "verificando" : "pedir");
   var [clave, setClave] = useState(claveUrl);
   var [error, setError] = useState("");
@@ -1698,6 +1951,7 @@ function PanelConClave(props) {
     fetchEventoInfo(props.eventoId, c)
       .then(function(d) {
         if (d.clave_ok) setEstado("ok");
+        else if (d.clave_bloqueada) { setEstado("pedir"); setError("Demasiados intentos. Esperá 15 minutos y probá de nuevo."); }
         else { setEstado("pedir"); setError("La clave no es correcta."); }
       })
       .catch(function(e) { setEstado("pedir"); setError("No pude verificar la clave (" + e.message + ")."); });
@@ -1914,11 +2168,13 @@ function VistaAsistente(props) {
 
       var p = extractPerfil(fullText);
       if (p) {
-        setPerfil(p);
-        guardarPerfilLocal(eventoId, p);
+        p.token = nuevoToken();
+        // Primero se guarda (y se espera) para que el Apps Script ya lo tenga al pedir los matches
         if (p.consentimiento !== false && eventoId) {
-          postToSheets({ action: "event_profile", evento: eventoId, ts: Date.now(), perfil: p });
+          await postToSheets({ action: "event_profile", evento: eventoId, ts: Date.now(), perfil: p });
         }
+        guardarPerfilLocal(eventoId, p);
+        setPerfil(p);
       }
     } catch (err) {
       setMessages(function(prev) {
@@ -2107,7 +2363,7 @@ function EditorPerfil(props) {
     if (f.objetivos.indexOf(o) !== -1) set("objetivos", f.objetivos.filter(function(x) { return x !== o; }));
     else if (f.objetivos.length < 2) set("objetivos", f.objetivos.concat([o]));
   }
-  function guardar() {
+  async function guardar() {
     if (!f.nombre.trim()) { setError("Falta tu nombre."); return; }
     if (f.linkedin.trim() && !urlLinkedin(f.linkedin)) { setError("En LinkedIn pegá el link de tu perfil (linkedin.com/in/…), no tu nombre."); return; }
     var nuevo = Object.assign({}, original, {
@@ -2117,9 +2373,11 @@ function EditorPerfil(props) {
       objetivos: f.objetivos, detalle_objetivo: f.detalle_objetivo.trim(),
       whatsapp: limpiarWhatsapp(f.whatsapp), linkedin: f.linkedin.trim(),
       reemplaza: clavePersona(original), editado: Date.now(),
+      token: original.token || nuevoToken(),
     });
     if (nuevo.consentimiento !== false && props.eventoId) {
-      postToSheets({ action: "event_profile", evento: props.eventoId, ts: Date.now(), perfil: nuevo });
+      var res = await postToSheets({ action: "event_profile", evento: props.eventoId, ts: Date.now(), perfil: nuevo });
+      if (res && res.error) { setError("No pude guardar tu perfil. Probá de nuevo en un momento."); return; }
     }
     guardarPerfilLocal(props.eventoId, nuevo);
     // Si entró con su link personal, la URL pasa a llevar el perfil nuevo
