@@ -68,6 +68,17 @@ export default function EmpresaDashboard() {
   var [error, setError]       = useState(null);
   var [tab, setTab]           = useState("overview");
   var [lastUpdate, setLastUpdate] = useState(null);
+  // 25-nov: clave del dashboard (se valida en /api/sheets, no está en este código).
+  // Puede venir en el link (&clave=...) o escribirse en pantalla; se recuerda en esta pestaña.
+  var claveGuardadaKey = "mc_clave_empresa_" + slug;
+  var [clave, setClave] = useState(function() {
+    var c = params.get("clave") || "";
+    if (c) return c;
+    try { return sessionStorage.getItem(claveGuardadaKey) || ""; } catch (e) { return ""; }
+  });
+  var [pideClave, setPideClave] = useState(false);
+  var [claveInput, setClaveInput] = useState("");
+  var [claveError, setClaveError] = useState("");
 
   // Token inválido
   if (!config) {
@@ -84,11 +95,22 @@ export default function EmpresaDashboard() {
     );
   }
 
-  function loadData() {
+  function loadData(claveUsar) {
+    var c = typeof claveUsar === "string" ? claveUsar : clave;
     setLoading(true);
-    fetch("/api/sheets?action=records")
+    setError(null);
+    fetch("/api/sheets?action=records&empresa=" + encodeURIComponent(slug) + (c ? "&clave=" + encodeURIComponent(c) : ""))
       .then(function(r) { return r.json(); })
       .then(function(d) {
+        if (d && d.error === "clave_incorrecta") {
+          try { sessionStorage.removeItem(claveGuardadaKey); } catch (e) {}
+          setClaveError(c ? "La clave no es correcta." : "");
+          setPideClave(true);
+          setLoading(false);
+          return;
+        }
+        if (c) { try { sessionStorage.setItem(claveGuardadaKey, c); } catch (e) {} }
+        setPideClave(false);
         if (d && d.records) {
           var filtered = d.records.filter(function(r) {
             return r.empresa_id === slug;
@@ -105,6 +127,37 @@ export default function EmpresaDashboard() {
   }
 
   useEffect(function() { loadData(); }, []);
+
+  function entrarConClave() {
+    var c = claveInput.trim();
+    if (!c) return;
+    setClave(c);
+    loadData(c);
+  }
+
+  if (pideClave) {
+    return (
+      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 20 }}>
+        <div style={{ textAlign: "center", maxWidth: 360, width: "100%" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>{config.icono}</div>
+          <div style={{ color: "white", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{config.nombre}</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.6, marginBottom: 18 }}>
+            Ingresá la clave del dashboard que te pasó Mentores con Propósito.
+          </div>
+          <input type="password" value={claveInput} autoFocus
+            onChange={function(e) { setClaveInput(e.target.value); }}
+            onKeyDown={function(e) { if (e.key === "Enter") entrarConClave(); }}
+            placeholder="Clave"
+            style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 10, border: "1px solid " + BORDER, background: CARD, color: "white", fontSize: 15, marginBottom: 10 }} />
+          {claveError && <div style={{ color: ACCENT, fontSize: 12, marginBottom: 10 }}>{claveError}</div>}
+          <button onClick={entrarConClave}
+            style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "none", background: config.color || PRIMARY, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+            Entrar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   var total = records.length;
 
