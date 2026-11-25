@@ -150,7 +150,8 @@ export default async function handler(req, res) {
       if (query.action === "stats" && query.clave !== undefined && !statsCompleto) {
         return res.status(401).json({ error: "clave_incorrecta" });
       }
-      delete query.clave;
+      // La clave del dashboard no viaja a Google (la del organizador de eventos sí: la valida el Apps Script)
+      if (query.action === "stats" || query.action === "records") delete query.clave;
 
       query.secreto = SECRETO;
       query.ip = ipDe(req);
