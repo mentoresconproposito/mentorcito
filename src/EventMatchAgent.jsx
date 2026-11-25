@@ -17,7 +17,9 @@ var SHEETS_URL = "/api/sheets";
 
 var MAX_MATCHES = 5;      // matches 1 a 1 por persona (por defecto; cada evento puede cambiarlo con la columna max_matches)
 var EXTRA_RECIBIDOS = 2;  // a quien ya tiene todos sus matches se le pueden sumar hasta 2 más, solo para que nadie quede sin match
-var MIN_MATCH_PCT = 30;   // por debajo de esto no se sugiere
+var MIN_RESCATE_PCT = 30;  // quien queda con menos de MIN_GARANTIZADOS matches puede sumar alguno de 30-39%
+var MIN_GARANTIZADOS = 2;
+var MIN_MATCH_PCT = 40;   // por debajo de esto no se sugiere (era 30: los de 30-39% eran relleno del cupo; ahora están "Ver más")
 var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent
 var MESA_MIN = 3;
 var MESA_MAX = 6;
@@ -292,7 +294,7 @@ function matchesPorPersona(perfiles, matriz, maxMatches) {
       var a = perfiles[i], b = perfiles[j];
       if (a.formato === "grupo" || b.formato === "grupo") continue;
       var pct = matriz[a.id][b.id].pct;
-      if (pct >= MIN_MATCH_PCT) aristas.push({ a: a.id, b: b.id, pct: pct });
+      if (pct >= MIN_RESCATE_PCT) aristas.push({ a: a.id, b: b.id, pct: pct });
     }
   }
   aristas.sort(function(x, y) { return y.pct - x.pct; });
@@ -304,12 +306,18 @@ function matchesPorPersona(perfiles, matriz, maxMatches) {
     grado[e.a]++; grado[e.b]++;
   }
   aristas.forEach(function(e, k) {
-    if (grado[e.a] < max && grado[e.b] < max) agregar(e, k);
+    if (e.pct >= MIN_MATCH_PCT && grado[e.a] < max && grado[e.b] < max) agregar(e, k);
   });
   var tope = max + EXTRA_RECIBIDOS;
   aristas.forEach(function(e, k) {
-    if (usada[k]) return;
+    if (usada[k] || e.pct < MIN_MATCH_PCT) return;
     if ((grado[e.a] < max && grado[e.b] < tope) || (grado[e.b] < max && grado[e.a] < tope)) agregar(e, k);
+  });
+  // Rescate: nadie queda con menos de MIN_GARANTIZADOS matches si hay alguien de 30-39% con lugar
+  var garantizados = Math.min(MIN_GARANTIZADOS, max);
+  aristas.forEach(function(e, k) {
+    if (usada[k]) return;
+    if ((grado[e.a] < garantizados && grado[e.b] < tope) || (grado[e.b] < garantizados && grado[e.a] < tope)) agregar(e, k);
   });
   perfiles.forEach(function(p) { out[p.id].sort(function(x, y) { return y.pct - x.pct; }); });
   return out;
@@ -574,7 +582,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "- Lo primero es preguntar nombre y apellido (así sus matches lo encuentran en el evento). Si da solo el nombre, seguí igual sin repreguntar. Usá el nombre de pila en cada respuesta.\n"
   + "- Inferí el género por el nombre y adaptá las palabras (bienvenido/bienvenida). Si dudás, usá formas neutras.\n\n"
   + "REGLA DE ORO — UNA PREGUNTA A LA VEZ. Nunca dos preguntas en el mismo mensaje.\n\n"
-  + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento.\n\n"
+  + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento, con UNA sola excepción: en la PREGUNTA 2, si la respuesta no se entiende o la persona contó lo que necesita en vez de lo que puede aportar, repreguntá una vez con otro ejemplo (eso no cuenta como pregunta nueva) y después seguí.\n\n"
   + "EXTENSIÓN: mensajes de máximo 3 líneas durante las preguntas.\n\n"
   + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá • (salvo en la pregunta de objetivos, que va numerada).\n\n"
   + "CATÁLOGO DE SKILLS (usá solo estos ids en ofrece_skills y busca_skills):\n" + SKILLS_LIST + "\n\n"
@@ -582,7 +590,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "FLUJO — EN ORDEN, SIN SALTEAR:\n"
   + "PASO 1 — APERTURA: ya se mostró el saludo. Recibís el nombre y apellido.\n"
   + "PASO 2 — PREGUNTA 1: '¿A qué te dedicás hoy y en qué empresa o proyecto?' — inferís rol, empresa y nivel.\n"
-  + "PASO 3 — PREGUNTA 2: '¿En qué temas te buscan los demás? Contame 2 o 3 cosas en las que podrías ayudar a alguien hoy mismo.' — esto es lo que OFRECE.\n"
+  + "PASO 3 — PREGUNTA 2: '¿Qué podés aportarle a otra persona del evento? Por ejemplo: vender, marketing digital, finanzas, programar o contactos en un rubro. Contame 2 o 3 cosas.' — esto es lo que OFRECE.\n"
   + "PASO 4 — PREGUNTA 3: '¿En qué tema te vendría bien una mano hoy? Por ejemplo: conseguir clientes, ordenar las finanzas, exportar o armar equipo.' — esto es lo que BUSCA (sus gaps).\n"
   + "PASO 5 — PREGUNTA 4: '¿A qué venís principalmente al evento? Respondé con hasta 2 números (por ejemplo: 7 y 10)' y mostrá las opciones numeradas, una por línea, EXACTAMENTE así:\n"
   + "1. Aprender de alguien con más experiencia\n2. Compartir experiencia o mentorear\n3. Contratar\n4. Buscar trabajo o proyecto\n5. Buscar inversión\n6. Invertir\n7. Conseguir clientes\n8. Encontrar proveedor o solución\n9. Encontrar socio o cofounder\n10. Ampliar red\n"
@@ -1875,8 +1883,18 @@ var URL_PRIVACIDAD = "https://mentorcito.vercel.app/privacidad#eventos";
 
 // PORTADA: /eventos sin ?evento= (no hay a qué evento sumar a la persona)
 // ─────────────────────────────────────────────
+// Sponsors de la portada: fila con código "portada" en registro_eventos (activo = NO, así nadie entra a un chat con ese código).
+// Se usan solo sus columnas sponsor, sponsor_logo y sponsor_link. Sin esa fila o sin sponsor, la portada queda como antes.
+var CODIGO_SPONSORS_PORTADA = "portada";
+
 function PortadaSinEvento(props) {
   var [codigo, setCodigo] = useState("");
+  var [sponsor, setSponsor] = useState(null);
+  useEffect(function() {
+    fetchEventoInfo(CODIGO_SPONSORS_PORTADA)
+      .then(function(d) { if (d && d.found && d.sponsor && d.sponsor.nombre) setSponsor(d.sponsor); })
+      .catch(function() {});
+  }, []);
   function ir() {
     var c = codigo.trim().toLowerCase().replace(/\s+/g, "-");
     if (c) window.location.search = "?evento=" + encodeURIComponent(c);
@@ -1884,7 +1902,7 @@ function PortadaSinEvento(props) {
   return (
     <>
       <EstilosBase />
-      <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ minHeight: "100vh", boxSizing: "border-box", background: T.bg, color: T.text, fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 16px " + (sponsor ? 72 : 16) + "px" }}>
         <div style={{ maxWidth: 440, width: "100%", display: "flex", flexDirection: "column", gap: 14, textAlign: "center" }}>
           <div style={{ fontSize: 40 }}>🤝</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: T.textWhite, lineHeight: 1.25 }}>Mentorcito para eventos</div>
@@ -1906,11 +1924,15 @@ function PortadaSinEvento(props) {
             <a href={"https://wa.me/" + WHATSAPP_ORGANIZADORES + "?text=" + encodeURIComponent("Hola! Quiero crear un evento en Mentorcito para eventos. Nombre del evento: ... Fecha: ... Cantidad estimada de asistentes: ...")}
               target="_blank" rel="noopener noreferrer"
               style={Object.assign({}, btnStyle(false), { textDecoration: "none", borderColor: T.whatsapp, color: T.whatsapp })}>💬 Escribinos por WhatsApp</a>
+            <a href={"https://wa.me/" + WHATSAPP_ORGANIZADORES + "?text=" + encodeURIComponent("Hola! Quiero que mi marca sea sponsor del networking en Mentorcito para eventos. Marca: ... Evento que me interesa (si ya sabés): ...")}
+              target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>¿Querés que tu marca aparezca acá y en los matches? Sumate como sponsor</a>
           </div>
           <a href="https://mentorcito.vercel.app/" style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>¿Buscás un mentor/a? Hacé tu diagnóstico</a>
           <a href={URL_PRIVACIDAD} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: T.textMuted }}>Política de privacidad</a>
         </div>
       </div>
+      {sponsor && <SponsorCinta sponsor={sponsor} style={{ position: "fixed", left: 0, right: 0, bottom: 0, paddingBottom: "env(safe-area-inset-bottom)", boxSizing: "content-box" }} />}
     </>
   );
 }
