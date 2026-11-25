@@ -2,13 +2,24 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options",        "value": "DENY" },
+        { "key": "Permissions-Policy",     "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/dashboard",          "destination": "/index.html" },
     { "source": "/empresas",           "destination": "/index.html" },
     { "source": "/creatumentoria",     "destination": "/creatumentoria.html" },
     { "source": "/gestionarmentoria",  "destination": "/gestionarmentoria.html" },
     { "source": "/miprogreso",         "destination": "/miprogreso.html" },
-    { "source": "/eventos", "destination": "/eventos.html" },
+    { "source": "/eventos",            "destination": "/eventos.html" },
     { "source": "/(.*)",               "destination": "/index.html" }
   ]
 }
