@@ -21,6 +21,7 @@ var MIN_RESCATE_PCT = 30;  // quien queda con menos de MIN_GARANTIZADOS matches 
 var MIN_GARANTIZADOS = 2;
 var MIN_MATCH_PCT = 40;   // por debajo de esto no se sugiere (era 30: los de 30-39% eran relleno del cupo; ahora están "Ver más")
 var WHATSAPP_ORGANIZADORES = "5491170043893"; // mismo número que MentorAgent
+var MAX_MISMO_APORTE = 2;  // variedad: como mucho 2 matches que aporten lo mismo
 var MESA_MIN = 3;
 var MESA_MAX = 6;
 
@@ -168,7 +169,7 @@ function normalizarPerfil(p, idx) {
     palabras_ofrece: palabrasClave(ofrece),
     palabras_busca: palabrasClave(busca),
     // "Doble clic" de la pregunta de objetivos (ej. su cliente ideal) y con qué palabras se describe cada uno
-    palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return RAICES_GENERICAS.indexOf(raiz(w)) === -1; }),
+    palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return !esGenerica(w); }),
     palabras_perfil: palabrasClave([p.rol || "", p.empresa || "", p.resumen || ""].concat(ofrece)),
     clave_persona: clavePersona(p),
   });
@@ -184,11 +185,15 @@ var STOPWORDS_DETALLE = ["empresa","empresas","clientes","cliente","buscar","per
   "emprendedor","emprendedores","emprendedora","emprendimiento","emprendimientos","emprender","experiencia","responsable","responsables","propio","propia","gente","ideas","especialistas","productos","servicios","soluciones","personalizados"];
 
 // Siglas y palabras cortas que sí distinguen a una persona (las demás de 4 letras o menos se descartan)
-var PALABRAS_CORTAS = ["rrhh","pyme","pymes","b2b","b2c","saas","ia","ong","erp","crm","ux","ui"];
+// (se suman rubros cortos: "agro", "moda", "web"... antes se descartaban por tener 4 letras o menos)
+var PALABRAS_CORTAS = ["agro","moda","web","apps","seo","pet","vino","café","arte","cine","rrhh","pyme","pymes","b2b","b2c","saas","ia","ong","erp","crm","ux","ui"];
 
 // Raíz de una palabra, para que "reclutadores" encaje con "reclutamiento" y "pymes" con "pyme"
 function raiz(w) { return w.length > 7 ? w.slice(0, 7) : w.replace(/s$/, ""); }
-var RAICES_GENERICAS = STOPWORDS_DETALLE.map(raiz);
+// "productos" se descarta solo como palabra exacta: por raíz se llevaba puesto a "productores" (del agro, por ejemplo)
+var SOLO_EXACTAS = ["productos"];
+var RAICES_GENERICAS = STOPWORDS_DETALLE.filter(function(w) { return SOLO_EXACTAS.indexOf(w) === -1; }).map(raiz);
+function esGenerica(w) { return STOPWORDS_DETALLE.indexOf(w) !== -1 || RAICES_GENERICAS.indexOf(raiz(w)) !== -1; }
 
 function palabrasClave(textos) {
   var t = (textos || []).join(" ").toLowerCase().replace(/[^a-záéíóúñü0-9\s]/g, " ");
@@ -257,6 +262,18 @@ function scorePar(a, b) {
   var dif = Math.abs(NIVELES.indexOf(a.nivel) - NIVELES.indexOf(b.nivel));
   score += dif === 1 ? 10 : dif === 0 ? 7 : dif === 2 ? 4 : 0;
 
+  // 4b. Competidores: los dos vienen a conseguir clientes y aportan lo mismo o le venden al mismo cliente ideal
+  //     (dos agencias de marketing para pymes salían 89%, como si fueran el mejor match una de la otra)
+  var vendenAmbos = a.objetivos.indexOf("buscar_clientes") !== -1 && b.objetivos.indexOf("buscar_clientes") !== -1;
+  var mismoAporte = a.ofrece_skills.some(function(s) { return b.ofrece_skills.indexOf(s) !== -1; });
+  var raicesDetB = (b.palabras_detalle || []).map(raiz);
+  var mismoCliente = (a.palabras_detalle || []).some(function(w) { return raicesDetB.indexOf(raiz(w)) !== -1; });
+  if (vendenAmbos && (mismoAporte || mismoCliente)) { score = score * 0.4; razones.push({ tipo: "competidores" }); }
+  // 4c. Misma necesidad y mismo aporte: se entienden, pero no se resuelven el problema (tope 60, así gana quien sí lo resuelve)
+  var mismaNecesidad = a.busca_skills.length > 0 && a.busca_skills.length === b.busca_skills.length &&
+    a.busca_skills.every(function(s) { return b.busca_skills.indexOf(s) !== -1; });
+  if (!vendenAmbos && mismaNecesidad && mismoAporte) score = Math.min(score, 60);
+
   // 5. Penalizaciones: misma empresa, o ya se conocen
   var mismaEmpresa = a.empresa && b.empresa && a.empresa.trim().toLowerCase() === b.empresa.trim().toLowerCase();
   if (mismaEmpresa) { score = score * 0.3; razones.push({ tipo: "misma_empresa" }); }
@@ -305,13 +322,27 @@ function matchesPorPersona(perfiles, matriz, maxMatches) {
     out[e.b].push({ id: e.a, pct: e.pct, razones: matriz[e.b][e.a].razones });
     grado[e.a]++; grado[e.b]++;
   }
+  // Variedad: como mucho MAX_MISMO_APORTE matches que aporten lo mismo (su primera skill), así un restaurante
+  // que busca finanzas y marketing no recibe 5 contadores. El rescate de abajo no lo aplica: mejor repetido que nada.
+  var porId = {};
+  perfiles.forEach(function(p) { porId[p.id] = p; });
+  function repetido(x, y) {
+    var t = porId[y].ofrece_skills[0];
+    if (!t) return false;
+    return out[x].filter(function(m) { return porId[m.id].ofrece_skills[0] === t; }).length >= MAX_MISMO_APORTE;
+  }
   aristas.forEach(function(e, k) {
-    if (e.pct >= MIN_MATCH_PCT && grado[e.a] < max && grado[e.b] < max) agregar(e, k);
+    if (e.pct >= MIN_MATCH_PCT && grado[e.a] < max && grado[e.b] < max && !repetido(e.a, e.b) && !repetido(e.b, e.a)) agregar(e, k);
   });
   var tope = max + EXTRA_RECIBIDOS;
   aristas.forEach(function(e, k) {
-    if (usada[k] || e.pct < MIN_MATCH_PCT) return;
+    if (usada[k] || e.pct < MIN_MATCH_PCT || repetido(e.a, e.b) || repetido(e.b, e.a)) return;
     if ((grado[e.a] < max && grado[e.b] < tope) || (grado[e.b] < max && grado[e.a] < tope)) agregar(e, k);
+  });
+  // Si por la regla de variedad alguien quedó con lugar, se completa con los mejores que quedaron (aunque repitan)
+  aristas.forEach(function(e, k) {
+    if (usada[k] || e.pct < MIN_MATCH_PCT) return;
+    if (grado[e.a] < max && grado[e.b] < max) agregar(e, k);
   });
   // Rescate: nadie queda con menos de MIN_GARANTIZADOS matches si hay alguien de 30-39% con lugar
   var garantizados = Math.min(MIN_GARANTIZADOS, max);
@@ -582,7 +613,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "- Lo primero es preguntar nombre y apellido (así sus matches lo encuentran en el evento). Si da solo el nombre, seguí igual sin repreguntar. Usá el nombre de pila en cada respuesta.\n"
   + "- Inferí el género por el nombre y adaptá las palabras (bienvenido/bienvenida). Si dudás, usá formas neutras.\n\n"
   + "REGLA DE ORO — UNA PREGUNTA A LA VEZ. Nunca dos preguntas en el mismo mensaje.\n\n"
-  + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento, con UNA sola excepción: en la PREGUNTA 2, si la respuesta no se entiende o la persona contó lo que necesita en vez de lo que puede aportar, repreguntá una vez con otro ejemplo (eso no cuenta como pregunta nueva) y después seguí.\n\n"
+  + "LÍMITE DURO: EXACTAMENTE " + nPreg + " preguntas (ver flujo). Si las respuestas son cortas, avanzás igual. Sin preguntas de seguimiento, con DOS excepciones (ninguna cuenta como pregunta nueva, y cada una se hace UNA sola vez): 1) en la PREGUNTA 2, si la respuesta no se entiende o la persona contó lo que necesita en vez de lo que puede aportar, repreguntá con otro ejemplo; 2) en la PREGUNTA 3, si la respuesta tiene menos de 3 palabras o es muy general (por ejemplo: 'clientes', 'todo', 'crecer'), repreguntá pidiendo un ejemplo concreto: '¿Me contás un poco más? Por ejemplo: qué tipo de clientes, o en qué parte del negocio te trabás'. Después seguí.\n\n"
   + "EXTENSIÓN: mensajes de máximo 3 líneas durante las preguntas.\n\n"
   + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá • (salvo en la pregunta de objetivos, que va numerada).\n\n"
   + "CATÁLOGO DE SKILLS (usá solo estos ids en ofrece_skills y busca_skills):\n" + SKILLS_LIST + "\n\n"
