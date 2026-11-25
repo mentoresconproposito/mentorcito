@@ -1,14 +1,12 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+// Seguridad (16-nov): se sacó el "define" que metía la clave de Anthropic en el código del navegador.
+// La clave vive solo en el servidor (api/anthropic.js, variable ANTHROPIC_API_KEY).
+export default defineConfig(() => {
   return {
     plugins: [react()],
-    define: {
-      VITE_ANTHROPIC_KEY: JSON.stringify(env.VITE_ANTHROPIC_API_KEY || ''),
-    },
     build: {
       rollupOptions: {
         input: {
