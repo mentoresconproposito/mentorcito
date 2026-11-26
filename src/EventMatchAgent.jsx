@@ -316,7 +316,9 @@ function scorePar(a, b) {
   //     Dos que le venden al mismo rubro pero cosas distintas (un contador y una agencia) NO son competidores.
   var vendenAmbos = a.objetivos.indexOf("buscar_clientes") !== -1 && b.objetivos.indexOf("buscar_clientes") !== -1;
   var mismoAporte = a.ofrece_skills.some(function(s) { return b.ofrece_skills.indexOf(s) !== -1; });
-  if (vendenAmbos && mismoAporte) { score = score * 0.4; razones.push({ tipo: "competidores" }); }
+  // Si además se complementan en otra cosa (uno invierte y el otro busca inversión, uno mentorea y el otro aprende,
+  // uno contrata y el otro busca trabajo), no son solo competidores: no se bajan (caso Gerardo, utn.labs)
+  if (vendenAmbos && mismoAporte && objPts < 20) { score = score * 0.4; razones.push({ tipo: "competidores" }); }
   // 4c. Misma necesidad y mismo aporte: se entienden, pero no se resuelven el problema (tope 60, así gana quien sí lo resuelve)
   var mismaNecesidad = a.busca_skills.length > 0 && a.busca_skills.length === b.busca_skills.length &&
     a.busca_skills.every(function(s) { return b.busca_skills.indexOf(s) !== -1; });
