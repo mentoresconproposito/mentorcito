@@ -93,6 +93,42 @@ var OBJETIVOS = {
 var NIVELES = ["junior", "mid", "senior", "senior-ejecutivo"];
 
 // ─────────────────────────────────────────────
+// RUBROS: lista fija, para que "parrilla", "restaurante" y "gastronómico" sean lo mismo.
+// El chat elige el rubro de la persona (rubros) y el de la gente que quiere conocer (rubros_cliente).
+// Si un perfil no los trae (perfiles de antes), se deducen con estas palabras.
+// ─────────────────────────────────────────────
+var RUBROS = [
+  { id: "gastronomia",     label: "Gastronomía",                 keywords: ["gastronomía","gastronomia","gastronómico","gastronómica","gastronómicos","restaurante","restaurantes","bar","bares","parrilla","cafetería","cafeterías","café","cervecería","catering","panadería","pastelería","heladería","cocina","comida","food","delivery de comida","dark kitchen"] },
+  { id: "agro",            label: "Agro",                        keywords: ["agro","agropecuario","agropecuaria","agropecuarios","agroindustria","agrícola","agricultura","agtech","campo","campos","ganadería","ganadero","tambo","cultivos","cosecha","soja","maíz","estancia","productor agropecuario","productores agropecuarios","productores del campo"] },
+  { id: "salud",           label: "Salud y bienestar",           keywords: ["salud","clínica","clínicas","hospital","sanatorio","médico","médicos","médica","consultorio","odontología","odontólogo","farmacia","farmacias","psicología","psicólogo","kinesiología","nutrición","healthtech","bienestar","laboratorio"] },
+  { id: "educacion",       label: "Educación",                   keywords: ["educación","educativo","educativa","educativos","escuela","escuelas","colegio","colegios","universidad","universidades","docente","docentes","edtech","instituto","institutos","jardín de infantes"] },
+  { id: "construccion",    label: "Construcción e inmobiliario", keywords: ["construcción","constructora","constructoras","inmobiliaria","inmobiliarias","inmobiliario","real estate","obra civil","obras civiles","desarrolladora","desarrolladoras","desarrollos inmobiliarios","materiales de construcción","corralón","propiedades","proptech"] },
+  { id: "comercio",        label: "Comercio y retail",           keywords: ["comercio","comercios","retail","tienda","tiendas","local comercial","locales comerciales","ecommerce","e-commerce","tienda online","mayorista","mayoristas","minorista","minoristas","distribuidora","distribuidoras","supermercado","supermercados","almacén","kiosco","franquicia","franquicias","pet shop","mascotas","veterinaria"] },
+  { id: "moda_belleza",    label: "Moda y belleza",              keywords: ["moda","indumentaria","ropa","textil","textiles","calzado","marroquinería","accesorios","joyería","belleza","cosmética","cosméticos","estética","peluquería","spa","manicura"] },
+  { id: "industria",       label: "Industria",                   keywords: ["industria","industrias","industrial","industriales","fábrica","fábricas","manufactura","metalúrgica","metalúrgicas","metalmecánica","autopartes","química","plásticos","envases","planta industrial","plantas industriales","pyme industrial","pymes industriales","gerente de planta"] },
+  { id: "tecnologia",      label: "Tecnología y software",       keywords: ["software","saas","tecnología","tecnológica","tecnológicas","startup tech","startups tech","desarrollo de software","desarrolladora de software","sistemas","informática","apps","plataforma digital","inteligencia artificial","ciberseguridad"] },
+  { id: "finanzas_seguros",label: "Finanzas y seguros",          keywords: ["banco","bancos","bancaria","financiera","financieras","fintech","fintechs","seguros","aseguradora","aseguradoras","broker","brokers","cooperativa","mutual","sociedad de bolsa","fondo de inversión","fondos de inversión"] },
+  { id: "servicios_prof",  label: "Servicios profesionales",     keywords: ["estudio contable","contador","contadora","contadores","abogado","abogada","abogados","estudio jurídico","escribanía","consultora","consultoras","consultoría","consultor","consultores","agencia","agencias","coach","freelance","freelancer","asesor","asesora","asesores","reclutamiento","selección de personal"] },
+  { id: "turismo",         label: "Turismo y hotelería",         keywords: ["turismo","turístico","turística","hotel","hoteles","hotelería","hostel","hospedaje","agencia de viajes","viajes","cabañas","bodega","bodegas","enoturismo"] },
+  { id: "energia_mineria", label: "Energía y minería",           keywords: ["energía","energética","petróleo","petrolera","petroleras","oil","gas","oil & gas","minería","minera","mineras","renovables","energía solar","paneles solares","vaca muerta"] },
+  { id: "logistica",       label: "Logística y transporte",      keywords: ["logística","logistica","transporte","transportes","envíos","flota","flotas","camiones","depósito","depósitos","última milla","courier","fletes"] },
+  { id: "medios_cultura",  label: "Medios, diseño y cultura",    keywords: ["medios de comunicación","audiovisual","productora","productoras","cine","publicidad","diseño gráfico","estudio de diseño","centro cultural","gestión cultural","industria cultural","música","entretenimiento","eventos","editorial","periodismo","fotografía"] },
+  { id: "publico_social",  label: "Sector público y social",     keywords: ["gobierno","municipio","municipios","municipalidad","ministerio","sector público","organismo público","organismos públicos","ong","ongs","fundación","fundaciones","asociación civil","tercer sector","cooperativas sociales","impacto social"] },
+];
+var RUBRO_IDS = RUBROS.map(function(r) { return r.id; });
+
+function clasificarRubros(texto) {
+  var t = (texto || "").toString().toLowerCase();
+  if (!t.trim()) return [];
+  return RUBROS.filter(function(r) { return r.keywords.some(function(kw) { return contieneKeyword(t, kw); }); }).map(function(r) { return r.id; });
+}
+
+function rubrosValidos(x) {
+  var lista = Array.isArray(x) ? x : (x ? [x] : []);
+  return unique(lista.map(function(r) { return (r || "").toString().trim().toLowerCase(); }).filter(function(r) { return RUBRO_IDS.indexOf(r) !== -1; }));
+}
+
+// ─────────────────────────────────────────────
 // MATCHING (funciones puras, sin React)
 // ─────────────────────────────────────────────
 
@@ -171,6 +207,12 @@ function normalizarPerfil(p, idx) {
     // "Doble clic" de la pregunta de objetivos (ej. su cliente ideal) y con qué palabras se describe cada uno
     palabras_detalle: palabrasClave([p.detalle_objetivo || ""]).filter(function(w) { return !esGenerica(w); }),
     palabras_perfil: palabrasClave([p.rol || "", p.empresa || "", p.resumen || ""].concat(ofrece)),
+    // Rubro de la persona y rubro de la gente que quiere conocer. Si el chat no los eligió (perfiles de antes),
+    // se deducen: el propio, solo del rol y la empresa (el resumen suele hablar de a quién le vende);
+    // el buscado, de la pregunta de doble clic, salvo que busque proveedor (ahí describe al proveedor, no a un rubro).
+    rubros: rubrosValidos(p.rubros).length ? rubrosValidos(p.rubros) : clasificarRubros((p.rol || "") + " · " + (p.empresa || "")),
+    rubros_cliente: rubrosValidos(p.rubros_cliente).length ? rubrosValidos(p.rubros_cliente)
+      : ((p.objetivos || [])[0] === "buscar_proveedor" ? [] : clasificarRubros(p.detalle_objetivo || "")),
     clave_persona: clavePersona(p),
   });
 }
@@ -250,10 +292,12 @@ function scorePar(a, b) {
   [[a, b], [b, a]].forEach(function(x) {
     var quien = x[0], otro = x[1];
     var det = quien.palabras_detalle || [];
-    if (!det.length) return;
+    if (!det.length && !(quien.rubros_cliente || []).length) return;
     var perf = otro.palabras_perfil || [];
     var raicesPerfil = perf.map(raiz);
       var n = det.filter(function(w) { return raicesPerfil.indexOf(raiz(w)) !== -1; }).length;
+    // El rubro cuenta como una coincidencia más: "parrilla" encaja con "restaurantes" aunque las palabras sean otras
+    if ((quien.rubros_cliente || []).some(function(r) { return (otro.rubros || []).indexOf(r) !== -1; })) n++;
     // Es la señal más valiosa para quien vende: "vos sos el cliente que describí" (12 pts el primero, +4 cada coincidencia más, hasta 20)
       if (n) { score += Math.min(20, 12 + (n - 1) * 4); razones.push({ tipo: "detalle", quien: quien.id, otro: otro.id }); }
   });
@@ -262,13 +306,12 @@ function scorePar(a, b) {
   var dif = Math.abs(NIVELES.indexOf(a.nivel) - NIVELES.indexOf(b.nivel));
   score += dif === 1 ? 10 : dif === 0 ? 7 : dif === 2 ? 4 : 0;
 
-  // 4b. Competidores: los dos vienen a conseguir clientes y aportan lo mismo o le venden al mismo cliente ideal
-  //     (dos agencias de marketing para pymes salían 89%, como si fueran el mejor match una de la otra)
+  // 4b. Competidores: los dos vienen a conseguir clientes y aportan lo mismo
+  //     (dos agencias de marketing para pymes salían 89%, como si fueran el mejor match una de la otra).
+  //     Dos que le venden al mismo rubro pero cosas distintas (un contador y una agencia) NO son competidores.
   var vendenAmbos = a.objetivos.indexOf("buscar_clientes") !== -1 && b.objetivos.indexOf("buscar_clientes") !== -1;
   var mismoAporte = a.ofrece_skills.some(function(s) { return b.ofrece_skills.indexOf(s) !== -1; });
-  var raicesDetB = (b.palabras_detalle || []).map(raiz);
-  var mismoCliente = (a.palabras_detalle || []).some(function(w) { return raicesDetB.indexOf(raiz(w)) !== -1; });
-  if (vendenAmbos && (mismoAporte || mismoCliente)) { score = score * 0.4; razones.push({ tipo: "competidores" }); }
+  if (vendenAmbos && mismoAporte) { score = score * 0.4; razones.push({ tipo: "competidores" }); }
   // 4c. Misma necesidad y mismo aporte: se entienden, pero no se resuelven el problema (tope 60, así gana quien sí lo resuelve)
   var mismaNecesidad = a.busca_skills.length > 0 && a.busca_skills.length === b.busca_skills.length &&
     a.busca_skills.every(function(s) { return b.busca_skills.indexOf(s) !== -1; });
@@ -301,7 +344,9 @@ function construirMatriz(perfiles) {
 // (con 500 asistentes, sin este tope, una persona aparecía en 44 listas y la mitad en ninguna).
 // Segunda pasada: quien quedó con menos matches puede sumar a alguien que ya está completo,
 // hasta EXTRA_RECIBIDOS por encima del máximo.
-function matchesPorPersona(perfiles, matriz, maxMatches) {
+// fijos: pares [claveIdentidad, claveIdentidad] que alguno de los dos ya vio (tipo "visto" en feedback_eventos).
+// Entran primero, así un match que la persona ya vio no desaparece cuando se suma gente nueva.
+function matchesPorPersona(perfiles, matriz, maxMatches, fijos) {
   var max = maxMatches || MAX_MATCHES;
   var out = {}, grado = {};
   perfiles.forEach(function(p) { out[p.id] = []; grado[p.id] = 0; });
@@ -321,6 +366,20 @@ function matchesPorPersona(perfiles, matriz, maxMatches) {
     out[e.a].push({ id: e.b, pct: e.pct, razones: matriz[e.a][e.b].razones });
     out[e.b].push({ id: e.a, pct: e.pct, razones: matriz[e.b][e.a].razones });
     grado[e.a]++; grado[e.b]++;
+  }
+  // Matches ya vistos: se mantienen si los dos siguen en el evento y todavía tienen afinidad (30% o más)
+  if (fijos && fijos.length) {
+    var tope0 = max + EXTRA_RECIBIDOS;
+    var porClave = {};
+    perfiles.forEach(function(p) { porClave[claveIdentidad(p)] = p.id; });
+    var fijo = {};
+    fijos.forEach(function(f) {
+      var x = porClave[f[0]], y = porClave[f[1]];
+      if (x && y && x !== y) fijo[x < y ? x + "|" + y : y + "|" + x] = true;
+    });
+    aristas.forEach(function(e, k) {
+      if (fijo[e.a < e.b ? e.a + "|" + e.b : e.b + "|" + e.a] && grado[e.a] < tope0 && grado[e.b] < tope0) agregar(e, k);
+    });
   }
   // Variedad: como mucho MAX_MISMO_APORTE matches que aporten lo mismo (su primera skill), así un restaurante
   // que busca finanzas y marketing no recibe 5 contadores. El rescate de abajo no lo aplica: mejor repetido que nada.
@@ -490,11 +549,24 @@ function armarMesas(perfiles, matriz) {
 // opciones: { maxMatches, sinRonda (el servidor no la usa), sinMesas }
 // El orden de perfilesCrudos importa: el panel y el Apps Script usan el mismo (el de la hoja),
 // así todos ven el mismo armado de matches y de mesas.
+// Pares ya vistos por los asistentes, a partir de los registros de feedback_eventos.
+// Un par que alguno descartó ("No me interesa") no se mantiene.
+function fijosDesdeRegistros(registros) {
+  var descartado = {};
+  (registros || []).forEach(function(r) {
+    if (r.tipo === "descarte" && Number(r.valor) === 1) { descartado[r.de + "§" + r.con] = true; descartado[r.con + "§" + r.de] = true; }
+  });
+  return (registros || []).filter(function(r) {
+    return r.tipo === "visto" && Number(r.valor) === 1 && r.de && r.con && !descartado[r.de + "§" + r.con];
+  }).map(function(r) { return [r.de, r.con]; });
+}
+
+// opciones.fijos: ver matchesPorPersona
 function calcularEvento(perfilesCrudos, opciones) {
   var op = opciones || {};
   var perfiles = perfilesCrudos.map(normalizarPerfil);
   var matriz = construirMatriz(perfiles);
-  var porPersona = matchesPorPersona(perfiles, matriz, op.maxMatches);
+  var porPersona = matchesPorPersona(perfiles, matriz, op.maxMatches, op.fijos);
   var pares = op.sinRonda ? [] : rondaDePares(perfiles, matriz);
   var mesas = op.sinMesas ? { mesas: [], sinMesa: [] } : armarMesas(perfiles, matriz);
   var candidatos = candidatosPorPersona(perfiles, matriz, porPersona);
@@ -598,6 +670,8 @@ var SKILLS_LIST = Object.keys(SKILL_BY_ID).map(function(id) {
   return "- " + id + " (" + SKILL_BY_ID[id].area + "): " + SKILL_BY_ID[id].label;
 }).join("\n");
 
+var RUBROS_LIST = RUBROS.map(function(r) { return "- " + r.id + ": " + r.label; }).join("\n");
+
 var OBJETIVOS_LIST = Object.keys(OBJETIVOS).map(function(id) {
   return "- " + id + ": " + OBJETIVOS[id].label;
 }).join("\n");
@@ -618,6 +692,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "FORMATO DE TEXTO: NO uses markdown (#, **, *, ---). Texto plano y limpio. Si hace falta una lista, usá • (salvo en la pregunta de objetivos, que va numerada).\n\n"
   + "CATÁLOGO DE SKILLS (usá solo estos ids en ofrece_skills y busca_skills):\n" + SKILLS_LIST + "\n\n"
   + "OBJETIVOS POSIBLES (usá solo estos ids en objetivos):\n" + OBJETIVOS_LIST + "\n\n"
+  + "RUBROS (usá solo estos ids en rubros y rubros_cliente):\n" + RUBROS_LIST + "\n\n"
   + "FLUJO — EN ORDEN, SIN SALTEAR:\n"
   + "PASO 1 — APERTURA: ya se mostró el saludo. Recibís el nombre y apellido.\n"
   + "PASO 2 — PREGUNTA 1: '¿A qué te dedicás hoy y en qué empresa o proyecto?' — inferís rol, empresa y nivel.\n"
@@ -653,10 +728,12 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "- linkedin: SOLO si es un link de LinkedIn (contiene linkedin.com) o un usuario sin espacios. Si escribió su nombre en lugar del link, dejalo vacío. contacto: un email si lo dio; si no, vacío.\n"
   + "- nombre: nombre y apellido tal como lo dio.\n"
   + "- detalle_objetivo: la respuesta a la pregunta 5, en una frase corta.\n"
+  + "- rubros: 1 o 2 ids del rubro en el que trabaja la persona (su empresa o proyecto, NO a quién le vende). Ej.: contadora de un estudio → servicios_prof; dueño de parrilla → gastronomia; productor de soja → agro. Si no encaja ninguno, lista vacía.\n"
+  + "- rubros_cliente: 0 a 3 ids del rubro de la gente que quiere conocer, según la pregunta 5. Si busca clientes, el rubro de su cliente ideal (ej.: 'restaurantes y bares' → gastronomia). Si busca proveedor, el rubro de ese proveedor (ej.: 'un contador' → servicios_prof). Si invierte, el de los proyectos. Si dice algo general como 'pymes' o 'emprendedores', lista vacía.\n"
   + "- resumen: una línea en tercera persona para que otros asistentes entiendan quién es.\n\n"
   + "FORMATO DEL BLOQUE (reemplazá con datos reales):\n"
   + "<PERFIL>\n"
-  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"detalle_objetivo\":\"\",\"formato\":\"ambos\",\"consentimiento\":true,\"whatsapp\":\"\",\"linkedin\":\"\",\"contacto\":\"\",\"resumen\":\"\"}\n"
+  + "{\"nombre\":\"\",\"rol\":\"\",\"empresa\":\"\",\"nivel\":\"mid\",\"ofrece\":[\"\"],\"ofrece_skills\":[\"\"],\"busca\":[\"\"],\"busca_skills\":[\"\"],\"objetivos\":[\"\"],\"detalle_objetivo\":\"\",\"rubros\":[\"\"],\"rubros_cliente\":[\"\"],\"formato\":\"ambos\",\"consentimiento\":true,\"whatsapp\":\"\",\"linkedin\":\"\",\"contacto\":\"\",\"resumen\":\"\"}\n"
   + "</PERFIL>";
 }
 
@@ -934,7 +1011,7 @@ function parsearPerfiles(texto) {
   var filas = t.split(/\r?\n/).filter(function(l) { return l.trim(); });
   var sep = filas[0].indexOf(";") !== -1 && filas[0].indexOf(",") === -1 ? ";" : ",";
   var cab = filas[0].split(sep).map(function(c) { return c.trim().toLowerCase(); });
-  var listas = ["ofrece", "busca", "objetivos", "ofrece_skills", "busca_skills"];
+  var listas = ["ofrece", "busca", "objetivos", "ofrece_skills", "busca_skills", "rubros", "rubros_cliente"];
   return filas.slice(1).map(function(f) {
     var cols = f.split(sep);
     var p = {};
@@ -1289,7 +1366,8 @@ function PanelOrganizador(props) {
     r.readAsText(f);
   }
 
-  var res = perfiles.length >= 2 ? calcularEvento(perfiles, { maxMatches: props.maxMatches, sinMesas: !conMesas }) : null;
+  // Con los matches que los asistentes ya vieron (registros "visto"), igual que el Apps Script
+  var res = perfiles.length >= 2 ? calcularEvento(perfiles, { maxMatches: props.maxMatches, sinMesas: !conMesas, fijos: fijosDesdeRegistros(registros) }) : null;
   var byId = {};
   if (res) res.perfiles.forEach(function(p) { byId[p.id] = p; });
 
@@ -2426,6 +2504,9 @@ function EditorPerfil(props) {
       objetivos: f.objetivos, detalle_objetivo: f.detalle_objetivo.trim(),
       whatsapp: limpiarWhatsapp(f.whatsapp), linkedin: f.linkedin.trim(),
       reemplaza: clavePersona(original), editado: Date.now(),
+      // Si cambió a qué se dedica o a quién busca, los rubros se vuelven a deducir de lo nuevo
+      rubros: (f.rol.trim() !== (original.rol || "") || f.empresa.trim() !== (original.empresa || "")) ? [] : (original.rubros || []),
+      rubros_cliente: f.detalle_objetivo.trim() !== (original.detalle_objetivo || "") ? [] : (original.rubros_cliente || []),
       token: original.token || nuevoToken(),
     });
     if (nuevo.consentimiento !== false && props.eventoId) {
