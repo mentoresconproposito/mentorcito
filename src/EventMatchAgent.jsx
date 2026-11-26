@@ -192,13 +192,18 @@ function decodeURIComponentSeguro(s) {
 function normalizarPerfil(p, idx) {
   var ofrece = p.ofrece || [];
   var busca = p.busca || [];
+  // Quien viene a buscar inversión busca financiamiento, y quien viene a invertir lo ofrece,
+  // aunque no lo repita en "qué buscás" (lo cuenta en la pregunta de doble clic)
+  var objs = p.objetivos || [];
+  var extraBusca = !p.skills_editadas && objs.indexOf("buscar_inversion") !== -1 ? ["financiamiento"] : [];
+  var extraOfrece = !p.skills_editadas && objs.indexOf("invertir") !== -1 ? ["financiamiento"] : [];
   return Object.assign({}, p, {
     id: p.id || ("p" + idx + "_" + (p.nombre || "anon").toLowerCase().replace(/\W+/g, "")),
     ofrece: ofrece,
     busca: busca,
     // Si la persona eligió sus etiquetas a mano (editar perfil), se respetan tal cual
-    ofrece_skills: unique((p.ofrece_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(ofrece))),
-    busca_skills: unique((p.busca_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(busca))),
+    ofrece_skills: unique((p.ofrece_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(ofrece)).concat(extraOfrece)),
+    busca_skills: unique((p.busca_skills || []).filter(function(s) { return SKILL_BY_ID[s]; }).concat(p.skills_editadas ? [] : clasificarEnSkills(busca)).concat(extraBusca)),
     objetivos: (p.objetivos || []).filter(function(o) { return OBJETIVOS[o]; }),
     nivel: NIVELES.indexOf(p.nivel) !== -1 ? p.nivel : "mid",
     formato: p.formato || "ambos",
@@ -722,7 +727,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "⚠️ Si la persona NO acepta compartir sus datos, igual emití el bloque con \"consentimiento\": false.\n\n"
   + "CÓMO COMPLETAR EL PERFIL:\n"
   + "- ofrece / busca: frases cortas con las palabras de la persona (2 a 4 cada una).\n"
-  + "- ofrece_skills / busca_skills: ids del catálogo que mejor representan esas frases. Si nada encaja, dejá la lista vacía.\n"
+  + "- ofrece_skills / busca_skills: ids del catálogo que mejor representan esas frases. Si nada encaja, dejá la lista vacía. Si eligió buscar inversión, sumá financiamiento a busca_skills; si eligió invertir, sumalo a ofrece_skills.\n"
   + "- nivel: junior (menos de 2 años), mid (2 a 5), senior (más de 5 o lidera equipos), senior-ejecutivo (C-level, founder con tracción, director).\n"
   + "- formato: 1a1, grupo o ambos.\n"
   + "- whatsapp: solo dígitos con código de país, sin + ni espacios (ej: 5491123456789). Si es un número argentino sin código, agregá 549 y sacá el 0 y el 15. Si no lo dio, dejalo vacío.\n"
