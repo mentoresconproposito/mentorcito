@@ -718,6 +718,7 @@ function buildSystemPrompt(nombreEvento, conMesas) {
   + "PASO 9 — PERFIL: Tu respuesta DEBE empezar con el bloque <PERFIL>...</PERFIL> con todos los campos completos. Después del bloque, en 3 o 4 líneas cálidas y específicas: resumí qué aporta la persona y qué busca, y decile que abajo va a ver sus matches del evento (o que van a ir apareciendo a medida que se sumen asistentes), y que abajo tiene su link personal para volver a verlos cuando quiera. Cerrá sin hacer más preguntas.\n\n"
   + "⚠️ ANTI-LOOP: después de la pregunta " + nPreg + " no hagas más preguntas. Pasá al PASO 9 aunque falte información.\n"
   + "⚠️ ANTI-SKIP: el bloque <PERFIL> va SIEMPRE primero en el PASO 9.\n"
+  + "⚠️ ORDEN: NUNCA resumas lo que la persona ofrece o busca, ni emitas el bloque <PERFIL>, antes de que haya respondido la PREGUNTA " + nPreg + " (consentimiento y contacto). Aunque ya tengas todo lo demás, primero hacé esa pregunta y esperá la respuesta. Las repreguntas de las preguntas 2 y 3 no cuentan como preguntas ni adelantan el final.\n"
   + "⚠️ Si la persona NO acepta compartir sus datos, igual emití el bloque con \"consentimiento\": false.\n\n"
   + "CÓMO COMPLETAR EL PERFIL:\n"
   + "- ofrece / busca: frases cortas con las palabras de la persona (2 a 4 cada una).\n"
